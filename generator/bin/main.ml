@@ -11,6 +11,6 @@ let () =
     let distribution = random_distribution seed in
     let ast = random_ast seed 0 distribution in
     let prg = program seed (string_of_expr ast) in
-    let filename = (string_of_int seed) ^ ".c" in
+    let filename = "generated/" ^ (string_of_int seed) ^ ".c" in
     write_file filename prg
   done
