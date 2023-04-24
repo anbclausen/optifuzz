@@ -14,8 +14,6 @@ type expr =
   | NotEqual of expr * expr
 
   (* Logical Operators *)
-  | LogicalAnd of expr * expr
-  | LogicalOr of expr * expr
   | Not of expr
 
   (* Bitwise Operators *)
@@ -45,8 +43,6 @@ let rec string_of_expr = function
   | Equal(e1, e2) -> "(" ^ string_of_expr e1 ^ " == " ^ string_of_expr e2 ^ ")"
   | NotEqual(e1, e2) -> "(" ^ string_of_expr e1 ^ " != " ^ string_of_expr e2 ^ ")"
 
-  | LogicalAnd(e1, e2) -> "(" ^ string_of_expr e1 ^ " && " ^ string_of_expr e2 ^ ")"
-  | LogicalOr(e1, e2) -> "(" ^ string_of_expr e1 ^ " || " ^ string_of_expr e2 ^ ")"
   | Not(e) -> "(!" ^ string_of_expr e ^ ")"
 
   | BitwiseAnd(e1, e2) -> "(" ^ string_of_expr e1 ^ " & " ^ string_of_expr e2 ^ ")"

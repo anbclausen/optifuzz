@@ -15,8 +15,6 @@ type expr_p =
     equal_p : float;
     not_equal_p : float;
 
-    logical_and_p : float;
-    logical_or_p : float;
     not_p : float;
 
     bitwise_and_p : float;
@@ -31,7 +29,7 @@ type expr_p =
     int_lit_p : float;
   }
 
-let max_depth = 3
+let max_depth = 5
 
 let choose state l p =
   let roll = Random.State.float state 1.0 in
@@ -70,8 +68,6 @@ let rec random_expr seed state depth p =
       lazy (Equal (random_ast (seed + 20) (depth + 1) p, random_ast (seed + 21) (depth + 1) p));
       lazy (NotEqual (random_ast (seed + 22) (depth + 1) p, random_ast (seed + 23) (depth + 1) p));
 
-      lazy (LogicalAnd (random_ast (seed + 24) (depth + 1) p, random_ast (seed + 25) (depth + 1) p));
-      lazy (LogicalOr (random_ast (seed + 26) (depth + 1) p, random_ast (seed + 27) (depth + 1) p));
       lazy (Not (random_ast (seed + 28) (depth + 1) p));
 
       lazy (BitwiseAnd (random_ast (seed + 29) (depth + 1) p, random_ast (seed + 30) (depth + 1) p));
@@ -98,8 +94,6 @@ let rec random_expr seed state depth p =
       p.equal_p;
       p.not_equal_p;
 
-      p.logical_and_p;
-      p.logical_or_p;
       p.not_p;
 
       p.bitwise_and_p;
@@ -123,7 +117,7 @@ and random_ast (seed: int) (depth: int) (p: expr_p) =
 
 let random_distribution seed =
   let state = Random.State.make [|seed|] in
-  let random_arr = Array.init 24 (fun _ -> Random.State.float state 1.0) in
+  let random_arr = Array.init 22 (fun _ -> Random.State.float state 1.0) in
   let normalized_arr = Array.map (fun x -> x /. (Array.fold_left (+.) 0.0 random_arr)) random_arr in
   {
     neg_p = normalized_arr.(0);
@@ -139,19 +133,17 @@ let random_distribution seed =
     equal_p = normalized_arr.(10);
     not_equal_p = normalized_arr.(11);
 
-    logical_and_p = normalized_arr.(12);
-    logical_or_p = normalized_arr.(13);
-    not_p = normalized_arr.(14);
+    not_p = normalized_arr.(12);
 
-    bitwise_and_p = normalized_arr.(15);
-    bitwise_or_p = normalized_arr.(16);
-    bitwise_complement_p = normalized_arr.(17);
-    bitwise_xor_p = normalized_arr.(18);
-    left_shift_p = normalized_arr.(19);
-    right_shift_p = normalized_arr.(20);
+    bitwise_and_p = normalized_arr.(13);
+    bitwise_or_p = normalized_arr.(14);
+    bitwise_complement_p = normalized_arr.(15);
+    bitwise_xor_p = normalized_arr.(16);
+    left_shift_p = normalized_arr.(17);
+    right_shift_p = normalized_arr.(18);
 
-    x_p = normalized_arr.(21);
-    y_p = normalized_arr.(22);
-    int_lit_p = normalized_arr.(23)
+    x_p = normalized_arr.(19);
+    y_p = normalized_arr.(20);
+    int_lit_p = normalized_arr.(21)
   }
   
