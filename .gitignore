@@ -36,3 +36,5 @@ _opam/
 
 generator/_build/
 generator/generated/
+.vscode
+out
