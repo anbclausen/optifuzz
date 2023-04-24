@@ -27,8 +27,9 @@ type expr =
   | RightShift of expr * expr
 
   (* Constants and Variables *)
-  | Variable of string
-  | Int of int
+  | X
+  | Y
+  | IntLit of int
 
 let rec string_of_expr = function 
   | Neg(e) -> "(-" ^ string_of_expr e ^ ")"
@@ -55,6 +56,7 @@ let rec string_of_expr = function
   | LeftShift(e1, e2) -> "(" ^ string_of_expr e1 ^ " << " ^ string_of_expr e2 ^ ")"
   | RightShift(e1, e2) -> "(" ^ string_of_expr e1 ^ " >> " ^ string_of_expr e2 ^ ")"
 
-  | Variable(v) -> v
-  | Int(i) -> string_of_int i
+  | X -> "x"
+  | Y -> "y"
+  | IntLit(i) -> string_of_int i
 
