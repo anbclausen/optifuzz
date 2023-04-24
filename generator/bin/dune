@@ -1,0 +1,4 @@
+(executable
+ (public_name generator)
+ (name main)
+ (libraries generator))
