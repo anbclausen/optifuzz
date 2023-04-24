@@ -120,3 +120,38 @@ and random_ast (seed: int) (depth: int) (p: expr_p) =
     Lazy.force (random_terminal state [p.x_p; p.y_p; p.int_lit_p])
   else     
     Lazy.force (random_expr seed state depth p)
+
+let random_distribution seed =
+  let state = Random.State.make [|seed|] in
+  let random_arr = Array.init 24 (fun _ -> Random.State.float state 1.0) in
+  let normalized_arr = Array.map (fun x -> x /. (Array.fold_left (+.) 0.0 random_arr)) random_arr in
+  {
+    neg_p = normalized_arr.(0);
+    plus_p = normalized_arr.(1);
+    minus_p = normalized_arr.(2);
+    times_p = normalized_arr.(3);
+    div_p = normalized_arr.(4);
+    mod_p = normalized_arr.(5);
+    less_than_p = normalized_arr.(6);
+    less_equal_p = normalized_arr.(7);
+    greater_than_p = normalized_arr.(8);
+    greater_equal_p = normalized_arr.(9);
+    equal_p = normalized_arr.(10);
+    not_equal_p = normalized_arr.(11);
+
+    logical_and_p = normalized_arr.(12);
+    logical_or_p = normalized_arr.(13);
+    not_p = normalized_arr.(14);
+
+    bitwise_and_p = normalized_arr.(15);
+    bitwise_or_p = normalized_arr.(16);
+    bitwise_complement_p = normalized_arr.(17);
+    bitwise_xor_p = normalized_arr.(18);
+    left_shift_p = normalized_arr.(19);
+    right_shift_p = normalized_arr.(20);
+
+    x_p = normalized_arr.(21);
+    y_p = normalized_arr.(22);
+    int_lit_p = normalized_arr.(23)
+  }
+  
