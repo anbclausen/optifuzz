@@ -4,7 +4,7 @@
 # Workspace root: "/home/abc/Dropbox/UNI/8.
 # Semester/LBS/project/project/generator"
 # Auto-detected concurrency: 12
-$ /usr/bin/ocamlc.opt -config > /tmp/dune_3fe253_output
+$ /usr/bin/ocamlc.opt -config > /tmp/dune_4040a5_output
 # Dune context:
 #  { name = "default"
 #  ; kind = "default"
