@@ -13,7 +13,6 @@ let generate_random_ast seed =
   write_file filename prg
 
 let () = 
-  string_of_int seed |> print_endline;
   if seed = 0 then
     (Random.self_init ();
     for _ = 0 to n do
