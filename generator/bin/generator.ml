@@ -31,7 +31,7 @@ type expr_p =
     false_p : float;
   }
 
-let max_depth = 5
+let max_depth = 6
 
 let choose state l p =
   let roll = Random.State.float state 1.0 in
@@ -48,7 +48,7 @@ let choose state l p =
   choose' l p 0.0
 
 let random_int_lit state =
-  let n = Random.State.bits state in
+  let n = Random.State.full_int state 100 in
   IntLit n
 
 let random_terminal state p = 
