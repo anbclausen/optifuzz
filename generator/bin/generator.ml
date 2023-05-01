@@ -27,6 +27,8 @@ type expr_p =
     x_p : float;
     y_p : float;
     int_lit_p : float;
+    true_p : float;
+    false_p : float;
   }
 
 let max_depth = 5
@@ -79,7 +81,9 @@ let rec random_expr seed state depth p =
 
       lazy X;
       lazy Y;
-      lazy (random_int_lit state)
+      lazy (random_int_lit state);
+      lazy True;
+      lazy False
     ] [ 
       p.neg_p; 
       p.plus_p;
@@ -105,7 +109,9 @@ let rec random_expr seed state depth p =
 
       p.x_p;
       p.y_p;
-      p.int_lit_p
+      p.int_lit_p;
+      p.true_p;
+      p.false_p
     ]
 
 and random_ast (seed: int) (depth: int) (p: expr_p) =
@@ -117,7 +123,7 @@ and random_ast (seed: int) (depth: int) (p: expr_p) =
 
 let random_distribution seed =
   let state = Random.State.make [|seed|] in
-  let random_arr = Array.init 22 (fun _ -> Random.State.float state 1.0) in
+  let random_arr = Array.init 24 (fun _ -> Random.State.float state 1.0) in
   let normalized_arr = Array.map (fun x -> x /. (Array.fold_left (+.) 0.0 random_arr)) random_arr in
   {
     neg_p = normalized_arr.(0);
@@ -144,6 +150,8 @@ let random_distribution seed =
 
     x_p = normalized_arr.(19);
     y_p = normalized_arr.(20);
-    int_lit_p = normalized_arr.(21)
+    int_lit_p = normalized_arr.(21);
+    true_p = normalized_arr.(22);
+    false_p = normalized_arr.(23)
   }
   

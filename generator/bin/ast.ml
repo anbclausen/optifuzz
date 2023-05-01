@@ -28,6 +28,8 @@ type expr =
   | X
   | Y
   | IntLit of int
+  | True 
+  | False
 
 let rec string_of_expr = function 
   | Neg(e) -> "(-" ^ string_of_expr e ^ ")"
@@ -55,4 +57,6 @@ let rec string_of_expr = function
   | X -> "x"
   | Y -> "y"
   | IntLit(i) -> string_of_int i
+  | True -> "true"
+  | False -> "false"
 
