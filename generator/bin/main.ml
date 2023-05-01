@@ -2,7 +2,7 @@ open Ast
 open Generator
 open Write 
 
-let n = 5
+let n = Sys.argv.(1) |> int_of_string
 
 let () = 
   Random.self_init ();

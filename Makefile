@@ -5,4 +5,4 @@ build-generator:
 exec-generator:
 	@cd generator; \
 	mkdir -p generated; \
-	dune exec generator
+	dune exec generator 5
