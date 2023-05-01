@@ -6,8 +6,6 @@ type expr_p =
     plus_p : float;
     minus_p : float;
     times_p : float;
-    div_p : float;
-    mod_p : float;
     less_than_p : float;
     less_equal_p : float;
     greater_than_p : float;
@@ -31,7 +29,7 @@ type expr_p =
     false_p : float;
   }
 
-let max_depth = 6
+let max_depth = 12
 
 let choose state l p =
   let roll = Random.State.float state 1.0 in
@@ -61,8 +59,6 @@ let rec random_expr seed state depth p =
       lazy (Plus (random_ast (seed + 2) (depth + 1) p, random_ast (seed + 3) (depth + 1) p));
       lazy (Minus (random_ast (seed + 4) (depth + 1) p, random_ast (seed + 5) (depth + 1) p));
       lazy (Times (random_ast (seed + 6) (depth + 1) p, random_ast (seed + 7) (depth + 1) p));
-      lazy (Div (random_ast (seed + 8) (depth + 1) p, random_ast (seed + 9) (depth + 1) p));
-      lazy (Mod (random_ast (seed + 10) (depth + 1) p, random_ast (seed + 11) (depth + 1) p));
       lazy (LessThan (random_ast (seed + 12) (depth + 1) p, random_ast (seed + 13) (depth + 1) p));
       lazy (LessEqual (random_ast (seed + 14) (depth + 1) p, random_ast (seed + 15) (depth + 1) p));
       lazy (GreaterThan (random_ast (seed + 16) (depth + 1) p, random_ast (seed + 17) (depth + 1) p));
@@ -89,8 +85,6 @@ let rec random_expr seed state depth p =
       p.plus_p;
       p.minus_p;
       p.times_p;
-      p.div_p;
-      p.mod_p;
       p.less_than_p;
       p.less_equal_p;
       p.greater_than_p;
@@ -123,35 +117,33 @@ and random_ast (seed: int) (depth: int) (p: expr_p) =
 
 let random_distribution seed =
   let state = Random.State.make [|seed|] in
-  let random_arr = Array.init 24 (fun _ -> Random.State.float state 1.0) in
+  let random_arr = Array.init 22 (fun _ -> Random.State.float state 1.0) in
   let normalized_arr = Array.map (fun x -> x /. (Array.fold_left (+.) 0.0 random_arr)) random_arr in
   {
     neg_p = normalized_arr.(0);
     plus_p = normalized_arr.(1);
     minus_p = normalized_arr.(2);
     times_p = normalized_arr.(3);
-    div_p = normalized_arr.(4);
-    mod_p = normalized_arr.(5);
-    less_than_p = normalized_arr.(6);
-    less_equal_p = normalized_arr.(7);
-    greater_than_p = normalized_arr.(8);
-    greater_equal_p = normalized_arr.(9);
-    equal_p = normalized_arr.(10);
-    not_equal_p = normalized_arr.(11);
+    less_than_p = normalized_arr.(4);
+    less_equal_p = normalized_arr.(5);
+    greater_than_p = normalized_arr.(6);
+    greater_equal_p = normalized_arr.(7);
+    equal_p = normalized_arr.(8);
+    not_equal_p = normalized_arr.(9);
 
-    not_p = normalized_arr.(12);
+    not_p = normalized_arr.(10);
 
-    bitwise_and_p = normalized_arr.(13);
-    bitwise_or_p = normalized_arr.(14);
-    bitwise_complement_p = normalized_arr.(15);
-    bitwise_xor_p = normalized_arr.(16);
-    left_shift_p = normalized_arr.(17);
-    right_shift_p = normalized_arr.(18);
+    bitwise_and_p = normalized_arr.(11);
+    bitwise_or_p = normalized_arr.(12);
+    bitwise_complement_p = normalized_arr.(13);
+    bitwise_xor_p = normalized_arr.(14);
+    left_shift_p = normalized_arr.(15);
+    right_shift_p = normalized_arr.(16);
 
-    x_p = normalized_arr.(19);
-    y_p = normalized_arr.(20);
-    int_lit_p = normalized_arr.(21);
-    true_p = normalized_arr.(22);
-    false_p = normalized_arr.(23)
+    x_p = normalized_arr.(17);
+    y_p = normalized_arr.(18);
+    int_lit_p = normalized_arr.(19);
+    true_p = normalized_arr.(20);
+    false_p = normalized_arr.(21)
   }
   

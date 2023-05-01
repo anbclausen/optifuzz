@@ -4,8 +4,6 @@ type expr =
   | Plus of expr * expr
   | Minus of expr * expr
   | Times of expr * expr
-  | Div of expr * expr
-  | Mod of expr * expr
   | LessThan of expr * expr
   | LessEqual of expr * expr
   | GreaterThan of expr * expr
@@ -36,8 +34,6 @@ let rec string_of_expr = function
   | Plus(e1, e2) -> "(" ^ string_of_expr e1 ^ " + " ^ string_of_expr e2 ^ ")"
   | Minus(e1, e2) -> "(" ^ string_of_expr e1 ^ " - " ^ string_of_expr e2 ^ ")"
   | Times(e1, e2) -> "(" ^ string_of_expr e1 ^ " * " ^ string_of_expr e2 ^ ")"
-  | Div(e1, e2) -> "(" ^ string_of_expr e1 ^ " / " ^ string_of_expr e2 ^ ")"
-  | Mod(e1, e2) -> "(" ^ string_of_expr e1 ^ " % " ^ string_of_expr e2 ^ ")"
   | LessThan(e1, e2) -> "(" ^ string_of_expr e1 ^ " < " ^ string_of_expr e2 ^ ")"
   | LessEqual(e1, e2) -> "(" ^ string_of_expr e1 ^ " <= " ^ string_of_expr e2 ^ ")"
   | GreaterThan(e1, e2) -> "(" ^ string_of_expr e1 ^ " > " ^ string_of_expr e2 ^ ")"
