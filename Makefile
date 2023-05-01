@@ -1,29 +1,34 @@
-build-generator:
+build-gen:
 	@cd generator; \
 	dune build
 
-exec-generator:
+generate:
 	@cd generator; \
 	mkdir -p generated; \
-	dune exec generator 50
+	dune exec generator 50 0
 
-clean-generated:
+clean-gen:
 	@cd generator; \
 	cd generated; \
 	rm *
 
-exec-assembly-inspection:
+inspect:
 	@cd analysis; \
 	python assembly_inspection.py
 
-clean-inspected:
+clean-ins:
 	@cd analysis; \
 	cd programs; \
 	rm *
 
-move-generated:
+move-gen:
 	@cd generator; \
 	cd generated; \
 	mv * ../../analysis/programs
 
-analyze: clean-inspected exec-generator move-generated exec-assembly-inspection
+analyze: clean-ins generate move-gen inspect
+
+generate-seeded:
+	@cd generator; \
+	mkdir -p generated; \
+	dune exec generator 1 $(seed)
