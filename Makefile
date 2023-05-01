@@ -5,7 +5,7 @@ build-gen:
 generate:
 	@cd generator; \
 	mkdir -p generated; \
-	dune exec generator 50 0
+	dune exec generator 200 0
 
 clean-gen:
 	@cd generator; \
