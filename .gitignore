@@ -38,3 +38,5 @@ generator/_build/
 generator/generated/
 .vscode
 out
+
+analysis/programs/
