@@ -11,7 +11,8 @@ clean-gen:
 	@rm generator/generated/* 1>/dev/null 2>&1; true
 
 inspect:
-	@python3 analysis/assembly_inspection.py
+	@cd analysis; \
+	python3 assembly_inspection.py
 
 clean-ins:
 	@rm analysis/programs/* 1>/dev/null 2>&1; true
