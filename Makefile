@@ -8,19 +8,21 @@ generate:
 	dune exec generator 200 0
 
 clean-gen:
-	@rm generator/generated/*
+	@rm generator/generated/* 1>/dev/null 2>&1; true
 
 inspect:
 	@python3 analysis/assembly_inspection.py
 
 clean-ins:
-	@rm analysis/programs/*
+	@rm analysis/programs/* 1>/dev/null 2>&1; true
 
 move-gen:
 	@mkdir -p analysis/programs
 	@mv generator/generated/* analysis/programs
 
 analyze: clean-ins generate move-gen inspect
+
+clean: clean-ins clean-gen
 
 generate-seeded:
 	@cd generator; \
