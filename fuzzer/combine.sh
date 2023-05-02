@@ -1,11 +1,11 @@
 #!/bin/sh
 
-#if [ "$#" -ne 2 ]; then
-#    echo "usage: $0 /path/to/fuzzer.o path/to/ast_template.c"
-#fi
+if [ "$#" -ne 1 ]; then
+    echo "usage: $0 path/to/prog.c"
+fi
 
-gcc -O3 -c -o template.o template.c
+gcc -O3 -c -o template.o $1
 
-gcc -o out fuzzer.o template.o
+gcc -o out fuzzer.o template.o -lbsd
 
 rm template.o
