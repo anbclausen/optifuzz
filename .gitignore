@@ -40,3 +40,4 @@ generator/generated/
 out
 
 analysis/programs/
+analysis/flagged/
