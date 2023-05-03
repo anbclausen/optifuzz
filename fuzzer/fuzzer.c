@@ -5,23 +5,36 @@
 #include <string.h>
 #include <limits.h>
 #include <bsd/stdlib.h>
-// #include <x86intrin.h>
 
-//#define USE_GCC_RDTSC
+// #include <linux/preempt.h> // TODO:
+
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+
+// #define USE_GCC_RDTSC
+
 #ifdef USE_GCC_RDTSC
-/* rdtsc */
-extern __inline unsigned long long
-    __attribute__((__gnu_inline__, __always_inline__, __artificial__))
-    __rdtsc(void)
+#include <x86intrin.h>
+#define rdtsc_cycles() ((uint64_t)__rdtsc());
+#else
+/*
+ * https://en.wikipedia.org/wiki/Time_Stamp_Counter
+ */
+static inline uint64_t rdtsc_cycles(void)
 {
-    return __builtin_ia32_rdtsc();
+    uint32_t lo, hi;
+    __asm__ __volatile__(
+        //"xorl %%eax, %%eax\n" // i don't think there is any need for this
+        "cpuid\n" // fuck, it also fucks up "%rbx", "%rcx", "%rax", "%rcx"
+        "rdtsc\n"
+        : "=a"(lo), "=d"(hi)
+        :
+        : "%rbx", "%rcx");
+    return (uint64_t)hi << 32 | lo;
 }
 #endif
 
-#define MIN(i, j) (((i) < (j)) ? (i) : (j))
-
 extern int seed;
-extern volatile int program(int64_t, int64_t);
+extern int program(int64_t, int64_t);
 
 typedef struct measurement
 {
@@ -30,41 +43,44 @@ typedef struct measurement
     int64_t fuzz_input_b;  // The input used
 } measurement_st;
 
-// Mby use clocks from time.h instead
-static inline uint64_t rdtsc(void)
+static inline uint64_t get_time(int a, int b)
 {
-#ifdef USE_GCC_RDTSC
-    return (uint64_t) __rdtsc();
-#else
-    /*
-    unsigned int lo, hi;
-    __asm__ __volatile__("rdtsc"
-                         : "=a"(lo), "=d"(hi));
-    return ((uint64_t)hi << 32) | lo;
-    */
-    uint32_t lo, hi;
-    __asm__ __volatile__(
-        "xorl %%eax, %%eax\n"
-        "cpuid\n"
-        "rdtsc\n"
-        : "=a"(lo), "=d"(hi)
-        :
-        : "%ebx", "%ecx");
-    return (uint64_t)hi << 32 | lo;
-#endif
-}
-
-static uint64_t get_time(int a, int b)
-{
-    uint64_t get_clocks = rdtsc();
+    
+    uint64_t clock_cycles = rdtsc_cycles();
     program(a, b);
-    uint64_t diff = rdtsc() - get_clocks;
+    uint64_t diff = rdtsc_cycles() - clock_cycles;
     return diff;
+
+    // NOTE: The best way according to INTEL
+    // NOTE: page 16: https://www.intel.de/content/dam/www/public/us/en/documents/white-papers/ia-32-ia-64-benchmark-code-execution-paper.pdf
+    /*
+    unsigned cycles_low, cycles_high, cycles_low1, cycles_high1;
+    uint64_t start, end;
+    
+    asm volatile("CPUID\n\t"
+                 "RDTSC\n\t"
+                 "mov %%edx, %0\n\t"
+                 "mov %%eax, %1\n\t"
+                 : "=r"(cycles_high), "=r"(cycles_low)::"%rax", "%rbx", "%rcx", "%rdx");
+    /***********************************/
+    /*call the function to measure here*/
+    program(a,b);
+    /***********************************/
+    asm volatile("RDTSCP\n\t"
+                 "mov %%edx, %0\n\t"
+                 "mov %%eax, %1\n\t"
+                 "CPUID\n\t"
+                 : "=r"(cycles_high1), "=r"(cycles_low1)::"%rax", "%rbx", "%rcx", "%rdx");
+    
+    start = (((uint64_t)cycles_high << 32) | cycles_low);
+    end = (((uint64_t)cycles_high1 << 32) | cycles_low1);
+
+    return end - start;
+    */
 }
 
 static inline int64_t get_rand(void)
 {
-    // return rand();
     // return (int64_t) arc4random();
     int64_t r;
     arc4random_buf(&r, sizeof(int64_t));
@@ -77,20 +93,11 @@ typedef struct
     int64_t b;
 } input_st;
 
-/*
-static inline void generate_input(input_st *input, size_t amount) {
-    for (size_t i = 0; i < amount; i++)
-        input[i] = (input_st) {get_rand(), get_rand()};
-}
-*/
-
-static void measure(measurement_st *measurements, size_t count, size_t retries)
+static void measure(measurement_st *measurements, size_t count, size_t iterations)
 {
     uint64_t get_clocks, diff;
 
-    // input_st input[count];
-    // generate_input(input, count);
-
+    // Single initial run through
     size_t initial_min = 0;
     for (size_t i = 0; i < count; i++)
     {
@@ -101,7 +108,8 @@ static void measure(measurement_st *measurements, size_t count, size_t retries)
         initial_min = MIN(initial_min, time);
     }
 
-    for (size_t j = 0; j < retries; j++)
+    // Complete run through
+    for (size_t j = 0; j < iterations; j++)
     {
         for (size_t i = 0; i < count; i++)
         {
@@ -113,17 +121,12 @@ static void measure(measurement_st *measurements, size_t count, size_t retries)
 
             uint64_t min = get_time(a, b);
 
-            if (min < 0)
-            {
-                // TODO if rdtsc resets
-                i--;
-                continue;
-                // This is a little naughty, but it might just do the trick..
-            }
+            // NOTE: min is unsigned. we cannot detect if the counter overflows by checking negative. should be fine
+
             min = MIN(measurements[i].clocks_spent, min);
             measurements[i].clocks_spent = min;
         }
-        fprintf(stdout, "\rRetry %ld/%ld..", j + 1, retries);
+        fprintf(stdout, "\rIteration %ld/%ld..", j + 1, iterations);
         fflush(stdout);
     }
 
@@ -154,16 +157,23 @@ static void write_data(const char *filename, const measurement_st *measurements,
 
 int main(int argc, char const *argv[])
 {
-    // Seed from time (used for fuzzing)
-    // unsigned int fuzz_seed = time(NULL);
-    // srand(fuzz_seed);
-
+    if (argc != 3)
+    {
+        fprintf(stderr, "supply input amount and compile flags");
+        return 1;
+    }
     // Amount of random inputs to the program
     size_t fuzz_count = atoi(argv[1]);
     const char *opt_flags = argv[2];
 
     // Allocate space for measurements and start fuzzing
     measurement_st *measurements = malloc(sizeof(*measurements) * fuzz_count);
+
+    // TODO: preempt_disable(); /*we disable preemption on our CPU*/
+    // TODO: raw_local_irq_save(flags); /*we disable hard interrupts on our CPU*/
+    // TODO: raw_local_irq_restore(flags);
+    // TODO: preempt_enable();
+
     measure(measurements, fuzz_count, 100);
 
     write_data("./result.csv", measurements, fuzz_count, opt_flags);
