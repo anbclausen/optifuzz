@@ -62,10 +62,9 @@ static inline uint64_t get_time(int a, int b)
                  "mov %%edx, %0\n\t"
                  "mov %%eax, %1\n\t"
                  : "=r"(cycles_high), "=r"(cycles_low)::"%rax", "%rbx", "%rcx", "%rdx");
-    /***********************************/
-    /*call the function to measure here*/
+    
     program(a,b);
-    /***********************************/
+
     asm volatile("RDTSCP\n\t"
                  "mov %%edx, %0\n\t"
                  "mov %%eax, %1\n\t"
