@@ -26,7 +26,11 @@ move-gen:
 
 analyze: clean-ins clean-flagged generate move-gen inspect
 
+.PHONY : clean
 clean: clean-ins clean-gen clean-flagged
+
+fuzzer: fuzzer/fuzzer.c
+	$(MAKE) -C fuzzer
 
 generate-seeded:
 	@cd generator; \
