@@ -1,5 +1,6 @@
+#!/usr/bin/env python3
 import os
-import re 
+import re
 
 folder = os.path.dirname(os.path.realpath(__file__))
 flagged_folder = f"{folder}{os.sep}flagged{os.sep}"
@@ -9,7 +10,7 @@ optimization_flags = ["O0", "O1", "O2", "O3"]
 
 def flag_file(file):
     os.makedirs(flagged_folder, exist_ok=True)
-    os.popen(f"cp {file} {flagged_folder}")
+    os.popen(f"mv {file} {flagged_folder}")
 
 def analyze(file):
     out = {}
