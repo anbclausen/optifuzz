@@ -8,6 +8,8 @@
 
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
+#define REPEATS 100
+
 extern int seed;
 extern int program(int64_t, int64_t);
 
@@ -20,29 +22,33 @@ typedef struct measurement
 
 static inline uint64_t get_time(int64_t a, int64_t b)
 {
-
-    /* 
+    /*
      * NOTE: The best way to measure time according to INTEL (well, should be in kernel space)
      * NOTE: section 3.2.1: https://www.intel.de/content/dam/www/public/us/en/documents/white-papers/ia-32-ia-64-benchmark-code-execution-paper.pdf
      */
 
     unsigned cycles_low, cycles_high, cycles_low1, cycles_high1;
     uint64_t start, end;
-    
-    asm volatile("CPUID\n\t" // Force prev instructions to complete before RDTSC bellow is executed (Serializing instruction execution)
-                 "RDTSC\n\t" // Get clock
-                 "mov %%edx, %0\n\t" // %0 is cycles_high
-                 "mov %%eax, %1\n\t" // %1 is cycles_low
-                 : "=r"(cycles_high), "=r"(cycles_low)::"%rax", "%rbx", "%rcx", "%rdx"); // Restore clobbered registers
-    
-    program(a,b);
 
-    asm volatile("RDTSCP\n\t" // Force to wait for all prev instructions before reading counter. (subsequent instructions may begin execution before the read)
-                 "mov %%edx, %0\n\t" // Depends on values from RDTSCP, so executed after
-                 "mov %%eax, %1\n\t" // Executed after RDTSCP
-                 "CPUID\n\t" // Ensure that the RDTSCP read before any other execution takes place
-                 : "=r"(cycles_high1), "=r"(cycles_low1)::"%rax", "%rbx", "%rcx", "%rdx");  // Restore clobbered registers
-    
+    asm volatile("CPUID\n\t"                                                             // Force prev instructions to complete before RDTSC bellow is executed (Serializing instruction execution)
+                 "RDTSC\n\t"                                                             // Get clock
+                 "mov %%edx, %0\n\t"                                                     // %0 is cycles_high
+                 "mov %%eax, %1\n\t"                                                     // %1 is cycles_low
+                 : "=r"(cycles_high), "=r"(cycles_low)::"%rax", "%rbx", "%rcx", "%rdx"); // Restore clobbered registers
+
+    // NOTE: This is done to combat too fast execution of the program
+    for (size_t i = 0; i < REPEATS; i++)
+    {
+        program(a, b);
+    }
+    // program(a,b);
+
+    asm volatile("RDTSCP\n\t"                                                              // Force to wait for all prev instructions before reading counter. (subsequent instructions may begin execution before the read)
+                 "mov %%edx, %0\n\t"                                                       // Depends on values from RDTSCP, so executed after
+                 "mov %%eax, %1\n\t"                                                       // Executed after RDTSCP
+                 "CPUID\n\t"                                                               // Ensure that the RDTSCP read before any other execution takes place
+                 : "=r"(cycles_high1), "=r"(cycles_low1)::"%rax", "%rbx", "%rcx", "%rdx"); // Restore clobbered registers
+
     start = (((uint64_t)cycles_high << 32) | cycles_low);
     end = (((uint64_t)cycles_high1 << 32) | cycles_low1);
 
@@ -134,7 +140,7 @@ int main(int argc, char const *argv[])
     // Allocate space for measurements and start fuzzing
     measurement_st *measurements = malloc(sizeof(*measurements) * fuzz_count);
 
-    measure(measurements, fuzz_count, 100);
+    measure(measurements, fuzz_count, 10);
 
     write_data("./result.csv", measurements, fuzz_count, opt_flags);
 
