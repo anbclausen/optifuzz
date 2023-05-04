@@ -58,8 +58,8 @@ static inline int64_t get_rand(void)
 
 static void measure(measurement_st *measurements, size_t count, size_t iterations)
 {
-    int64_t time, a, b;
-    uint64_t min, old_min, initial_min = 0;
+    int64_t a, b;
+    uint64_t time, min, old_min, initial_min = 0;
 
     // Single initial run through
     for (size_t i = 0; i < count; i++)
