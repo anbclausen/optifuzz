@@ -28,9 +28,10 @@ analyze: clean-ins clean-flagged generate move-gen inspect
 
 .PHONY : clean
 clean: clean-ins clean-gen clean-flagged
+	$(MAKE) -C fuzzer clean
 
-fuzzer: fuzzer/fuzzer.c
-	$(MAKE) -C fuzzer
+fuzz:
+	$(MAKE) -C fuzzer fuzz
 
 generate-seeded:
 	@cd generator; \

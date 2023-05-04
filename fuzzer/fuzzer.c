@@ -123,7 +123,7 @@ int main(int argc, char const *argv[])
 {
     if (argc != 3)
     {
-        fprintf(stderr, "supply input amount and compile flags");
+        fprintf(stderr, "usage: %s #data-points flag", argv[0]);
         return 1;
     }
 
