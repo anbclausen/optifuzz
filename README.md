@@ -40,4 +40,4 @@ make clean                          # cleans all generated files in all steps of
 - Fix visualize script
   - Output LaTeX and compile it
     - Include code, graphs, compile flags and stats
-  - Move into analyze folder
+    
