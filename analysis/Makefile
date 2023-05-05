@@ -1,5 +1,5 @@
 inspect:
-	./assembly_inspection.py
+	./inspect.py $(c)
 
 clean-programs:
 	@rm programs/* 1>/dev/null 2>&1; true

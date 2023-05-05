@@ -6,7 +6,7 @@ generate:
 	$(MAKE) -C analysis clean
 	$(MAKE) -C generator generate
 
-inspect: move-generated
+inspect: 
 	$(MAKE) -C analysis inspect
 
 fuzz:
@@ -16,9 +16,9 @@ visualize:
 	@cd fuzzer; \
 	./data_analysis.py
 
-generate-inspect: generate inspect
+generate-inspect: generate move-generated inspect
 
-all: generate inspect fuzz visualize
+all: generate move-generated inspect fuzz visualize
 
 .PHONY : clean
 clean:
