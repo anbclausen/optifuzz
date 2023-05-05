@@ -29,6 +29,7 @@ for prog in os.listdir(prog_dir):
 
         combine(prog_path, flag)
         os.system(f"./out {data_points} {flag}")
-        shutil.copyfile(f"result.csv", "results/{seed}.csv")
+        shutil.copyfile("result.csv", f"results/{seed}.csv")
 
 os.remove("out")
+os.remove("result.csv")
