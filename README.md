@@ -29,6 +29,9 @@ make clean                          # cleans all generated files in all steps of
                                     # the process
 ```
 
+## Sources
+- [C operators](https://devdocs.io/c/language/operator_arithmetic): List of all arithmetic operators in C. Used as a basis for defining should-be-constant-time ASTs.
+
 ## TODO
 - Skriv fuzzer færdig, lav minimal C kode
 - Python script til at analysere kode
