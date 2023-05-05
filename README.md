@@ -9,3 +9,4 @@
 - Document code
 - Make timing more robust
 - Make classes of fuzzing inputs
+- Fix visualize script
