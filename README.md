@@ -10,3 +10,8 @@
 - Make timing more robust
 - Make classes of fuzzing inputs
 - Fix visualize script
+  - Output LaTeX and compile it
+  - move into analyze folder
+
+Goal of today:
+  - make all: generér en LaTeX-fil + pdf med sektioner der indeholder kode, grafer, compileflags og stats: så mange ud af så mange...

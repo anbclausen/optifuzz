@@ -6,7 +6,7 @@ folder = os.path.dirname(os.path.realpath(__file__))
 flagged_folder = f"{folder}{os.sep}flagged{os.sep}"
 optimization_flags = ["O0", "O1", "O2", "O3", "Os"]
 jmp_regex = re.compile(r"\t(j[a-z]+)")
-compiler = "gcc"
+compiler = "clang"
 
 def flag_file(file):
     os.makedirs(flagged_folder, exist_ok=True)
