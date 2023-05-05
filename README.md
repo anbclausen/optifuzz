@@ -18,11 +18,12 @@ make inspect c=?                    # compiles all programs in analysis/programs
 
 make generate-inspect pn=? md=? c=? # generates, moves and inspects code
 
-make fuzz                           # ???
+make fuzz in=?                      # fuzzes all programs that were flagged from
+                                    # the assembly inspection with 'in' inputs
 
 make visualize                      # ???
 
-make all pn=? md=? c=?              # runs the whole pipeline: generates, moves,
+make all pn=? md=? c=? in=?         # runs the whole pipeline: generates, moves,
                                     # inspects, fuzzes and analyzes
 
 make clean                          # cleans all generated files in all steps of
