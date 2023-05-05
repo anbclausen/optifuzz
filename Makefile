@@ -1,45 +1,27 @@
-build-gen:
-	@cd generator; \
-	dune build
-
-generate:
-	@cd generator; \
-	mkdir -p generated; \
-	dune exec generator 200 0
-
-clean-gen:
-	@rm generator/generated/* 1>/dev/null 2>&1; true
-
-inspect:
-	@cd analysis; \
-	python3 assembly_inspection.py
-
-clean-ins:
-	@rm analysis/programs/* 1>/dev/null 2>&1; true
-
-clean-flagged:
-	@rm analysis/flagged/* 1>/dev/null 2>&1; true
-
-move-gen:
+move-generated:
 	@mkdir -p analysis/programs
 	@mv generator/generated/* analysis/programs
 
-analyze: clean-ins clean-flagged generate move-gen inspect
+generate: 
+	$(MAKE) -C analysis clean
+	$(MAKE) -C generator generate
 
-.PHONY : clean
-clean: clean-ins clean-gen clean-flagged
-	$(MAKE) -C fuzzer clean
+inspect: move-generated
+	$(MAKE) -C analysis inspect
 
 fuzz:
 	$(MAKE) -C fuzzer fuzz
-
-generate-seeded:
-	@cd generator; \
-	mkdir -p generated; \
-	dune exec generator 1 $(seed)
 
 visualize: 
 	@cd fuzzer; \
 	./data_analysis.py
 
-all: analyze fuzz visualize
+generate-inspect: generate inspect
+
+all: generate inspect fuzz visualize
+
+.PHONY : clean
+clean:
+	$(MAKE) -C generator clean
+	$(MAKE) -C analysis clean
+	$(MAKE) -C fuzzer clean
