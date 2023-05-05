@@ -22,7 +22,7 @@ make fuzz                           # ???
 
 make visualize                      # ???
 
-make all                            # runs the whole pipeline: generates, moves,
+make all pn=? md=? c=?              # runs the whole pipeline: generates, moves,
                                     # inspects, fuzzes and analyzes
 
 make clean                          # cleans all generated files in all steps of
@@ -41,4 +41,3 @@ make clean                          # cleans all generated files in all steps of
   - Output LaTeX and compile it
     - Include code, graphs, compile flags and stats
   - Move into analyze folder
-  
