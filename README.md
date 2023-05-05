@@ -33,7 +33,6 @@ make clean                          # cleans all generated files in all steps of
 ## TODO
 - Fuzzer
   - Make classes of fuzzing inputs: custom values for tests fx (0, MAXINT, ...)
-- Document code
 - Fix visualize script
   - Output LaTeX and compile it
     - Include code, graphs, compile flags and stats
