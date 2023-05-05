@@ -43,7 +43,7 @@ def analyze(file):
 
 print("Analyzing assembly instructions...")
 print(f"COMPILER: {compiler}")
-programs_folder = f"{folder}{os.sep}programs"
+programs_folder = f"{folder}{os.sep}..{os.sep}generator{os.sep}generated"
 for dirpath, dnames, fnames in os.walk(programs_folder):
     for f in fnames:
         if f.endswith(".c"):

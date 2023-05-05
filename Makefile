@@ -1,7 +1,3 @@
-move-generated:
-	@mkdir -p analysis/programs
-	@mv generator/generated/* analysis/programs
-
 generate: 
 	$(MAKE) -C analysis clean
 	$(MAKE) -C generator generate
@@ -19,9 +15,9 @@ fuzz:
 visualize: 
 	$(MAKE) -C analysis visualize
 
-generate-inspect: generate move-generated inspect
+generate-inspect: generate inspect
 
-all: generate move-generated inspect fuzz visualize
+all: generate inspect fuzz visualize
 
 .PHONY : clean
 clean:
