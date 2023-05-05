@@ -4,24 +4,26 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
+
 def visualize(path):
-  df = pd.read_csv(path, sep=",", skiprows=[0])
-  clocks_column = 'clock_cycles'
-  min_clocks = df[clocks_column].min()
-  max_clocks = df[clocks_column].max()
+    df = pd.read_csv(path, sep=",", skiprows=[0])
+    clocks_column = "clock_cycles"
+    min_clocks = df[clocks_column].min()
+    max_clocks = df[clocks_column].max()
 
-  _, axes = plt.subplots()
+    _, axes = plt.subplots()
 
-  # Hist plot
-  df[clocks_column].plot.hist(ax=axes, bins=max_clocks-min_clocks)
-  ticks_step = int((max_clocks+1-min_clocks)/10)
-  axes.set_xticks(np.arange(min_clocks, max_clocks+1, ticks_step))
+    # Hist plot
+    df[clocks_column].plot.hist(ax=axes, bins=max_clocks - min_clocks)
+    ticks_step = int((max_clocks + 1 - min_clocks) / 10)
+    axes.set_xticks(np.arange(min_clocks, max_clocks + 1, ticks_step))
+
 
 root = "../fuzzer/results"
 for dirpath, dnames, fnames in os.walk(root):
-  for f in fnames:
-    if f.endswith(".csv"):
-      print(f"Visualizing {f}")
-      visualize(os.path.join(dirpath, f))
-      
+    for f in fnames:
+        if f.endswith(".csv"):
+            print(f"Visualizing {f}")
+            visualize(os.path.join(dirpath, f))
+
 plt.show()

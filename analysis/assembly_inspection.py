@@ -12,15 +12,19 @@ jmp_regex = re.compile(r"\t(j[a-z]+)")
 optimization_flags = ["O0", "O1", "O2", "O3", "Os"]
 compiler = sys.argv[1] if len(sys.argv) > 1 else "gcc"
 
+
 def tick():
     print(".", end="", flush=True)
+
 
 def run(args):
     return subprocess.run(args, capture_output=True, text=True).stdout
 
+
 def flag_file(file):
     os.makedirs(flagged_folder, exist_ok=True)
-    run(['mv', file, flagged_folder])
+    run(["mv", file, flagged_folder])
+
 
 def analyze(file):
     tick()
@@ -29,17 +33,19 @@ def analyze(file):
         # -S: compile to assembly
         # -w: disable warnings
         # -c: compile to object file
-        out[opt_flag] = run([compiler, file, "-S", f"-{opt_flag}", "-w", "-c", "-o", "/dev/stdout"])
+        out[opt_flag] = run(
+            [compiler, file, "-S", f"-{opt_flag}", "-w", "-c", "-o", "/dev/stdout"]
+        )
 
     for k, v in out.items():
         out[k] = jmp_regex.findall(v)
-    
+
     if out["O1"] or out["O2"] or out["O3"]:
         flag_file(file)
         print(f"\n> File: {file}")
         for k, v in out.items():
             print(f"  {k}: {v}")
-    
+
 
 print("Analyzing assembly instructions...")
 print(f"COMPILER: {compiler}")
