@@ -4,9 +4,9 @@ import re
 
 folder = os.path.dirname(os.path.realpath(__file__))
 flagged_folder = f"{folder}{os.sep}flagged{os.sep}"
+optimization_flags = ["O0", "O1", "O2", "O3"]
 jmp_regex = re.compile(r"\t(j[a-z]+)")
 compiler = "gcc"
-optimization_flags = ["O0", "O1", "O2", "O3"]
 
 def flag_file(file):
     os.makedirs(flagged_folder, exist_ok=True)
@@ -15,6 +15,9 @@ def flag_file(file):
 def analyze(file):
     out = {}
     for opt_flag in optimization_flags:
+        # -S: compile to assembly
+        # -w: disable warnings
+        # -c: compile to object file
         out[opt_flag] = os.popen(f"{compiler} {file} -{opt_flag} -S -w -c -o /dev/stdout").read()
 
     for k, v in out.items():
