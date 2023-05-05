@@ -32,7 +32,6 @@ make clean                          # cleans all generated files in all steps of
 
 ## TODO
 - Fuzzer
-  - Make timing more robust
   - Make classes of fuzzing inputs: custom values for tests fx (0, MAXINT, ...)
 - Document code
 - Fix visualize script
