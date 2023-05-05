@@ -37,3 +37,9 @@ generate-seeded:
 	@cd generator; \
 	mkdir -p generated; \
 	dune exec generator 1 $(seed)
+
+visualize: 
+	@cd fuzzer; \
+	./data_analysis.py
+
+all: analyze fuzz visualize

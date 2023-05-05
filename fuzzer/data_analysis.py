@@ -2,8 +2,6 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy import stats
-import seaborn as sns
 
 df = pd.read_csv('result.csv', sep=",", skiprows=[0])
 clocks_column = 'clock_cycles'

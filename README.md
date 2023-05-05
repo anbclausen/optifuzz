@@ -7,3 +7,5 @@
 - Lav liste over farlige branching instruktioner
 - Lav custom værdier for tests (0, MAXINT, ...)
 - Document code
+- Make timing more robust
+- Make classes of fuzzing inputs
