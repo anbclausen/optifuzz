@@ -29,7 +29,7 @@ type expr_p =
     false_p : float;
   }
 
-let max_depth = 3
+let max_depth = 4
 
 let choose state l p =
   let roll = Random.State.float state 1.0 in
