@@ -6,7 +6,7 @@ import shutil
 prog_dir = "../analysis/flagged"
 
 data_points = sys.argv[1]
-flag = "O3"
+optimization_flags = ["O0", "O1", "O2", "O3", "Os"]
 
 
 def combine(prog_path, flag):
@@ -28,9 +28,11 @@ for prog in os.listdir(prog_dir):
         seen_so_far += 1
         print(f"Progress: {seen_so_far}/{amount_of_programs} [{seed}]")
 
-        combine(prog_path, flag)
-        os.system(f"./out {data_points} {flag}")
-        shutil.copyfile("result.csv", f"results/{seed}.csv")
+        for flag in optimization_flags:
+            print(f"  {flag}")
+            combine(prog_path, flag)
+            os.system(f"./out {data_points} {flag}")
+            shutil.copyfile("result.csv", f"results/{seed}_{flag}.csv")
 
 os.remove("out")
 os.remove("result.csv")
