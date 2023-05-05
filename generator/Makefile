@@ -3,11 +3,11 @@ build:
 
 generate:
 	mkdir -p generated; \
-	dune exec generator 200 0
+	dune exec generator $(pn) 0 $(md)
 
 generate-seeded:
 	mkdir -p generated; \
-	dune exec generator 1 $(seed)
+	dune exec generator 1 $(s) $(md)
 
 .PHONY : clean
 clean:

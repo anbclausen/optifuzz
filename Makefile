@@ -6,6 +6,10 @@ generate:
 	$(MAKE) -C analysis clean
 	$(MAKE) -C generator generate
 
+generate-seeded:
+	$(MAKE) -C analysis clean
+	$(MAKE) -C generator generate-seeded
+
 inspect: 
 	$(MAKE) -C analysis inspect
 
