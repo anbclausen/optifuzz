@@ -4,7 +4,7 @@ CFLAGS = -O2
 build-fuzzer: fuzzer.c
 	@$(CC) $(CFLAGS) -c -o fuzzer.o fuzzer.c
 
-fuzz: build-fuzzer
+fuzz: clean build-fuzzer
 	@./fuzz.py $(in)
 
 clean-results:
