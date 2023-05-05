@@ -5,7 +5,7 @@ build-fuzzer: fuzzer.c
 	@$(CC) $(CFLAGS) -c -o fuzzer.o fuzzer.c
 
 fuzz: build-fuzzer
-	@./fuzz.py 10000
+	@./fuzz.py $(dps)
 
 clean-results:
 	@rm results/* 1>/dev/null 2>&1; true
