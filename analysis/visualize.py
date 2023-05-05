@@ -12,10 +12,11 @@ def visualize(path):
     max_clocks = df[clocks_column].max()
 
     _, axes = plt.subplots()
+    axes.set_title(path)
 
     # Hist plot
-    df[clocks_column].plot.hist(ax=axes, bins=max_clocks - min_clocks)
-    ticks_step = int((max_clocks + 1 - min_clocks) / 10)
+    df[clocks_column].plot.hist(ax=axes, bins=max(max_clocks - min_clocks, 1))
+    ticks_step = int((max_clocks + 1 - min_clocks))
     axes.set_xticks(np.arange(min_clocks, max_clocks + 1, ticks_step))
 
 
