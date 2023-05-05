@@ -35,5 +35,3 @@ axes[1,1].set_xticks(np.arange(60, 80, 1))
 manager = plt.get_current_fig_manager()
 manager.full_screen_toggle()
 plt.show()
-
-

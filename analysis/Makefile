@@ -1,6 +1,9 @@
 inspect:
 	./inspect.py $(c)
 
+visualize:
+	./visualize.py
+
 clean-programs:
 	@rm programs/* 1>/dev/null 2>&1; true
 

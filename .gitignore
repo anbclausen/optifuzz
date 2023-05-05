@@ -41,5 +41,5 @@ out
 
 analysis/programs/
 analysis/flagged/
-fuzzer/result.csv
+analysis/result.csv
 fuzzer/results

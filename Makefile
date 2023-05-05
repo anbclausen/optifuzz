@@ -17,8 +17,7 @@ fuzz:
 	$(MAKE) -C fuzzer fuzz
 
 visualize: 
-	@cd fuzzer; \
-	./data_analysis.py
+	$(MAKE) -C analysis visualize
 
 generate-inspect: generate move-generated inspect
 
