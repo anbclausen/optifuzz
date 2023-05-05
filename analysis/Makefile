@@ -1,5 +1,5 @@
 inspect:
-	@./assembly_inspect.py $(c)
+	@./assembly_inspection.py $(c)
 
 visualize:
 	@./visualize.py

@@ -10,7 +10,7 @@ data_points = sys.argv[1]
 flag = "O3"
 
 def combine(prog_path, flag):
-  os.system(f"gcc -{flag} -c -o template.o {prog_path}")
+  os.system(f"gcc -{flag} -c -w -o template.o {prog_path}")
   os.system("gcc -o out fuzzer.o template.o -lbsd")
   os.remove("template.o")
 

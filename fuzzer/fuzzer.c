@@ -10,7 +10,6 @@
 
 #define REPEATS 100
 
-extern int seed;
 extern int program(int64_t, int64_t);
 
 typedef struct measurement
@@ -112,7 +111,7 @@ static void write_data(const char *filename, const measurement_st *measurements,
         exit(EXIT_FAILURE);
     }
 
-    fprintf(fs, "# prog seed: [%d] compile flags: [%s]\n", seed, flags);
+    fprintf(fs, "# compile flags: [%s]\n", flags);
     fprintf(fs, "input_a,input_b,clock_cycles\n");
     for (size_t i = 0; i < count; i++)
     {
