@@ -2,7 +2,6 @@
 import sys
 import os
 import shutil
-import time
 
 prog_dir = "../analysis/flagged"
 
