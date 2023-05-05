@@ -1,36 +1,20 @@
 open Ast
 
-type expr_p =
-  {
-    neg_p : float;
-    plus_p : float;
-    minus_p : float;
-    times_p : float;
-    less_than_p : float;
-    less_equal_p : float;
-    greater_than_p : float;
-    greater_equal_p : float;
-    equal_p : float;
-    not_equal_p : float;
-
-    not_p : float;
-
-    bitwise_and_p : float;
-    bitwise_or_p : float;
-    bitwise_complement_p : float;
-    bitwise_xor_p : float;
-    left_shift_p : float;
-    right_shift_p : float;
-
-    x_p : float;
-    y_p : float;
-    int_lit_p : float;
-    true_p : float;
-    false_p : float;
-  }
-
 let max_depth = Sys.argv.(3) |> int_of_string
 
+(** Returns the last n elements of a list. *)
+let last n l = 
+  let rev = List.rev l in
+  let rec last' n l =
+    match n, l with
+    | 0, _ -> []
+    | _, [] -> []
+    | _, x :: xs -> x :: last' (n - 1) xs in
+  List.rev (last' n rev) 
+
+(** Takes a Random state, a list of values, and a list of probabilities
+    and returns a value from the list of values with the corresponding
+    probability. *)
 let choose state l p =
   let roll = Random.State.float state 1.0 in
   let rec choose' l p acc =
@@ -45,14 +29,17 @@ let choose state l p =
         choose' xs ys (acc +. y) in
   choose' l p 0.0
 
+(** Generates a random integer literal. *)
 let random_int_lit state =
   let n = Random.State.full_int state 100 in
   IntLit n
 
+(** Generates a random leaf (terminal) of the AST. *)
 let random_terminal state p = 
   let normalized_p = List.map (fun x -> x /. (List.fold_left (+.) 0.0 p)) p in
-  choose state [lazy X; lazy Y; lazy (random_int_lit state)] normalized_p
+  choose state [lazy X; lazy Y; lazy (random_int_lit state); lazy True; lazy False] normalized_p
 
+(** Generates a random node (non-terminal) of the AST. *)
 let rec random_expr seed state depth p =
   choose state [
       lazy (Neg (random_ast (seed + 1) (depth + 1) p));
@@ -80,70 +67,21 @@ let rec random_expr seed state depth p =
       lazy (random_int_lit state);
       lazy True;
       lazy False
-    ] [ 
-      p.neg_p; 
-      p.plus_p;
-      p.minus_p;
-      p.times_p;
-      p.less_than_p;
-      p.less_equal_p;
-      p.greater_than_p;
-      p.greater_equal_p;
-      p.equal_p;
-      p.not_equal_p;
+    ] p
 
-      p.not_p;
-
-      p.bitwise_and_p;
-      p.bitwise_or_p;
-      p.bitwise_complement_p;
-      p.bitwise_xor_p;
-      p.left_shift_p;
-      p.right_shift_p;
-
-      p.x_p;
-      p.y_p;
-      p.int_lit_p;
-      p.true_p;
-      p.false_p
-    ]
-
-and random_ast (seed: int) (depth: int) (p: expr_p) =
+(** Generates a random AST. *)
+and random_ast seed depth p =
   let state = Random.State.make [|seed|] in
   if depth >= max_depth then 
-    Lazy.force (random_terminal state [p.x_p; p.y_p; p.int_lit_p])
-  else     
+    let terminals_p = last 5 p in
+    Lazy.force (random_terminal state terminals_p)
+  else
     Lazy.force (random_expr seed state depth p)
 
+(** Generates a random distribution of nodes in the AST. *)
 let random_distribution seed =
   let state = Random.State.make [|seed|] in
-  let random_arr = Array.init 22 (fun _ -> Random.State.float state 1.0) in
-  let normalized_arr = Array.map (fun x -> x /. (Array.fold_left (+.) 0.0 random_arr)) random_arr in
-  {
-    neg_p = normalized_arr.(0);
-    plus_p = normalized_arr.(1);
-    minus_p = normalized_arr.(2);
-    times_p = normalized_arr.(3);
-    less_than_p = normalized_arr.(4);
-    less_equal_p = normalized_arr.(5);
-    greater_than_p = normalized_arr.(6);
-    greater_equal_p = normalized_arr.(7);
-    equal_p = normalized_arr.(8);
-    not_equal_p = normalized_arr.(9);
-
-    not_p = normalized_arr.(10);
-
-    bitwise_and_p = normalized_arr.(11);
-    bitwise_or_p = normalized_arr.(12);
-    bitwise_complement_p = normalized_arr.(13);
-    bitwise_xor_p = normalized_arr.(14);
-    left_shift_p = normalized_arr.(15);
-    right_shift_p = normalized_arr.(16);
-
-    x_p = normalized_arr.(17);
-    y_p = normalized_arr.(18);
-    int_lit_p = normalized_arr.(19);
-    true_p = normalized_arr.(20);
-    false_p = normalized_arr.(21)
-  }
+  let random_list = List.init 22 (fun _ -> Random.State.float state 1.0) in
+  let normalized_list = List.map (fun x -> x /. (List.fold_left (+.) 0.0 random_list)) random_list in
+  normalized_list
   

@@ -1,3 +1,8 @@
+(** Defines an AST consisting of should-be-constant-time
+    nodes. Nodes include all non-branching arithmetic, 
+    logical and comparison operators in C other than '/'
+    and '%'. Leafs can be the variable 'x', the variable
+    'y', an integer or a Boolean. *)
 type expr =
   (* Arithmetic *)
   | Neg of expr
@@ -55,4 +60,3 @@ let rec string_of_expr = function
   | IntLit(i) -> string_of_int i
   | True -> "true"
   | False -> "false"
-
