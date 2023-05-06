@@ -1,6 +1,8 @@
-let program seed expr = 
-  "#define false 0\n#define true 1\nint seed = " ^ string_of_int seed ^ ";\nint program(int x, int y) { return " ^ expr ^ "; }"
+(** Wraps a one-line C expression in a valid C program.*)
+let program expr = 
+  "#define false 0\n#define true 1\nint program(int x, int y) { return " ^ expr ^ "; }"
 
+(** Takes filename and content. Writes the content to the file. *)
 let write_file filename content = 
   let oc = open_out filename in
   Printf.fprintf oc "%s\n" content;
