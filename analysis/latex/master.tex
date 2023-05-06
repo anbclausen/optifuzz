@@ -6,6 +6,10 @@
 \usepackage{adjustbox}
 \usepackage{float}
 \usepackage{subcaption}
+\usepackage{pgffor}
+\usepackage{expl3}
+\usepackage{xparse}
+\usepackage{xfp}
 \pgfplotsset{compat=1.12}
 
 \definecolor{mGreen}{rgb}{0,0.6,0}
@@ -40,10 +44,48 @@
 
 \newsavebox{\mybox}
 
+
+
+\ExplSyntaxOn
+\cs_new:Npn \__afp_ismember_loop:Nnw #1#2#3,
+  {
+    \quark_if_recursion_tail_stop_do:nn {#3}
+      { \prg_return_false: }
+    #1 {#2} {#3}
+      { \use_i_delimit_by_q_recursion_stop:nw { \prg_return_true: } }
+      { \__afp_ismember_loop:Nnw #1 {#2} }
+  }
+\prg_new_conditional:Npnn \afp_int_ismember:nn #1#2 { p, T, F, TF }
+  {
+    \__afp_ismember_loop:Nnw \__afp_int_isequal:nnTF {#1} #2 ,
+    \q_recursion_tail , \q_recursion_stop
+  }
+\prg_new_conditional:Npnn \__afp_int_isequal:nn #1#2 { p, T, F, TF }
+  {
+    \int_compare:nNnTF {#1} = {#2}
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
+\NewExpandableDocumentCommand { \IncludeExperimentResults } { m m }
+  {
+    \foreach \x in {1,...,#1} {
+        \noindent\bool_if:NF { \afp_int_ismember_p:nn {\x} {#2} } {\input{prog\x.tex}}
+    }
+  }
+\ExplSyntaxOff
+
+
+
+
+
+
+
 \begin{document}
 
-\input{prog1.tex}
-\input{prog1.tex}
+% IncludeExperimentResults{n}{x,y,z} includes documents 1 to n, excluding x, y and z
+\IncludeExperimentResults{2}{3,4,9}
+
+
 
 
 
