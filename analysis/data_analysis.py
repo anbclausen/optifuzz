@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
 import os
 import re
+import itertools
 
 # Constants for parsing
 CLOCKS_COLUMN = 'clock_cycles'
-RESULTS_FOLDER = 'results'
-PROGRAMS_FOLDER = 'flagged'
+RESULTS_FOLDER = '../fuzzer/results'
+LATEX_FOLDER = 'latex'
+LATEX_OUTPUT_FOLDER = f'{LATEX_FOLDER}/generated_latex'
+FLAGGED_FOLDER = 'flagged'
 
 # Output constants
 NO_OF_BINS = 100
@@ -27,7 +29,7 @@ ymin= 0,
 """
 
 
-def parse_aux_info(aux):
+def parse_aux_info(csv_filename, aux):
     """Parses first line of CSV fuzzing data
 
     Parameters
@@ -39,8 +41,8 @@ def parse_aux_info(aux):
     re_brackets = re.findall(r'\[.*?\]', aux)
     # Remove brackets from each match
     res = list(map(lambda x: x.replace("[", "").replace("]", ""), re_brackets))
-    seed = res[0]
-    compiler_flag = res[1]
+    compiler_flag = res[0]
+    seed = re.search(r'\d+', csv_filename).group()
     return seed, compiler_flag
 
 
@@ -55,25 +57,7 @@ def gen_lstlisting(style, code):
 
 
 def gen_tikzpic(data, xmin, xmax, ymax, color):
-    start_tikz = "\\begin{tikzpicture}[>=latex]\n"
-    begin_axis = "\\begin{axis}["
-
-    end_axis = "\\end{axis}"
-    end_tikz = "\\end{tikzpicture}%\n"
-
-    #xmin, xmax, ymax = f"xmin={xmin},\n", f"xmax={xmax},\n", f"ymax={ymax},\n"
-    #start_axis = begin_axis+TIKZ_AXIS_DEFAULT_SETTINGS+xmin+xmax+ymax+"]\n"
-
-    plot_section = f"""
-    \\addplot+ [ybar interval,mark=no,
-    color={color},
-    fill={color}, 
-    fill opacity=0.5] table {{
-        {data}
-    }};
-    """
-
-    whole_thing = f"""
+    tikzpic = f"""
     \\begin{{tikzpicture}}[>=latex]
     \\begin{{axis}}[
         axis x line=center,
@@ -101,7 +85,7 @@ def gen_tikzpic(data, xmin, xmax, ymax, color):
     \\end{{tikzpicture}}%
     """
 
-    return whole_thing
+    return tikzpic
 
 def gen_lrbox_wrapper(body):
     start_lrbox = "\\begin{lrbox}{\\mybox}%\n"
@@ -123,16 +107,20 @@ def gen_fig(body, centering=False):
     return start_fig+centering+body+end_fig
 
 
-def gen_latex_doc(file, prog_id):
-    """Generates all the LaTeX required for the CSV-file provided
+def gen_latex_doc(seed, CSV_files, prog_id):
+    """Generates all the LaTeX required for the CSV-files provided
 
     Parameters
     ----------
-    file : str
-        Path and file name to a CSV-file for fuzzing data
+    seed : str
+        Seed of fuzzed data
+    CSV_files : str list
+        List of file names of CSV_files
     prog_id : int
         Identifier of the program 
     """
+    file = f"{RESULTS_FOLDER}/{CSV_files[0]}"
+
     # Remove path from file-argument
     csv_filename = os.path.basename(file)
     c_prog_filename = csv_filename.replace(".csv", "")
@@ -140,7 +128,7 @@ def gen_latex_doc(file, prog_id):
     # Read first line of CSV containing auxiliary information
     aux_info = ""
     with open(file) as f: aux_info = f.readline()
-    prog_seed, compile_flag = parse_aux_info(aux_info)
+    prog_seed, compile_flag = parse_aux_info(csv_filename, aux_info)
 
     # Read the rest of the CSV - skip the auxiliary line
     df = pd.read_csv(file, sep=",", skiprows=[0])
@@ -159,11 +147,11 @@ def gen_latex_doc(file, prog_id):
     clocks = pd.cut(df[CLOCKS_COLUMN], bins=bins_count,labels=labels).value_counts(sort=False)  
 
     # Read program
-    file_reader = open(f'{PROGRAMS_FOLDER}/{c_prog_filename}', "r") 
+    file_reader = open(f'{FLAGGED_FOLDER}/{prog_seed}.c', "r") 
     prog = file_reader.read()
     file_reader.close()
     # Replace first 3 lines with ...
-    prog = "...\n"+prog.split("\n",3)[3]
+    prog = "...\n"+prog.split("\n",2)[2]
 
     ################################################################
     # TODO: refactor this thing...
@@ -177,9 +165,9 @@ def gen_latex_doc(file, prog_id):
     data = "\n".join(f"{bin} {count}" for bin, count in zip(clocks.index.tolist(), clocks.tolist()))
 
     # TODO: Refactor to builder pattern maybe?
-    fig1 = gen_subfig(gen_lrbox_wrapper(gen_tikzpic(data, min_clock-10, max_clock+10, round(clocks.max(), -4), "firstCol")), 0.3, compile_flag)
-    fig2 = gen_subfig(gen_lrbox_wrapper(gen_tikzpic(data, min_clock-10, max_clock+10, round(clocks.max(), -4), "secondCol")), 0.3, compile_flag)
-    fig3 = gen_subfig(gen_lrbox_wrapper(gen_tikzpic(data, min_clock-10, max_clock+10, round(clocks.max(), -4), "thirdCol")), 0.3, compile_flag)
+    fig1 = gen_subfig(gen_lrbox_wrapper(gen_tikzpic(data, min_clock-10, max_clock+10, round(clocks.max()*1.05), "firstCol")), 0.3, compile_flag)
+    fig2 = gen_subfig(gen_lrbox_wrapper(gen_tikzpic(data, min_clock-10, max_clock+10, round(clocks.max()*1.05), "secondCol")), 0.3, compile_flag)
+    fig3 = gen_subfig(gen_lrbox_wrapper(gen_tikzpic(data, min_clock-10, max_clock+10, round(clocks.max()*1.05), "thirdCol")), 0.3, compile_flag)
     figs = gen_fig(fig1+fig2+fig3, centering=True)
 
     # TODO Like this:
@@ -188,14 +176,26 @@ def gen_latex_doc(file, prog_id):
     # ....
     # three_figs = gen_fig(centering=True).add_subfig(fig1).add_subfig(fig2).add_subfig(fig3).finalize()
 
+    # Hack to move the assembly lstlistings closer to the figures above
+    sep = "\\vspace*{-6mm}\n"
 
-    print(header+program_lstlisting+figs)
+    new_page = "\\newpage"
+
+    return header+program_lstlisting+figs+sep+new_page
+
+
+all_seeds = list(map(lambda x: x.replace(".c", ""), os.listdir(FLAGGED_FOLDER)))
+# Groups by seed, i.e. seed -> [O0, O2, O3]
+all_fuzzing_results = itertools.groupby(sorted(os.listdir(RESULTS_FOLDER)), lambda x: re.search(r'\d+', x).group())
+
+for id, (seed, CSV_files) in enumerate(all_fuzzing_results, 1):
+    latex = gen_latex_doc(seed, list(CSV_files), id)
+    f = open(f"{LATEX_OUTPUT_FOLDER}/prog{id}.tex", "w")
+    f.write(latex)
+    f.close()
+    if id == 2: exit(0)
 
 
 
-for filename in os.scandir(RESULTS_FOLDER):
-    if filename.is_file():
-        latex = gen_latex_doc(filename.path, 1)
-        #print(latex)
-
+os.system(f"pdflatex {LATEX_FOLDER}/master.tex")
 

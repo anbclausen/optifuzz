@@ -69,7 +69,7 @@
 \NewExpandableDocumentCommand { \IncludeExperimentResults } { m m }
   {
     \foreach \x in {1,...,#1} {
-        \noindent\bool_if:NF { \afp_int_ismember_p:nn {\x} {#2} } {\input{prog\x.tex}}
+        \noindent\bool_if:NF { \afp_int_ismember_p:nn {\x} {#2} } {\input{generated_latex/prog\x.tex}}
     }
   }
 \ExplSyntaxOff
@@ -83,7 +83,7 @@
 \begin{document}
 
 % IncludeExperimentResults{n}{x,y,z} includes documents 1 to n, excluding x, y and z
-\IncludeExperimentResults{2}{3,4,9}
+\IncludeExperimentResults{2}{0}
 
 
 
