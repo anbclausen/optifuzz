@@ -40,7 +40,8 @@ def analyze(file):
     for k, v in out.items():
         out[k] = jmp_regex.findall(v)
 
-    if out["O1"] or out["O2"] or out["O3"]:
+    # Flag the file if any jumps are reported for any flag (except O0)
+    if [None for k, v in out.items() if k != "O0" and v]:
         flag_file(file)
         print(f"\n> File: {file}")
         for k, v in out.items():
