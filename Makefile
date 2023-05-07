@@ -20,7 +20,7 @@ latexgen:
 
 generate-inspect: generate inspect
 
-all: generate inspect fuzz visualize
+all: generate inspect fuzz latexgen
 
 .PHONY : clean
 clean:

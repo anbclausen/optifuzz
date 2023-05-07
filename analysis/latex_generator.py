@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import string
+from typing_extensions import override
 import pandas as pd
 import numpy as np
 import os
@@ -17,16 +18,17 @@ FLAGGED_FOLDER = 'flagged'
 
 # Output constants
 NO_OF_BINS = 100
-COLORS = ["firstCol", "secondCol", "thirdCol", "fourthCol", "fifthCol"]
+COLORS = ["firstCol", "secondCol", "thirdCol", "fourthCol", "fifthCol", "sixthCol"]
 X_LABEL = "CPU Clocks"
 Y_LABEL = "Frequency"
+X_MARGIN = 1.03 # Controls margin to both sides of x-axis
+Y_MARGIN = 1.05 # Controls margin to top of y-axis
 
 
 
 class TexString:
     def __init__(self, str):
         self.str = str
-
     def finalize(self) -> string:
         return self.str
 
@@ -106,9 +108,13 @@ class TexTikzPic(TexBlock):
             \\end{{axis}}
             \\end{{tikzpicture}}%
         """
-    
+        
+    @override
+    def add_child(self, block):
+        raise Exception("It does not make sense to nest anything in a Tikzpicture yet") 
+
     def finalize(self) -> string:
-        return self.tikzpic+super().finalize()
+        return self.tikzpic
 
 class TexLstlisting(TexBlock):
     def __init__(self, style, code):
@@ -142,7 +148,13 @@ def parse_aux_info(aux):
     return compiler_flag
 
 
-def gen_header(prog_id, prog_seed):
+def gen_header(prog_id: str, prog_seed: str):
+    """Generates a latex header for the program
+
+    Returns
+    ----------
+    Header as LaTeX string
+    """
     return f"\\textbf{{Program {prog_id}}} -- \\texttt{{Seed {prog_seed}}}\n"
 
 @dataclass
@@ -151,6 +163,19 @@ class ParsedCSV:
     compile_flag: str
 
 def parse_csv(file):
+    """Generates a LaTeX figure for the CSV-files provided.\n
+    CPU-clocks will be plotted and colored.\n
+    Assembly lstlistings will also be generated.
+
+    Parameters
+    ----------
+    file : str
+        File path and name to parse
+
+    Returns
+    ----------
+    A ParsedCSV containing compile-flag used and all measured clocks as a pd series
+    """
     # Read first line of CSV containing auxiliary information
     with open(file) as f: aux_info = f.readline()
     compile_flag = parse_aux_info(aux_info)
@@ -174,6 +199,13 @@ def parse_csv(file):
     return ParsedCSV(clocks, compile_flag)
 
 def get_program_source(seed):
+    """Retrieves source code of program.
+
+    Parameters
+    ----------
+    seed : str
+        Seed of fuzzed data
+    """
     # Read program
     file_reader = open(f'{FLAGGED_FOLDER}/{seed}.c', "r") 
     prog = file_reader.read()
@@ -183,6 +215,15 @@ def get_program_source(seed):
     return prog
 
 def trim_assembly(asm):
+    """Trims start and end of provided assembly.\n
+    Searches specifically after .LFE0 and trims everything
+    after that point. Also trims away the first 4 lines.
+
+    Parameters
+    ----------
+    asm : str
+        Assembly given as string
+    """
     # Split to list of instructions instead and search for LFE0
     asm = asm.split("\n") 
     LFE0 = next(i for i, s in enumerate(asm) if s.startswith(".LFE0"))
@@ -192,24 +233,48 @@ def trim_assembly(asm):
     asm = '\n'.join(asm[4:LFE0+1])
     return asm
 
-def gen_plot_asm_fig(parsed_csv, colors):
+def gen_plot_asm_fig(seed, parsed_csv: list[ParsedCSV], colors):
+    """Generates a LaTeX figure for the CSV-files provided.\n
+    CPU-clocks will be plotted and colored.\n
+    Assembly lstlistings will also be generated.
+
+    Parameters
+    ----------
+    seed : str
+        Seed of fuzzed data
+    parsed_csv : list[ParsedCSV]
+        List of parsed CSV files
+    colors : str list
+        List of colors to use for the plots
+
+    Returns
+    ----------
+    LaTeX figure as string
+    """
+    if len(colors) < len(parsed_csv):
+        ex = f"Not enough colors to color parsed CSVs. " \
+             f"Colors: {len(colors)} - CSVs: {len(parsed_csv)}"
+        raise Exception(ex)
+    
     # Determine the width according to what we can fit
     # i.e. len(parse_csv) = 3  ==>  width = 0.3
     width = 1/len(parsed_csv)-0.03
-
     figure = TexFigure()
+
+    # Generate tikzpictures
     for i, csv in enumerate(parsed_csv):
         data = "\n".join(f"{bin} {count}" for bin, count in zip(csv.clocks.index.tolist(), csv.clocks.tolist()))
-        xmin = csv.clocks.index.min()
-        xmax = csv.clocks.index.max()
-        ymax = round(csv.clocks.max()*1.05)
+        xmin = round(csv.clocks.index.min()*1/X_MARGIN)
+        xmax = round(csv.clocks.index.max()*X_MARGIN)
+        ymax = round(csv.clocks.max()*Y_MARGIN)
 
         lrbox = TexLrbox().add_child(TexTikzPic(xmin,xmax,ymax,colors[i], data))
         subfig = TexSubFigure(width=width, caption=csv.compile_flag).add_child(lrbox)
         figure.add_child(subfig)
 
-
+    # Move the first lstlisting a little
     figure.append_string("\\hspace*{6mm}\n")
+    # Generate asm lstlistings
     for i, csv in enumerate(parsed_csv):
         asm = run(
             ["gcc", f"{FLAGGED_FOLDER}/{seed}.c", "-S", f"-{csv.compile_flag}", "-w", "-c", "-o", "/dev/stdout"]
@@ -222,49 +287,55 @@ def gen_plot_asm_fig(parsed_csv, colors):
         )
         subfig = TexSubFigure(width=width-0.03).add_child(lstlisting)
         figure.add_child(subfig)
-        if i != 2:
+        # Don't add hspace after last lstlisting
+        if i != len(parsed_csv)-1:
             figure.append_string("\\hspace*{8mm}\n")
     
     return figure.finalize()
 
-
 def gen_latex_doc(seed, CSV_files, prog_id):
-    """Generates all the LaTeX required for the CSV-files provided
+    """Generates all the LaTeX required for the CSV-files provided.
 
     Parameters
     ----------
     seed : str
         Seed of fuzzed data
-    CSV_files : str list
-        List of file names of CSV_files
+    CSV_files : list[str]
+        List of file names for the CSV files
     prog_id : int
         Identifier of the program 
+
+    Returns
+    ----------
+    LaTeX doc as string
     """
     parsed_results = [parse_csv(f"{RESULTS_FOLDER}/{x}") for x in CSV_files]
     prog = get_program_source(seed)
-
-    header = gen_header(prog_id, seed)
     program_lstlisting = TexLstlisting("style=defstyle,language=C", prog).finalize()
 
-    figure1 = gen_plot_asm_fig(parsed_results[:3], COLORS[:3])
-    figure2 = gen_plot_asm_fig(parsed_results[3:], COLORS[3:])
+    figure1 = gen_plot_asm_fig(seed, parsed_results[:3], COLORS[:3])
+    figure2 = gen_plot_asm_fig(seed, parsed_results[3:], COLORS[3:])
     new_page = "\\newpage"
 
+    header = gen_header(prog_id, seed)
     first_page = header+program_lstlisting+figure1+new_page
     second_page = header+figure2+new_page
 
     return first_page+second_page
 
 
-all_seeds = list(map(lambda x: x.replace(".c", ""), os.listdir(FLAGGED_FOLDER)))
-# Groups by seed, i.e. seed -> [O0, O2, O3]
-all_fuzzing_results = itertools.groupby(sorted(os.listdir(RESULTS_FOLDER)), lambda x: re.search(r'\d+', x).group())
+if __name__ == '__main__':
+    # Retrieve all generated seeds
+    all_seeds = list(map(lambda x: x.replace(".c", ""), os.listdir(FLAGGED_FOLDER)))
+    # Map seed to available results, i.e. seed -> [O0, O2, O3]
+    all_fuzzing_results = itertools.groupby(sorted(os.listdir(RESULTS_FOLDER)), lambda x: re.search(r'\d+', x).group())
 
-for id, (seed, CSV_files) in enumerate(all_fuzzing_results, 1):
-    latex = gen_latex_doc(seed, list(CSV_files), id)
-    f = open(f"{LATEX_OUTPUT_FOLDER}/prog{id}.tex", "w")
-    f.write(latex)
-    f.close()
+    # For each program/seed; create a .tex file in the output folder
+    for id, (seed, CSV_files) in enumerate(all_fuzzing_results, 1):
+        latex = gen_latex_doc(seed, list(CSV_files), id)
+        f = open(f"{LATEX_OUTPUT_FOLDER}/prog{id}.tex", "w")
+        f.write(latex)
+        f.close()
 
 
 

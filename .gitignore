@@ -41,7 +41,10 @@ out
 
 analysis/programs/
 analysis/flagged/
-analysis/result.csv
+analysis/latex/*
+!analysis/latex/*.tex
+!analysis/latex/generated_latex/
+
 fuzzer/result.csv
 fuzzer/results
 
