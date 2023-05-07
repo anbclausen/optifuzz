@@ -15,6 +15,9 @@ fuzz:
 visualize: 
 	$(MAKE) -C analysis visualize
 
+latexgen: 
+	$(MAKE) -C analysis latexgen
+
 generate-inspect: generate inspect
 
 all: generate inspect fuzz visualize
