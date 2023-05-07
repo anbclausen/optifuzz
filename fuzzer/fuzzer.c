@@ -43,7 +43,8 @@ typedef struct measurement
  *              between intels version INTEL's IA-64 and AMD's AMD64 version of the
  *              x86-64 architecture.
  * 
- *              Note: This is best way to measure time according to INTEL as 
+ *              Note: This is best way to measure time according to INTEL (except
+ *              for not running it in kernel space with exclusive permissions) as
  *              described in section 3.2.1 of their white paper fro, sep. 2010:
  *              https://www.intel.de/content/dam/www/public/us/en/documents/white-papers/ia-32-ia-64-benchmark-code-execution-paper.pdf
  *              
