@@ -31,13 +31,21 @@ typedef struct measurement
  * @fn          get_time
  * @brief       Get the time it takes to execute the program with the given inputs.
  * @details     This function is a wrapper around the RDTSC instruction.
+ *              It uses CPUID (and DRTSCP) to serialize instructions to avoid out
+ *              of order execution for encreased precision.
  * 
  *              The code is run multiple times to for a more accurate measurement.
+ *              The amount of repeats is determined by REPEATS.
  * 
- *              Note: The best way to measure time according to INTEL (well, should 
- *              be in kernel space)
+ *              Note: On older machines this returns the actual amount of clock 
+ *              cycles spent. On newer machines this register is increased at a
+ *              fixed rate. Even on newer machines the behavior might differ 
+ *              between intels version INTEL's IA-64 and AMD's AMD64 version of the
+ *              x86-64 architecture.
  * 
- *              Note: section 3.2.1: https://www.intel.de/content/dam/www/public/us/en/documents/white-papers/ia-32-ia-64-benchmark-code-execution-paper.pdf
+ *              Note: This is best way to measure time according to INTEL as 
+ *              described in section 3.2.1 of their white paper fro, sep. 2010:
+ *              https://www.intel.de/content/dam/www/public/us/en/documents/white-papers/ia-32-ia-64-benchmark-code-execution-paper.pdf
  *              
  * @param       a                   The first input.
  * @param       b                   The second input.
