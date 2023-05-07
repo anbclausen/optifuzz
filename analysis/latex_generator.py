@@ -22,127 +22,13 @@ X_LABEL = "CPU Clocks"
 Y_LABEL = "Frequency"
 
 
-def parse_aux_info(aux):
-    """Parses first line of CSV fuzzing data
 
-    Parameters
-    ----------
-    aux : str
-        Auxiliary information in CSV
-    """
-    # Find occurrences of [---] in the string
-    re_brackets = re.findall(r'\[.*?\]', aux)
-    # Remove brackets from each match
-    res = list(map(lambda x: x.replace("[", "").replace("]", ""), re_brackets))
-    compiler_flag = res[0]
-    return compiler_flag
+class TexString:
+    def __init__(self, str):
+        self.str = str
 
-
-
-def gen_header(prog_id, prog_seed):
-    return f"\\textbf{{Program {prog_id}}} -- \\texttt{{Seed {prog_seed}}}\n"
-
-def gen_lstlisting(style, code):
-    prog_pre = f"\\begin{{lstlisting}}[{style}]\n"
-    prog_post = "\\end{lstlisting}\n"
-    return prog_pre+code+prog_post
-
-
-def gen_tikzpic(data, xmin, xmax, ymax, color):
-    tikzpic = f"""
-    \\begin{{tikzpicture}}[>=latex]
-    \\begin{{axis}}[
-        axis x line=center,
-        axis y line=center,
-        scaled y ticks=base 10:-3,
-        ytick scale label code/.code={{}},
-        yticklabel={{\\pgfmathprintnumber{{\\tick}} k}},
-        xlabel={{{X_LABEL}}},
-        ylabel={{{Y_LABEL}}},
-        x label style={{at={{(axis description cs:0.5,-0.1)}},anchor=north}},
-        y label style={{at={{(axis description cs:-0.1,.5)}},rotate=90,anchor=south,yshift=4mm}},
-        area style,
-        ymin= 0,
-        xmin={xmin},
-        xmax={xmax},
-        ymax={ymax}
-        ]
-        \\addplot+ [ybar interval,mark=no,
-        color={color},
-        fill={color}, 
-        fill opacity=0.5] table {{
-            {data}
-        }};
-    \\end{{axis}}
-    \\end{{tikzpicture}}%
-    """
-
-    return tikzpic
-
-def gen_lrbox_wrapper(body):
-    start_lrbox = "\\begin{lrbox}{\\mybox}%\n"
-    end_lrbox = "\\end{lrbox}\\resizebox{\\textwidth}{!}{\\usebox{\\mybox}}\n"
-    return start_lrbox+body+end_lrbox
-
-
-def gen_subfig(body, width, caption=None):
-    start_fig = f"\\begin{{subfigure}}[T]{{{width}\\textwidth}}\n"
-    caption = f"\\caption*{{{caption}}}\n" if caption is not None else ""
-    end_fig = "\\end{subfigure}\n"
-    return start_fig+caption+body+end_fig
-
-
-def gen_fig(body, centering=False):
-    start_fig = "\\begin{figure}[H]\n"
-    centering = "\\centering\n" if centering else ""
-    end_fig = "\\end{figure}\n"
-    return start_fig+centering+body+end_fig
-
-
-
-
-@dataclass
-class ParsedCSV:
-    clocks: pd.Series
-    compile_flag: str
-
-def parse_csv(file):
-    # Read first line of CSV containing auxiliary information
-    with open(file) as f: aux_info = f.readline()
-    compile_flag = parse_aux_info(aux_info)
-
-    # Read the rest of the CSV - skip the auxiliary line
-    df = pd.read_csv(file, sep=",", skiprows=[0])
-
-    min_clock, max_clock = df[CLOCKS_COLUMN].min(), df[CLOCKS_COLUMN].max()
-    diff = max_clock-min_clock
-    # Cap the bins_count to NO_OF_BINS.
-    # If we have fewer than the cap, then just use that amount of bins
-    bins_count = diff if diff < NO_OF_BINS else NO_OF_BINS
-
-    # Generate labels for bins
-    edges = np.linspace(min_clock, max_clock, bins_count+1).astype(int)
-    labels = [edges[i]+round((edges[i+1]-edges[i])/2) for i in range(bins_count)]
-
-    # Group into bins, receiving a list of (interval, count)
-    clocks = pd.cut(df[CLOCKS_COLUMN], bins=bins_count,labels=labels).value_counts(sort=False)  
-
-    return ParsedCSV(clocks, compile_flag)
-
-
-
-def run(args):
-    return subprocess.run(args, capture_output=True, text=True).stdout
-
-def get_program_source(seed):
-    # Read program
-    file_reader = open(f'{FLAGGED_FOLDER}/{seed}.c', "r") 
-    prog = file_reader.read()
-    file_reader.close()
-    # Replace first 3 lines with ...
-    prog = "...\n"+prog.split("\n",2)[2]
-    return prog
-
+    def finalize(self) -> string:
+        return self.str
 
 class TexBlock:
     def __init__(self):
@@ -153,6 +39,9 @@ class TexBlock:
     def add_child(self, block):
         self.children.append(block)
         return self
+    
+    def append_string(self, str):
+        self.children.append(TexString(str))
 
     def finalize(self) -> string:
         return "".join([x.finalize() for x in self.children])
@@ -221,6 +110,81 @@ class TexTikzPic(TexBlock):
     def finalize(self) -> string:
         return self.tikzpic+super().finalize()
 
+class TexLstlisting(TexBlock):
+    def __init__(self, style, code):
+        super().__init__()
+        self.start = f"\\begin{{lstlisting}}[{style}]\n"
+        self.end = "\\end{lstlisting}\n"
+        self.code = code
+    
+    def finalize(self) -> string:
+        return self.start+self.code+super().finalize()+self.end
+
+
+
+
+
+def parse_aux_info(aux):
+    """Parses first line of CSV fuzzing data
+
+    Parameters
+    ----------
+    aux : str
+        Auxiliary information in CSV
+    """
+    # Find occurrences of [---] in the string
+    re_brackets = re.findall(r'\[.*?\]', aux)
+    # Remove brackets from each match
+    res = list(map(lambda x: x.replace("[", "").replace("]", ""), re_brackets))
+    compiler_flag = res[0]
+    return compiler_flag
+
+
+def gen_header(prog_id, prog_seed):
+    return f"\\textbf{{Program {prog_id}}} -- \\texttt{{Seed {prog_seed}}}\n"
+
+
+@dataclass
+class ParsedCSV:
+    clocks: pd.Series
+    compile_flag: str
+
+def parse_csv(file):
+    # Read first line of CSV containing auxiliary information
+    with open(file) as f: aux_info = f.readline()
+    compile_flag = parse_aux_info(aux_info)
+
+    # Read the rest of the CSV - skip the auxiliary line
+    df = pd.read_csv(file, sep=",", skiprows=[0])
+
+    min_clock, max_clock = df[CLOCKS_COLUMN].min(), df[CLOCKS_COLUMN].max()
+    diff = max_clock-min_clock
+    # Cap the bins_count to NO_OF_BINS.
+    # If we have fewer than the cap, then just use that amount of bins
+    bins_count = diff if diff < NO_OF_BINS else NO_OF_BINS
+
+    # Generate labels for bins
+    edges = np.linspace(min_clock, max_clock, bins_count+1).astype(int)
+    labels = [edges[i]+round((edges[i+1]-edges[i])/2) for i in range(bins_count)]
+
+    # Group into bins, receiving a list of (interval, count)
+    clocks = pd.cut(df[CLOCKS_COLUMN], bins=bins_count,labels=labels).value_counts(sort=False)  
+
+    return ParsedCSV(clocks, compile_flag)
+
+def run(args):
+    return subprocess.run(args, capture_output=True, text=True).stdout
+
+def get_program_source(seed):
+    # Read program
+    file_reader = open(f'{FLAGGED_FOLDER}/{seed}.c', "r") 
+    prog = file_reader.read()
+    file_reader.close()
+    # Replace first 3 lines with ...
+    prog = "...\n"+prog.split("\n",2)[2]
+    return prog
+
+
 
 def gen_latex_doc(seed, CSV_files, prog_id):
     """Generates all the LaTeX required for the CSV-files provided
@@ -247,9 +211,9 @@ def gen_latex_doc(seed, CSV_files, prog_id):
     prog = get_program_source(seed)
 
     header = gen_header(prog_id, seed)
-    program_lstlisting = gen_lstlisting("style=defstyle,language=C",prog)
+    program_lstlisting = TexLstlisting("style=defstyle,language=C", prog).finalize()
 
-    figure = TexFigure()
+    figure1 = TexFigure()
     for i, csv in enumerate(parsed_results[:3]):
         data = "\n".join(f"{bin} {count}" for bin, count in zip(csv.clocks.index.tolist(), csv.clocks.tolist()))
         xmin = csv.clocks.index.min()
@@ -258,74 +222,66 @@ def gen_latex_doc(seed, CSV_files, prog_id):
 
         lrbox = TexLrbox().add_child(TexTikzPic(xmin,xmax,ymax,COLORS[i], data))
         subfig = TexSubFigure(width=0.3, caption=csv.compile_flag).add_child(lrbox)
-        figure.add_child(subfig)
-    print(figure.finalize())
-    subfigs = figure.finalize()
+        figure1.add_child(subfig)
 
-    #subfigs = ""
-    #for i, csv in enumerate(parsed_results[:3]):
-    #    data = "\n".join(f"{bin} {count}" for bin, count in zip(csv.clocks.index.tolist(), csv.clocks.tolist()))
-    #    subfigs += gen_subfig(gen_lrbox_wrapper(gen_tikzpic(data, csv.clocks.index.min()-10, csv.clocks.index.max()+10, round(csv.clocks.max()*1.05), COLORS[i])), 0.3, csv.compile_flag)
 
-        # TODO: Refactor to builder pattern maybe?
-        #fig1 = gen_subfig(gen_lrbox_wrapper(gen_tikzpic(data, p.clocks.min()-10, p.clocks.max()+10, round(p.clocks.max()*1.05), "firstCol")), 0.3, p.compile_flag)
-        #fig2 = gen_subfig(gen_lrbox_wrapper(gen_tikzpic(data, p.clocks.min()-10, p.clocks.max()+10, round(p.clocks.max()*1.05), "secondCol")), 0.3, p.compile_flag)
-        #fig3 = gen_subfig(gen_lrbox_wrapper(gen_tikzpic(data, p.clocks.min()-10, p.clocks.max()+10, round(p.clocks.max()*1.05), "thirdCol")), 0.3, p.compile_flag)
-    
-    #figs = gen_fig(subfigs, centering=False)
-
-    # TODO Like this:
-    # fig1 = gen_subfig(0.3, "GCC O0").add_lrbox()
-    # fig1 = fig1.add_tikzpic(data, min_clock-10, max_clock+10, round(clocks.max(), -4), "firstCol")
-    # ....
-    # three_figs = gen_fig(centering=True).add_subfig(fig1).add_subfig(fig2).add_subfig(fig3).finalize()
-
-    subfigs += "\\hspace*{6mm}\n"
+    figure1.append_string("\\hspace*{6mm}\n")
     for i, csv in enumerate(parsed_results[:3]):
-        temp = run(
+        asm = run(
             ["gcc", f"{FLAGGED_FOLDER}/{seed}.c", "-S", f"-{csv.compile_flag}", "-w", "-c", "-o", "/dev/stdout"]
         ).split("\n") # List of instructions
-        
-        LFE0 = next(i for i, s in enumerate(temp) if s.startswith(".LFE0"))
-        temp[4] = "..."
-        temp[LFE0] = "..."
-        temp = '\n'.join(temp[4:LFE0+1])
-        subfigs += gen_subfig(gen_lstlisting("style=defstyle, language={[x86masm]Assembler},basicstyle=\\tiny\\ttfamily, breaklines=true",temp), 0.27)
+
+        LFE0 = next(i for i, s in enumerate(asm) if s.startswith(".LFE0"))
+        asm[4] = "..."
+        asm[LFE0] = "..."
+        asm = '\n'.join(asm[4:LFE0+1])
+
+        lstlisting = TexLstlisting(
+            style="style=defstyle,language={[x86masm]Assembler},basicstyle=\\tiny\\ttfamily,breaklines=true",
+            code=asm
+        )
+        subfig = TexSubFigure(width=0.27).add_child(lstlisting)
+        figure1.add_child(subfig)
         if i != 2:
-            subfigs += "\\hspace{8mm}\n"
+            figure1.append_string("\\hspace*{8mm}\n")
 
-    asm = gen_fig(subfigs, centering=False)
-
-
-
-
+    figure1 = figure1.finalize()
     new_page = "\\newpage"
 
-    # Second page:
-    subfigs = ""
+    figure2 = TexFigure()
     for i, csv in enumerate(parsed_results[3:],3):
         data = "\n".join(f"{bin} {count}" for bin, count in zip(csv.clocks.index.tolist(), csv.clocks.tolist()))
-        subfigs += gen_subfig(gen_lrbox_wrapper(gen_tikzpic(data, csv.clocks.index.min()-10, csv.clocks.index.max()+10, round(csv.clocks.max()*1.05), COLORS[i])), 0.3, csv.compile_flag)
-    #figs2 = gen_fig(subfigs, centering=False)
+        xmin = csv.clocks.index.min()
+        xmax = csv.clocks.index.max()
+        ymax = round(csv.clocks.max()*1.05)
 
+        lrbox = TexLrbox().add_child(TexTikzPic(xmin,xmax,ymax,COLORS[i], data))
+        subfig = TexSubFigure(width=0.3, caption=csv.compile_flag).add_child(lrbox)
+        figure2.add_child(subfig)
 
-    #subfigs = ""
-    for i, csv in enumerate(parsed_results[3:]):
-        temp = run(
+    figure2.append_string("\\hspace*{6mm}\n")
+    for i, csv in enumerate(parsed_results[3:],3):
+        asm = run(
             ["gcc", f"{FLAGGED_FOLDER}/{seed}.c", "-S", f"-{csv.compile_flag}", "-w", "-c", "-o", "/dev/stdout"]
         ).split("\n") # List of instructions
-        
-        LFE0 = next(i for i, s in enumerate(temp) if s.startswith(".LFE0"))
-        temp[4] = "..."
-        temp[LFE0] = "..."
-        temp = '\n'.join(temp[4:LFE0+1])
-        subfigs += gen_subfig(gen_lstlisting("style=defstyle, language={[x86masm]Assembler},basicstyle=\\tiny\\ttfamily,framexrightmargin=-8mm,breaklines=true",temp), 0.3)
+
+        LFE0 = next(i for i, s in enumerate(asm) if s.startswith(".LFE0"))
+        asm[4] = "..."
+        asm[LFE0] = "..."
+        asm = '\n'.join(asm[4:LFE0+1])
+
+        lstlisting = TexLstlisting(
+            style="style=defstyle,language={[x86masm]Assembler},basicstyle=\\tiny\\ttfamily,breaklines=true",
+            code=asm
+        )
+        subfig = TexSubFigure(width=0.27).add_child(lstlisting)
+        figure2.add_child(subfig)
         if i != 2:
-            subfigs += "\\hspace{8mm}\n"
+            figure2.append_string("\\hspace*{8mm}\n")
 
-    asm2 = gen_fig(subfigs, centering=False)
+    figure2 = figure2.finalize()
 
-    return header+program_lstlisting+asm+new_page+header+asm2+new_page
+    return header+program_lstlisting+figure1+new_page+header+figure2+new_page
 
 
 all_seeds = list(map(lambda x: x.replace(".c", ""), os.listdir(FLAGGED_FOLDER)))
