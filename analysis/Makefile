@@ -14,7 +14,7 @@ clean-flagged:
 	@rm flagged/* 1>/dev/null 2>&1; true
 
 clean-latex:
-	@rm generated_latex/* 1>/dev/null 2>&1; true
+	@rm latex/generated_latex/prog* 1>/dev/null 2>&1; true
 
 .PHONY : clean
 clean: clean-programs clean-flagged clean-latex
