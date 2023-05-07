@@ -182,8 +182,21 @@ def get_program_source(seed):
     prog = "...\n"+prog.split("\n",2)[2]
     return prog
 
+def trim_assembly(asm):
+    # Split to list of instructions instead and search for LFE0
+    asm = asm.split("\n") 
+    LFE0 = next(i for i, s in enumerate(asm) if s.startswith(".LFE0"))
+    # Trim at start and end, and return the string
+    asm[4] = "..."
+    asm[LFE0] = "..."
+    asm = '\n'.join(asm[4:LFE0+1])
+    return asm
 
-def gen_3wide_plot_asm_fig(parsed_csv, colors):
+def gen_plot_asm_fig(parsed_csv, colors):
+    # Determine the width according to what we can fit
+    # i.e. len(parse_csv) = 3  ==>  width = 0.3
+    width = 1/len(parsed_csv)-0.03
+
     figure = TexFigure()
     for i, csv in enumerate(parsed_csv):
         data = "\n".join(f"{bin} {count}" for bin, count in zip(csv.clocks.index.tolist(), csv.clocks.tolist()))
@@ -192,7 +205,7 @@ def gen_3wide_plot_asm_fig(parsed_csv, colors):
         ymax = round(csv.clocks.max()*1.05)
 
         lrbox = TexLrbox().add_child(TexTikzPic(xmin,xmax,ymax,colors[i], data))
-        subfig = TexSubFigure(width=0.3, caption=csv.compile_flag).add_child(lrbox)
+        subfig = TexSubFigure(width=width, caption=csv.compile_flag).add_child(lrbox)
         figure.add_child(subfig)
 
 
@@ -200,18 +213,14 @@ def gen_3wide_plot_asm_fig(parsed_csv, colors):
     for i, csv in enumerate(parsed_csv):
         asm = run(
             ["gcc", f"{FLAGGED_FOLDER}/{seed}.c", "-S", f"-{csv.compile_flag}", "-w", "-c", "-o", "/dev/stdout"]
-        ).split("\n") # List of instructions
-
-        LFE0 = next(i for i, s in enumerate(asm) if s.startswith(".LFE0"))
-        asm[4] = "..."
-        asm[LFE0] = "..."
-        asm = '\n'.join(asm[4:LFE0+1])
+        )
+        asm = trim_assembly(asm)
 
         lstlisting = TexLstlisting(
             style="style=defstyle,language={[x86masm]Assembler},basicstyle=\\tiny\\ttfamily,breaklines=true",
             code=asm
         )
-        subfig = TexSubFigure(width=0.27).add_child(lstlisting)
+        subfig = TexSubFigure(width=width-0.03).add_child(lstlisting)
         figure.add_child(subfig)
         if i != 2:
             figure.append_string("\\hspace*{8mm}\n")
@@ -237,8 +246,8 @@ def gen_latex_doc(seed, CSV_files, prog_id):
     header = gen_header(prog_id, seed)
     program_lstlisting = TexLstlisting("style=defstyle,language=C", prog).finalize()
 
-    figure1 = gen_3wide_plot_asm_fig(parsed_results[:3], COLORS[:3])
-    figure2 = gen_3wide_plot_asm_fig(parsed_results[3:], COLORS[3:])
+    figure1 = gen_plot_asm_fig(parsed_results[:3], COLORS[:3])
+    figure2 = gen_plot_asm_fig(parsed_results[3:], COLORS[3:])
     new_page = "\\newpage"
 
     first_page = header+program_lstlisting+figure1+new_page
