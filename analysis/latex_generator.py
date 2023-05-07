@@ -122,10 +122,12 @@ class TexLstlisting(TexBlock):
 
 
 
-
+def run(args):
+    return subprocess.run(args, capture_output=True, text=True).stdout
 
 def parse_aux_info(aux):
     """Parses first line of CSV fuzzing data
+    (Currently only returns used compiler flag)
 
     Parameters
     ----------
@@ -142,7 +144,6 @@ def parse_aux_info(aux):
 
 def gen_header(prog_id, prog_seed):
     return f"\\textbf{{Program {prog_id}}} -- \\texttt{{Seed {prog_seed}}}\n"
-
 
 @dataclass
 class ParsedCSV:
@@ -172,9 +173,6 @@ def parse_csv(file):
 
     return ParsedCSV(clocks, compile_flag)
 
-def run(args):
-    return subprocess.run(args, capture_output=True, text=True).stdout
-
 def get_program_source(seed):
     # Read program
     file_reader = open(f'{FLAGGED_FOLDER}/{seed}.c', "r") 
@@ -184,6 +182,41 @@ def get_program_source(seed):
     prog = "...\n"+prog.split("\n",2)[2]
     return prog
 
+
+def gen_3wide_plot_asm_fig(parsed_csv, colors):
+    figure = TexFigure()
+    for i, csv in enumerate(parsed_csv):
+        data = "\n".join(f"{bin} {count}" for bin, count in zip(csv.clocks.index.tolist(), csv.clocks.tolist()))
+        xmin = csv.clocks.index.min()
+        xmax = csv.clocks.index.max()
+        ymax = round(csv.clocks.max()*1.05)
+
+        lrbox = TexLrbox().add_child(TexTikzPic(xmin,xmax,ymax,colors[i], data))
+        subfig = TexSubFigure(width=0.3, caption=csv.compile_flag).add_child(lrbox)
+        figure.add_child(subfig)
+
+
+    figure.append_string("\\hspace*{6mm}\n")
+    for i, csv in enumerate(parsed_csv):
+        asm = run(
+            ["gcc", f"{FLAGGED_FOLDER}/{seed}.c", "-S", f"-{csv.compile_flag}", "-w", "-c", "-o", "/dev/stdout"]
+        ).split("\n") # List of instructions
+
+        LFE0 = next(i for i, s in enumerate(asm) if s.startswith(".LFE0"))
+        asm[4] = "..."
+        asm[LFE0] = "..."
+        asm = '\n'.join(asm[4:LFE0+1])
+
+        lstlisting = TexLstlisting(
+            style="style=defstyle,language={[x86masm]Assembler},basicstyle=\\tiny\\ttfamily,breaklines=true",
+            code=asm
+        )
+        subfig = TexSubFigure(width=0.27).add_child(lstlisting)
+        figure.add_child(subfig)
+        if i != 2:
+            figure.append_string("\\hspace*{8mm}\n")
+    
+    return figure.finalize()
 
 
 def gen_latex_doc(seed, CSV_files, prog_id):
@@ -198,90 +231,20 @@ def gen_latex_doc(seed, CSV_files, prog_id):
     prog_id : int
         Identifier of the program 
     """
-
-    # first_page_fig = figure_builder()
-    # for i, csv in enum(parsed[:3])
-    #   data = ...
-    #   tikzpic = gen_tikzpic(data).set_color(COLOURS[i])
-    #   subfig = subfig_builder(width=0.3).add_lrbox().add_tikzpic(tikzpic).finalize()
-    #   first_page_fig.add_subfig(subfig)
-    # first_page_fig.finalize()
-
     parsed_results = [parse_csv(f"{RESULTS_FOLDER}/{x}") for x in CSV_files]
     prog = get_program_source(seed)
 
     header = gen_header(prog_id, seed)
     program_lstlisting = TexLstlisting("style=defstyle,language=C", prog).finalize()
 
-    figure1 = TexFigure()
-    for i, csv in enumerate(parsed_results[:3]):
-        data = "\n".join(f"{bin} {count}" for bin, count in zip(csv.clocks.index.tolist(), csv.clocks.tolist()))
-        xmin = csv.clocks.index.min()
-        xmax = csv.clocks.index.max()
-        ymax = round(csv.clocks.max()*1.05)
-
-        lrbox = TexLrbox().add_child(TexTikzPic(xmin,xmax,ymax,COLORS[i], data))
-        subfig = TexSubFigure(width=0.3, caption=csv.compile_flag).add_child(lrbox)
-        figure1.add_child(subfig)
-
-
-    figure1.append_string("\\hspace*{6mm}\n")
-    for i, csv in enumerate(parsed_results[:3]):
-        asm = run(
-            ["gcc", f"{FLAGGED_FOLDER}/{seed}.c", "-S", f"-{csv.compile_flag}", "-w", "-c", "-o", "/dev/stdout"]
-        ).split("\n") # List of instructions
-
-        LFE0 = next(i for i, s in enumerate(asm) if s.startswith(".LFE0"))
-        asm[4] = "..."
-        asm[LFE0] = "..."
-        asm = '\n'.join(asm[4:LFE0+1])
-
-        lstlisting = TexLstlisting(
-            style="style=defstyle,language={[x86masm]Assembler},basicstyle=\\tiny\\ttfamily,breaklines=true",
-            code=asm
-        )
-        subfig = TexSubFigure(width=0.27).add_child(lstlisting)
-        figure1.add_child(subfig)
-        if i != 2:
-            figure1.append_string("\\hspace*{8mm}\n")
-
-    figure1 = figure1.finalize()
+    figure1 = gen_3wide_plot_asm_fig(parsed_results[:3], COLORS[:3])
+    figure2 = gen_3wide_plot_asm_fig(parsed_results[3:], COLORS[3:])
     new_page = "\\newpage"
 
-    figure2 = TexFigure()
-    for i, csv in enumerate(parsed_results[3:],3):
-        data = "\n".join(f"{bin} {count}" for bin, count in zip(csv.clocks.index.tolist(), csv.clocks.tolist()))
-        xmin = csv.clocks.index.min()
-        xmax = csv.clocks.index.max()
-        ymax = round(csv.clocks.max()*1.05)
+    first_page = header+program_lstlisting+figure1+new_page
+    second_page = header+figure2+new_page
 
-        lrbox = TexLrbox().add_child(TexTikzPic(xmin,xmax,ymax,COLORS[i], data))
-        subfig = TexSubFigure(width=0.3, caption=csv.compile_flag).add_child(lrbox)
-        figure2.add_child(subfig)
-
-    figure2.append_string("\\hspace*{6mm}\n")
-    for i, csv in enumerate(parsed_results[3:],3):
-        asm = run(
-            ["gcc", f"{FLAGGED_FOLDER}/{seed}.c", "-S", f"-{csv.compile_flag}", "-w", "-c", "-o", "/dev/stdout"]
-        ).split("\n") # List of instructions
-
-        LFE0 = next(i for i, s in enumerate(asm) if s.startswith(".LFE0"))
-        asm[4] = "..."
-        asm[LFE0] = "..."
-        asm = '\n'.join(asm[4:LFE0+1])
-
-        lstlisting = TexLstlisting(
-            style="style=defstyle,language={[x86masm]Assembler},basicstyle=\\tiny\\ttfamily,breaklines=true",
-            code=asm
-        )
-        subfig = TexSubFigure(width=0.27).add_child(lstlisting)
-        figure2.add_child(subfig)
-        if i != 2:
-            figure2.append_string("\\hspace*{8mm}\n")
-
-    figure2 = figure2.finalize()
-
-    return header+program_lstlisting+figure1+new_page+header+figure2+new_page
+    return first_page+second_page
 
 
 all_seeds = list(map(lambda x: x.replace(".c", ""), os.listdir(FLAGGED_FOLDER)))
