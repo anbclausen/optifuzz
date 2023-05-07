@@ -243,6 +243,13 @@ int main(int argc, char const *argv[])
     instantiate_measurements(UNIFORMLY, measurements, fuzz_count);
     measure(measurements, fuzz_count);
     write_data("./result.csv", measurements, fuzz_count, opt_flags);
+
+    /*
+    instantiate_measurements(EQUAL, measurements, fuzz_count);
+    measure(measurements, fuzz_count);
+    write_data("./result-equal.csv", measurements, fuzz_count, opt_flags);
+    */
+
     free(measurements);
 
     return 0;
