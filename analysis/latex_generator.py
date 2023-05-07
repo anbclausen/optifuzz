@@ -54,7 +54,7 @@ def gen_tikzpic(data, xmin, xmax, ymax, color):
         scaled y ticks=base 10:-3,
         ytick scale label code/.code={{}},
         yticklabel={{\\pgfmathprintnumber{{\\tick}} k}},
-        xlabel={{Clock Count}},
+        xlabel={{CPU Clocks}},
         ylabel={{Frequency}},
         x label style={{at={{(axis description cs:0.5,-0.1)}},anchor=north}},
         y label style={{at={{(axis description cs:-0.1,.5)}},rotate=90,anchor=south,yshift=4mm}},
@@ -173,7 +173,7 @@ def gen_latex_doc(seed, CSV_files, prog_id):
         #fig2 = gen_subfig(gen_lrbox_wrapper(gen_tikzpic(data, p.clocks.min()-10, p.clocks.max()+10, round(p.clocks.max()*1.05), "secondCol")), 0.3, p.compile_flag)
         #fig3 = gen_subfig(gen_lrbox_wrapper(gen_tikzpic(data, p.clocks.min()-10, p.clocks.max()+10, round(p.clocks.max()*1.05), "thirdCol")), 0.3, p.compile_flag)
     
-    figs = gen_fig(subfigs, centering=False)
+    #figs = gen_fig(subfigs, centering=False)
 
     # TODO Like this:
     # fig1 = gen_subfig(0.3, "GCC O0").add_lrbox()
@@ -181,17 +181,23 @@ def gen_latex_doc(seed, CSV_files, prog_id):
     # ....
     # three_figs = gen_fig(centering=True).add_subfig(fig1).add_subfig(fig2).add_subfig(fig3).finalize()
 
-    # Hack to move the assembly lstlistings closer to the figures above
-    sep = "\\vspace*{-6mm}\n"
+    #subfigs = ""
 
-    subfigs = ""
+    subfigs += "\\hspace*{6mm}\n"
     for i, csv in enumerate(csvs[:3]):
         temp = run(
             ["gcc", f"{FLAGGED_FOLDER}/{seed}.c", "-S", f"-{csv.compile_flag}", "-w", "-c", "-o", "/dev/stdout"]
-        )
-        subfigs += gen_subfig(gen_lstlisting("style=defstyle, language={[x86masm]Assembler},basicstyle=\\tiny\\ttfamily,framexrightmargin=-8mm,breaklines=true",temp), 0.3)
+        ).split("\n") # List of instructions
+        
+        LFE0 = next(i for i, s in enumerate(temp) if s.startswith(".LFE0"))
+        temp[4] = "..."
+        temp[LFE0] = "..."
+        temp = '\n'.join(temp[4:LFE0+1])
+        subfigs += gen_subfig(gen_lstlisting("style=defstyle, language={[x86masm]Assembler},basicstyle=\\tiny\\ttfamily, breaklines=true",temp), 0.27)
+        if i != 2:
+            subfigs += "\\hspace{8mm}\n"
 
-    asm = gen_fig(subfigs, centering=True)
+    asm = gen_fig(subfigs, centering=False)
 
     new_page = "\\newpage"
 
@@ -200,19 +206,26 @@ def gen_latex_doc(seed, CSV_files, prog_id):
     for i, csv in enumerate(csvs[3:],3):
         data = "\n".join(f"{bin} {count}" for bin, count in zip(csv.clocks.index.tolist(), csv.clocks.tolist()))
         subfigs += gen_subfig(gen_lrbox_wrapper(gen_tikzpic(data, csv.clocks.index.min()-10, csv.clocks.index.max()+10, round(csv.clocks.max()*1.05), COLORS[i])), 0.3, csv.compile_flag)
-    figs2 = gen_fig(subfigs, centering=False)
+    #figs2 = gen_fig(subfigs, centering=False)
 
 
-    subfigs = ""
+    #subfigs = ""
     for i, csv in enumerate(csvs[3:]):
         temp = run(
             ["gcc", f"{FLAGGED_FOLDER}/{seed}.c", "-S", f"-{csv.compile_flag}", "-w", "-c", "-o", "/dev/stdout"]
-        )
+        ).split("\n") # List of instructions
+        
+        LFE0 = next(i for i, s in enumerate(temp) if s.startswith(".LFE0"))
+        temp[4] = "..."
+        temp[LFE0] = "..."
+        temp = '\n'.join(temp[4:LFE0+1])
         subfigs += gen_subfig(gen_lstlisting("style=defstyle, language={[x86masm]Assembler},basicstyle=\\tiny\\ttfamily,framexrightmargin=-8mm,breaklines=true",temp), 0.3)
-
+        if i != 2:
+            subfigs += "\\hspace{8mm}\n"
+            
     asm2 = gen_fig(subfigs, centering=False)
 
-    return header+program_lstlisting+figs+sep+asm+new_page+header+figs2+asm2+new_page
+    return header+program_lstlisting+asm+new_page+header+asm2+new_page
 
 
 all_seeds = list(map(lambda x: x.replace(".c", ""), os.listdir(FLAGGED_FOLDER)))
