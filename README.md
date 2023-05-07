@@ -23,6 +23,10 @@ make visualize                      # visualizes results from fuzzing
 make all pn=? md=? c=? in=?         # runs the whole pipeline: generates, 
                                     # inspects, fuzzes and analyzes
 
+make latexgen                       # generates results of CSVs in: 
+                                    # "analysis/latex/generated_latex". Compile: 
+                                    # "analysis/latex/master.tex" for a preview
+
 make clean                          # cleans all generated files in all steps of
                                     # the process
 ```
