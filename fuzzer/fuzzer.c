@@ -80,15 +80,14 @@ static void set_values(distribution_et dist, int64_t *a, int64_t *b)
 }
 
 /**
- * @struct      measurement_st
- * @brief       A measurement of the execution time of the program.
+ * @struct      input_st
+ * @brief       A tuple (a,b) defining an input to the program
  */
-typedef struct measurement
+typedef struct
 {
-    uint64_t clocks_spent; /** The amount of clocks spent on executing. */
-    int64_t fuzz_input_a;  /** The first input.                         */
-    int64_t fuzz_input_b;  /** The second input.                        */
-} measurement_st;
+    int64_t a; /** The first input.                         */
+    int64_t b; /** The second input.                        */
+} input_st;
 
 /**
  * @fn          get_time
@@ -163,43 +162,49 @@ static inline uint64_t get_time(int64_t a, int64_t b)
  *              random inputs. The measurements are repeated multiple times
  *              to get a more accurate measurement.
  * @param       measurements        The array to store the measurements in.
+ * @param       inputs              The inputs to the program.
  * @param       count               The amount of measurements to take.
  */
-static void measure(measurement_st *measurements, size_t count)
+static void measure(uint64_t *measurements[ITERATIONS], input_st *inputs, size_t count)
 {
-    int64_t a, b;
     uint64_t min, old_min;
 
     for (size_t j = 0; j < ITERATIONS; j++)
     {
         for (size_t i = 0; i < count; i++)
         {
-            a = measurements[i].fuzz_input_a;
-            b = measurements[i].fuzz_input_b;
-            min = get_time(a, b);
+            min = get_time(inputs[i].a, inputs[i].b);
 
-            old_min = measurements[i].clocks_spent;
-            measurements[i].clocks_spent = MIN(old_min, min);
+            old_min = measurements[j][i];
+            measurements[j][i] = MIN(old_min, min);
         }
     }
 }
 
 /**
- * @fn          instantiate_measurements
- * @brief       Generate and set all initial values for measurements struct.
- * @param       dist                The name of the file to write to.
- * @param       measurements        The measurements to write.
+ * @fn          create_inputs
+ * @brief       Generate and set all input values.
+ * @param       dist                The distribution to draw the inputs from.
+ * @param       inputs              the list to write them to.
  * @param       count               The amount of measurements to write.
  */
-static void instantiate_measurements(distribution_et dist, measurement_st *measurements, size_t count)
+static void create_inputs(distribution_et dist, input_st *inputs, size_t count)
 {
-    // Optimizer, plz do your thing here :)
-    int64_t a, b;
     for (size_t i = 0; i < count; i++)
-    {
-        set_values(UNIFORMLY, &a, &b);
-        measurements[i] = (measurement_st){INT64_MAX, a, b};
-    }
+        set_values(UNIFORMLY, &inputs[i].a, &inputs[i].b);
+}
+
+/**
+ * @fn          initialize_measurements
+ * @brief       Set initial value of measurements to MAX.
+ * @param       measurements        The measurements to set.
+ * @param       count               The amount of measurements to write.
+ */
+static void initialize_measurements(uint64_t *measurements[ITERATIONS], size_t count)
+{
+    for (size_t j = 0; j < ITERATIONS; j++)
+        for (size_t i = 0; i < count; i++)
+            measurements[j][i] = UINT64_MAX;
 }
 
 /**
@@ -207,10 +212,11 @@ static void instantiate_measurements(distribution_et dist, measurement_st *measu
  * @brief       Write the measurements to a file.
  * @param       filename            The name of the file to write to.
  * @param       measurements        The measurements to write.
+ * @param       inputs              The inputs to write.
  * @param       count               The amount of measurements to write.
  * @param       flags               The flags used to compile the program.
  */
-static void write_data(const char *filename, const measurement_st *measurements, size_t count, const char *flags)
+static void write_data(const char *filename, uint64_t *measurements[ITERATIONS], const input_st *inputs, size_t count, const char *flags)
 {
     FILE *fs = fopen(filename, "w");
     if (fs == NULL)
@@ -220,13 +226,24 @@ static void write_data(const char *filename, const measurement_st *measurements,
     }
 
     fprintf(fs, "# compile flags: [%s]\n", flags);
-    fprintf(fs, "input_a,input_b,clock_cycles\n");
+    fprintf(fs, "input_a,input_b,min_clock_measured");
+    for (int i = 1; i <= ITERATIONS; i++)
+        fprintf(fs, ",it%d", i);
+    fprintf(fs, "\n");
+
     for (size_t i = 0; i < count; i++)
     {
-        fprintf(fs, "%ld,%ld,%lu\n",
-                measurements[i].fuzz_input_a,
-                measurements[i].fuzz_input_b,
-                measurements[i].clocks_spent);
+        fprintf(fs, "%ld,%ld", inputs[i].a, inputs[i].b);
+
+        // Find min for given set of inputs
+        uint64_t min = UINT64_MAX;
+        for (int j = 0; j < ITERATIONS; j++)
+            min = MIN(min, measurements[j][i]);
+        fprintf(fs, ",%lu", min);
+
+        for (int j = 0; j < ITERATIONS; j++)
+            fprintf(fs, ",%lu", measurements[j][i]);
+        fprintf(fs, "\n");
     }
 
     fclose(fs);
@@ -243,29 +260,38 @@ int main(int argc, char const *argv[])
     size_t fuzz_count = atoi(argv[1]);
     const char *opt_flags = argv[2];
 
-    measurement_st *measurements = malloc(sizeof(*measurements) * fuzz_count);
+    input_st *inputs = malloc(sizeof(*inputs) * fuzz_count);
+    uint64_t *measurements[ITERATIONS];
+    for (size_t i = 0; i < ITERATIONS; i++)
+        measurements[i] = malloc(sizeof(uint64_t) * fuzz_count);
 
-    instantiate_measurements(UNIFORMLY, measurements, fuzz_count);
-    measure(measurements, fuzz_count);
-    write_data("./result-uniform.csv", measurements, fuzz_count, opt_flags);
+    create_inputs(UNIFORMLY, inputs, fuzz_count);
+    initialize_measurements(measurements, fuzz_count);
+    measure(measurements, inputs, fuzz_count);
+    write_data("./result-uniform.csv", measurements, inputs, fuzz_count, opt_flags);
 
-    instantiate_measurements(EQUAL, measurements, fuzz_count);
-    measure(measurements, fuzz_count);
-    write_data("./result-equal.csv", measurements, fuzz_count, opt_flags);
+    create_inputs(EQUAL, inputs, fuzz_count);
+    initialize_measurements(measurements, fuzz_count);
+    measure(measurements, inputs, fuzz_count);
+    write_data("./result-equal.csv", measurements, inputs, fuzz_count, opt_flags);
 
-    instantiate_measurements(ZERO, measurements, fuzz_count);
-    measure(measurements, fuzz_count);
-    write_data("./result-zero.csv", measurements, fuzz_count, opt_flags);
+    create_inputs(ZERO, inputs, fuzz_count);
+    initialize_measurements(measurements, fuzz_count);
+    measure(measurements, inputs, fuzz_count);
+    write_data("./result-zero.csv", measurements, inputs, fuzz_count, opt_flags);
 
-    instantiate_measurements(MAX64, measurements, fuzz_count);
-    measure(measurements, fuzz_count);
-    write_data("./result-max64.csv", measurements, fuzz_count, opt_flags);
+    create_inputs(MAX64, inputs, fuzz_count);
+    initialize_measurements(measurements, fuzz_count);
+    measure(measurements, inputs, fuzz_count);
+    write_data("./result-max64.csv", measurements, inputs, fuzz_count, opt_flags);
 
-    instantiate_measurements(UMAX64, measurements, fuzz_count);
-    measure(measurements, fuzz_count);
-    write_data("./result-umax64.csv", measurements, fuzz_count, opt_flags);
+    create_inputs(UMAX64, inputs, fuzz_count);
+    initialize_measurements(measurements, fuzz_count);
+    measure(measurements, inputs, fuzz_count);
+    write_data("./result-umax64.csv", measurements, inputs, fuzz_count, opt_flags);
 
-    free(measurements);
+    for (size_t i = 0; i < ITERATIONS; i++)
+        free(measurements[i]);
 
     return 0;
 }

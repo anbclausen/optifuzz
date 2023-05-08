@@ -39,4 +39,8 @@ for prog in os.listdir(prog_dir):
             shutil.copyfile("result-umax64.csv", f"results/{seed}-umax64_{flag}.csv")
 
 os.remove("out")
-#os.remove("result.csv") # FIXME
+os.remove("result-uniform.csv")
+os.remove("result-equal.csv")
+os.remove("result-zero.csv")
+os.remove("result-max64.csv")
+os.remove("result-umax64.csv")
