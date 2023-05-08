@@ -37,7 +37,11 @@ make clean                          # cleans all generated files in all steps of
 ## TODO
 - Fuzzer
   - Make classes of fuzzing inputs: custom values for tests fx (0, MAXINT, ...)
-- Fix visualize script
-  - Output LaTeX and compile it
-    - Include code, graphs, compile flags and stats
+- LaTeX
+  - Graph that shows computation time vs. fuzz # (to detect low level CPU optimizations)
+  - Write jumps: jle, je, ...
+- Misc.
+  - Describe all dependencies used for this project
+- Inspection
+  - Do not flag 'jmp' instr. Only conditional jumps
     
