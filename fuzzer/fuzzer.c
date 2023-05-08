@@ -9,6 +9,8 @@
 #define MIN(x, y) ((x < y) ? (x) : (y))
 #define RAND64(x) arc4random_buf(x, sizeof(int64_t))
 
+#define RANDOM (arc4random() > UINT32_MAX / 2)
+
 #define REPEATS 100   /** The amount of times the program \
                        *  is run to get a more accurate measurement. */
 #define ITERATIONS 10 /** The amount of times to cycle through all  \
@@ -25,10 +27,9 @@ typedef enum
 {
     UNIFORMLY, // Uniformly random values
     EQUAL,     // Uniformly random but equal values
-    MAX64A,    // a is INT64_MAX, b uniform random
-    MAX64B,    // b is INT64_MAX, a uniform random
-    ZEROA,     // a is 0, b is uniform random
-    ZEROB,     // b is 0, a is uniform random
+    MAX64,     // One is INT64_MAX, other is uniform random
+    UMAX64,    // One is UINT64_MAX, other is uniform random. UINT64_MAX is -1 in signed (int64_t)
+    ZERO,      // One is 0, other is uniform random
 } distribution_et;
 
 /**
@@ -50,23 +51,27 @@ static void set_values(distribution_et dist, int64_t *a, int64_t *b)
         RAND64(a);
         *b = *a;
         break;
-    case MAX64A:
-        *a = INT64_MAX;
-        RAND64(b);
+    case MAX64:
+        *a = *b = INT64_MAX;
+        if (RANDOM)
+            RAND64(a);
+        else
+            RAND64(b);
         break;
-    case MAX64B:
-        RAND64(a);
-        *b = INT64_MAX;
+    case UMAX64:
+        *a = *b = -1;
+        if (RANDOM)
+            RAND64(a);
+        else
+            RAND64(b);
         break;
-    case ZEROA:
-        *a = 0;
-        RAND64(b);
+    case ZERO:
+        *a = *b = 0;
+        if (RANDOM)
+            RAND64(a);
+        else
+            RAND64(b);
         break;
-    case ZEROB:
-        *b = 0;
-        RAND64(a);
-        break;
-
     default:
         fprintf(stderr, "Distribution not yet supported!");
         exit(1);
@@ -242,13 +247,23 @@ int main(int argc, char const *argv[])
 
     instantiate_measurements(UNIFORMLY, measurements, fuzz_count);
     measure(measurements, fuzz_count);
-    write_data("./result.csv", measurements, fuzz_count, opt_flags);
+    write_data("./result-uniform.csv", measurements, fuzz_count, opt_flags);
 
-    /*
     instantiate_measurements(EQUAL, measurements, fuzz_count);
     measure(measurements, fuzz_count);
     write_data("./result-equal.csv", measurements, fuzz_count, opt_flags);
-    */
+
+    instantiate_measurements(ZERO, measurements, fuzz_count);
+    measure(measurements, fuzz_count);
+    write_data("./result-zero.csv", measurements, fuzz_count, opt_flags);
+
+    instantiate_measurements(MAX64, measurements, fuzz_count);
+    measure(measurements, fuzz_count);
+    write_data("./result-max64.csv", measurements, fuzz_count, opt_flags);
+
+    instantiate_measurements(UMAX64, measurements, fuzz_count);
+    measure(measurements, fuzz_count);
+    write_data("./result-umax64.csv", measurements, fuzz_count, opt_flags);
 
     free(measurements);
 

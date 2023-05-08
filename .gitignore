@@ -45,7 +45,7 @@ analysis/latex/*
 !analysis/latex/*.tex
 !analysis/latex/generated_latex/
 
-fuzzer/result.csv
+fuzzer/result-*.csv
 fuzzer/results
 
 __pycache__

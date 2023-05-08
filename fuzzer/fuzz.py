@@ -32,7 +32,11 @@ for prog in os.listdir(prog_dir):
             print(f"  {flag}")
             combine(prog_path, flag)
             os.system(f"./out {data_points} {flag}")
-            shutil.copyfile("result.csv", f"results/{seed}_{flag}.csv")
+            shutil.copyfile("result-uniform.csv", f"results/{seed}-uniform_{flag}.csv")
+            shutil.copyfile("result-equal.csv", f"results/{seed}-equal_{flag}.csv")
+            shutil.copyfile("result-zero.csv", f"results/{seed}-zero_{flag}.csv")
+            shutil.copyfile("result-max64.csv", f"results/{seed}-max64_{flag}.csv")
+            shutil.copyfile("result-umax64.csv", f"results/{seed}-umax64_{flag}.csv")
 
 os.remove("out")
-os.remove("result.csv")
+#os.remove("result.csv") # FIXME
