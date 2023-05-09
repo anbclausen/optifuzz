@@ -7,14 +7,11 @@ import subprocess
 folder = os.path.dirname(os.path.realpath(__file__))
 flagged_folder = f"{folder}{os.sep}flagged{os.sep}"
 
-jmp_regex = re.compile(r"\t(j[a-z]+)")
+# Match all jx(x) instructions that is not jmp
+jmp_regex = re.compile(r"\t(j(?!mp)[a-z][a-z]?)")
 
 optimization_flags = ["O0", "O1", "O2", "O3", "Os"]
 compiler = sys.argv[1] if len(sys.argv) > 1 else "gcc"
-
-
-def tick():
-    print(".", end="", flush=True)
 
 
 def run(args):
@@ -27,7 +24,6 @@ def flag_file(file):
 
 
 def analyze(file):
-    tick()
     out = {}
     for opt_flag in optimization_flags:
         # -S: compile to assembly
@@ -46,13 +42,19 @@ def analyze(file):
         print(f"\n> File: {file}")
         for k, v in out.items():
             print(f"  {k}: {v}")
+        return True
+    return False
 
 
 print("Analyzing assembly instructions...")
 print(f"COMPILER: {compiler}")
 programs_folder = f"{folder}{os.sep}..{os.sep}generator{os.sep}generated"
+file_amount = sum(1 for entry in os.scandir(programs_folder) if entry.is_file() and entry.name.endswith('.c'))
+count = 1
 for dirpath, dnames, fnames in os.walk(programs_folder):
     for f in fnames:
         if f.endswith(".c"):
+            print(f"\rInspecting [{count}/{file_amount}]", end="", flush=True)
+            count += 1
             analyze(os.path.join(dirpath, f))
-print("Done!")
+print("\nDone!")
