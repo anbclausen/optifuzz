@@ -8,10 +8,10 @@ fuzz: clean build-fuzzer
 	@./fuzz.py $(in)
 
 clean-results:
-	@rm results/* 1>/dev/null 2>&1; true
+	@-rm results/* 1>/dev/null 2>&1
 
 clean-objects:
-	@rm *.o
+	@-rm *.o 1>/dev/null 2>&1
 
 .PHONY : clean
 clean: clean-results clean-objects
