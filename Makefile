@@ -20,7 +20,7 @@ latexcompile:
 
 generate-inspect: generate inspect
 
-all: generate inspect fuzz latexgen latexcompile
+all: clean generate inspect fuzz latexgen latexcompile
 
 .PHONY : clean
 clean:
