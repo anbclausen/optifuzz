@@ -66,6 +66,9 @@ class TexSubFigure(TexBlock):
         self.end = "\\end{subfigure}\n"
         self.caption = f"\\caption*{{{caption}}}\n" if caption is not None else ""
     
+    def set_caption(self, caption):
+        self.caption = f"\\caption*{{{caption}}}\n" if caption is not None else ""
+
     def finalize(self) -> string:
         return self.start+self.caption+super().finalize()+self.end
     
@@ -354,10 +357,10 @@ def gen_time_plots(csv_files):
     data = []
     min_values = []
     max_values = []
-    window_size = 1000
+    window_size = 10000
     for csv in csv_files:
-        rolling_est = csv.all_clocks.rolling(window=window_size, min_periods=1).mean().round(0).astype(int).iloc[::100]
-        rolling_est.index = np.arange(1, window_size+1)
+        rolling_est = csv.all_clocks.rolling(window=window_size, min_periods=1).mean().round(0).astype(int).iloc[::1000]
+        rolling_est.index = np.arange(1, window_size/10+1)
 
         data.append("\n".join([f"{i} {clock}" for i, clock in enumerate(rolling_est)]))
         min_values.append(rolling_est.min())
@@ -397,7 +400,7 @@ def gen_latex_doc(seed, CSV_files, prog_id):
     data, ymin, ymax = gen_time_plots(CSV_files["uniform"])
 
     # subfigs[0] is the subfigure for the tikzplot
-    # subfigs[1] is the subfigure for an optional lstlisting
+    # subfigs[1] is a subfigure for an optional lstlisting
     lrbox = TexLrbox().add_child(
             TexTikzPic(
                 xmin, xmax, ymax, "firstCol", data, 
@@ -406,6 +409,7 @@ def gen_latex_doc(seed, CSV_files, prog_id):
             )
         )
     subfigs[0].add_child(lrbox)
+    subfigs[0].set_caption("Noise")
 
     # Finalize the figures
     figure1, figure2 = figure1.finalize(), figure2.finalize()
