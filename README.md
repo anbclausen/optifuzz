@@ -2,7 +2,7 @@
 Welcome to Optifuzz! A tool for fuzzing randomly generated C code with different optimization flags to discover side-channel vulnerabilities.
 
 ## Prerequisites
-You should have `ocaml`, `dune`, `python3`, all python packages in `requirements.txt` installed.
+You should have `ocaml`, `dune`, `python3`, and all python packages in `python_requirements.txt` installed.
 
 ## Documentation
 ```
@@ -39,7 +39,7 @@ make clean                          # cleans all generated files in all steps of
 
 ## TODO
 - LaTeX
-  - Graph that shows computation time vs. fuzz # (to detect low level CPU optimizations)
+  - Graph that shows computation time vs. fuzz # (to detect low-level CPU optimizations)
   - Write jumps: jle, je, ...
   - Visualize different fuzz classes with the rainbow technique
 - Misc.
