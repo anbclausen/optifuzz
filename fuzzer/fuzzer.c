@@ -75,7 +75,6 @@ static void set_values(distribution_et dist, int64_t *a, int64_t *b)
     default:
         fprintf(stderr, "Distribution not yet supported!");
         exit(1);
-        break;
     }
 }
 
