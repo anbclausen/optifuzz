@@ -12,9 +12,6 @@ inspect:
 fuzz:
 	$(MAKE) -C fuzzer fuzz
 
-visualize: 
-	$(MAKE) -C analysis visualize
-
 latexgen: 
 	$(MAKE) -C analysis latexgen
 
