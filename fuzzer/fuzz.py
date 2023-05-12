@@ -26,10 +26,10 @@ for prog in os.listdir(prog_dir):
         name = os.path.basename(prog_path)
         seed = name[:-2]
         seen_so_far += 1
-        print(f"Progress: {seen_so_far}/{amount_of_programs} [{seed}]")
+        print(f"Progress: {seen_so_far}/{amount_of_programs} [{seed}]\t flags: ", end="")
 
         for flag in optimization_flags:
-            print(f"  {flag}")
+            print(f"  {flag}", end="", flush=True)
             combine(prog_path, flag)
             os.system(f"./out {data_points} {flag}")
             shutil.copyfile("result-uniform.csv", f"results/{seed}-uniform_{flag}.csv")
@@ -37,6 +37,8 @@ for prog in os.listdir(prog_dir):
             shutil.copyfile("result-zero.csv", f"results/{seed}-zero_{flag}.csv")
             shutil.copyfile("result-max64.csv", f"results/{seed}-max64_{flag}.csv")
             shutil.copyfile("result-umax64.csv", f"results/{seed}-umax64_{flag}.csv")
+        
+        print()
 
 os.remove("out")
 os.remove("result-uniform.csv")

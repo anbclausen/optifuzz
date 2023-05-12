@@ -35,14 +35,10 @@ make clean                          # cleans all generated files in all steps of
 - [C operators](https://devdocs.io/c/language/operator_arithmetic): List of all arithmetic operators in C. Used as a basis for defining should-be-constant-time ASTs.
 
 ## TODO
-- Fuzzer
-  - Make classes of fuzzing inputs: custom values for tests fx (0, MAXINT, ...)
 - LaTeX
   - Graph that shows computation time vs. fuzz # (to detect low level CPU optimizations)
   - Write jumps: jle, je, ...
   - Visualize different fuzz classes with the rainbow technique
 - Misc.
   - Describe all dependencies used for this project
-- Inspection
-  - Do not flag 'jmp' instr. Only conditional jumps
     

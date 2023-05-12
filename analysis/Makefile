@@ -1,4 +1,4 @@
-inspect:
+inspect: clean-flagged
 	@./assembly_inspection.py $(c)
 
 visualize:
