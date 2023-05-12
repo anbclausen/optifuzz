@@ -7,6 +7,9 @@ visualize:
 latexgen:
 	@./latex_generator.py
 
+latexcompile:
+	@cd latex; pdflatex master.tex
+
 clean-programs:
 	@rm programs/* 1>/dev/null 2>&1; true
 

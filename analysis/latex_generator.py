@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import copy
 import string
-from typing_extensions import override
 import pandas as pd
 import numpy as np
 import os
@@ -82,9 +81,20 @@ class TexLrbox(TexBlock):
 class TexTikzPic(TexBlock):
     def __init__(self, xmin, xmax, ymax, color, data, X_LABEL=X_LABEL,Y_LABEL=Y_LABEL, ymin=0, time_plot=False):
         super().__init__()
-        plot_settings = f"[color={color},mark=none,smooth]" \
-                        if time_plot \
-                        else f"[ybar interval,mark=no,color={color},fill={color},fill opacity=0.5]"
+
+        # Depending on 
+        def plot_settings(i):
+            return f"[color={COLORS[i]},mark=none,smooth]" \
+            if time_plot \
+            else f"[ybar interval,mark=no,color={color},fill={color},fill opacity=0.5]"
+        
+        # Always wrap data in list
+        data = data if isinstance(data, list) else [data]
+        plot = "\n".join([
+                f"""\\addplot+ {plot_settings(i)} table {{
+                    {x}
+                }};""" for i, x in enumerate(data)])
+
         self.start = None
         self.end = None
         self.tikzpic = \
@@ -105,14 +115,11 @@ class TexTikzPic(TexBlock):
                 xmax={xmax},
                 ymax={ymax}
                 ]
-                \\addplot+ {plot_settings} table {{
-                    {data}
-                }};
+                {plot}
             \\end{{axis}}
             \\end{{tikzpicture}}%
         """
-        
-    @override
+
     def add_child(self, block):
         raise Exception("It does not make sense to nest anything in a Tikzpicture yet") 
 
@@ -342,6 +349,23 @@ def gen_plot_asm_fig(seed, parsed_csv: list[ParsedCSV], colors, placeholder=[]):
     
     return figure, placeholder_subfigures
 
+def gen_time_plots(csv_files):
+
+    data = []
+    min_values = []
+    max_values = []
+    window_size = 1000
+    for csv in csv_files:
+        rolling_est = csv.all_clocks.rolling(window=window_size, min_periods=1).mean().round(0).astype(int).iloc[::100]
+        rolling_est.index = np.arange(1, window_size+1)
+
+        data.append("\n".join([f"{i} {clock}" for i, clock in enumerate(rolling_est)]))
+        min_values.append(rolling_est.min())
+        max_values.append(rolling_est.max())
+
+    return data, min(min_values), max(max_values)
+
+
 def gen_latex_doc(seed, CSV_files, prog_id):
     """Generates all the LaTeX required for the CSV-files provided.
 
@@ -368,14 +392,9 @@ def gen_latex_doc(seed, CSV_files, prog_id):
     # should only be created as an empty subfigure
     figure2, subfigs = gen_plot_asm_fig(seed, CSV_files["uniform"][3:5], COLORS[3:5], placeholder=[3])
 
-    asd = CSV_files["uniform"][0].all_clocks.rolling(window=5000, min_periods=1).mean().round(0).astype(int).iloc[::1000]
-    asd.index = np.arange(1, 101)
-
-    data = "\n".join([f"{i} {clock}" for i, clock in enumerate(asd)])
     xmin = 0
-    xmax = 99
-    ymin = asd.min()
-    ymax = asd.max()
+    xmax = 999
+    data, ymin, ymax = gen_time_plots(CSV_files["uniform"])
 
     # subfigs[0] is the subfigure for the tikzplot
     # subfigs[1] is the subfigure for an optional lstlisting

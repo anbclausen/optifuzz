@@ -18,9 +18,12 @@ visualize:
 latexgen: 
 	$(MAKE) -C analysis latexgen
 
+latexcompile:
+	$(MAKE) -C analysis latexcompile
+
 generate-inspect: generate inspect
 
-all: generate inspect fuzz latexgen
+all: generate inspect fuzz latexgen latexcompile
 
 .PHONY : clean
 clean:

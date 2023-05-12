@@ -227,8 +227,9 @@ typedef struct
  * @param       inputs              The inputs to write.
  * @param       count               The amount of measurements to write.
  * @param       flags               The flags used to compile the program.
+ * @param       fuzz_class          The class of fuzzing input.
  */
-static void write_data(const char *filename, const char *flags, const analysis_st *analysis)
+static void write_data(const char *filename, const char *flags, const char *fuzz_class, const analysis_st *analysis)
 {
     uint64_t **measurements = *(analysis->measurements);
     const input_st *inputs = analysis->inputs;
@@ -241,7 +242,7 @@ static void write_data(const char *filename, const char *flags, const analysis_s
         exit(EXIT_FAILURE);
     }
 
-    fprintf(fs, "# compile flags: [%s]\n", flags);
+    fprintf(fs, "# compile flags: [%s], fuzz class: [%s]\n", flags, fuzz_class);
     fprintf(fs, "input_a,input_b,min_clock_measured");
     for (int i = 1; i <= ITERATIONS; i++)
         fprintf(fs, ",it%d", i);
@@ -271,13 +272,14 @@ static void write_data(const char *filename, const char *flags, const analysis_s
  * @param       analysis            The specifications for the measurement.
  * @param       out_file            The filename to save the results.
  * @param       flags               The flags used to compile the program.
+ * @param       fuzz_class          The class of fuzzing input.
  */
-static void run(analysis_st *analysis, const char *out_file, const char *flags)
+static void run(analysis_st *analysis, const char *out_file, const char *flags, const char *fuzz_class)
 {
     generate_inputs(analysis->dist, analysis->inputs, analysis->count);
     initialize_measurements(*(analysis->measurements), analysis->count);
     measure(*(analysis->measurements), analysis->inputs, analysis->count);
-    write_data(out_file, flags, analysis);
+    write_data(out_file, flags, fuzz_class, analysis);
 }
 
 int main(int argc, char const *argv[])
@@ -300,19 +302,19 @@ int main(int argc, char const *argv[])
     analysis_st analysis;
     
     analysis = (analysis_st) {UNIFORMLY, inputs, &measurements, fuzz_count};
-    run(&analysis, "./result-uniform.csv", opt_flags);
+    run(&analysis, "./result-uniform.csv", opt_flags, "uniform");
 
     analysis = (analysis_st) {EQUAL, inputs, &measurements, fuzz_count};
-    run(&analysis, "./result-equal.csv", opt_flags);
+    run(&analysis, "./result-equal.csv", opt_flags, "equal");
 
     analysis = (analysis_st) {ZERO, inputs, &measurements, fuzz_count};
-    run(&analysis, "./result-zero.csv", opt_flags);
+    run(&analysis, "./result-zero.csv", opt_flags, "zero");
 
     analysis = (analysis_st) {MAX64, inputs, &measurements, fuzz_count};
-    run(&analysis, "./result-max64.csv", opt_flags);
+    run(&analysis, "./result-max64.csv", opt_flags, "max64");
 
     analysis = (analysis_st) {UMAX64, inputs, &measurements, fuzz_count};
-    run(&analysis, "./result-umax64.csv", opt_flags);
+    run(&analysis, "./result-umax64.csv", opt_flags, "umax64");
 
     // Free input for memory and measurements
     free(inputs);
