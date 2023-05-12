@@ -1,0 +1,140 @@
+\documentclass{article}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage[a4paper, total={15cm, 23cm}]{geometry}
+\usepackage{pgfplots}
+\usepackage{adjustbox}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{pgffor}
+\usepackage{expl3}
+\usepackage{xparse}
+\usepackage{xfp}
+\usepackage{hyperref}
+\pgfplotsset{compat=1.12}
+
+\definecolor{mGreen}{rgb}{0,0.6,0}
+\definecolor{mGray}{rgb}{0.5,0.5,0.5}
+\definecolor{mPurple}{rgb}{0.58,0,0.82}
+\definecolor{backgroundColour}{rgb}{0.95,0.95,0.92}
+
+\definecolor{firstCol}{HTML}{332288}
+\definecolor{secondCol}{HTML}{117733}
+\definecolor{thirdCol}{HTML}{44AA99}
+\definecolor{fourthCol}{HTML}{88CCEE}
+\definecolor{fifthCol}{HTML}{DDCC77}
+\definecolor{sixthCol}{HTML}{DD2255}
+
+\lstdefinestyle{defstyle}{
+    backgroundcolor=\color{backgroundColour},   
+    commentstyle=\color{mGreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{mGray},
+    stringstyle=\color{mPurple},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\newsavebox{\mybox}
+
+\ExplSyntaxOn
+\cs_new:Npn \__afp_ismember_loop:Nnw #1#2#3,
+  {
+    \quark_if_recursion_tail_stop_do:nn {#3}
+      { \prg_return_false: }
+    #1 {#2} {#3}
+      { \use_i_delimit_by_q_recursion_stop:nw { \prg_return_true: } }
+      { \__afp_ismember_loop:Nnw #1 {#2} }
+  }
+\prg_new_conditional:Npnn \afp_int_ismember:nn #1#2 { p, T, F, TF }
+  {
+    \__afp_ismember_loop:Nnw \__afp_int_isequal:nnTF {#1} #2 ,
+    \q_recursion_tail , \q_recursion_stop
+  }
+\prg_new_conditional:Npnn \__afp_int_isequal:nn #1#2 { p, T, F, TF }
+  {
+    \int_compare:nNnTF {#1} = {#2}
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
+\NewExpandableDocumentCommand { \IncludeExperimentResults } { m m }
+  {
+    \foreach \x in {1,...,#1} {
+        \noindent\bool_if:NF { \afp_int_ismember_p:nn {\x} {#2} } {\input{generated_latex/prog\x.tex}}
+    }
+  }
+\ExplSyntaxOff
+
+\begin{document}
+\pagenumbering{roman} 
+\begin{titlepage}
+  \vspace*{\fill}
+  \begin{center}
+    \huge
+    \textbf{Optimizing Away Security in C}
+        
+    \vspace{0.2cm}
+    \small
+    Project Report, Language-Based Security, Fall 2023, Aarhus University
+        
+    \vspace{0.4cm}
+    \large
+    Anders B. Clausen\\ Johan T. Degn\\ Jonathan Eilath
+
+    \vspace{0.2cm}
+    \small
+    $\{$\href{mailto:clausen@post.au.com}{clausen}, \href{mailto:johandegn@post.au.com}{johandegn}, \href{mailto:eilath@post.au.com}{eilath}$\}$@post.au.dk
+
+    \vspace{0.4cm}
+    June, 2023
+  \end{center}
+
+  \begin{abstract}
+    Lorem ipsum...
+  \end{abstract}
+
+  \vspace*{\fill}
+
+  \begin{center}
+    \includegraphics*[width=0.2\linewidth]{assets/au_logo.png}
+  \end{center}
+\end{titlepage}
+
+
+
+\pagebreak
+
+\tableofcontents
+
+\pagebreak
+\pagenumbering{arabic} 
+\section{Introduction}
+\subsection{Related Work}
+\subsection{Contributions}
+\subsection{Overview}
+
+\section{Preliminaries}
+\subsection{C Compiler Optimzations}
+\subsection{Side-Channel Attacks}
+
+\section{OptiFuzz}
+\subsection{Code Generation}
+\subsection{Assembly Inspection}
+\subsection{Fuzzing}
+\subsection{Visualization}
+
+\section{Experimental Results}
+
+\section{Conclusion and Future Work}
+
+
+\end{document}
