@@ -16,7 +16,7 @@ let generate_random_ast seed =
 let () = 
   if seed = 0 then
     (Random.self_init ();
-    for _ = 0 to n do
+    for _ = 1 to n do
       let random_seed = Random.bits () in
       generate_random_ast random_seed
     done)
