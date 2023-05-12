@@ -1,6 +1,9 @@
 # Optifuzz
 Welcome to Optifuzz! A tool for fuzzing randomly generated C code with different optimization flags to discover side-channel vulnerabilities.
 
+## Prerequisites
+You should have `ocaml`, `dune`, `python3`, all python packages in `requirements.txt` installed.
+
 ## Documentation
 ```
 make generate pn=? md=?             # generates 'pn' programs with ASTs of a 

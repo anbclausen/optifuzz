@@ -49,7 +49,7 @@ def analyze(file):
 print("Analyzing assembly instructions...")
 print(f"COMPILER: {compiler}")
 programs_folder = f"{folder}{os.sep}..{os.sep}generator{os.sep}generated"
-file_amount = sum(1 for entry in os.scandir(programs_folder) if entry.is_file() and entry.name.endswith('.c'))
+file_amount = len(os.listdir(programs_folder))
 count = 1
 for dirpath, dnames, fnames in os.walk(programs_folder):
     for f in fnames:
