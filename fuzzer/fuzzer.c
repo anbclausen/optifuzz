@@ -182,13 +182,13 @@ static void measure(uint64_t *measurements[ITERATIONS], input_st *inputs, size_t
 }
 
 /**
- * @fn          create_inputs
+ * @fn          generate_inputs
  * @brief       Generate and set all input values.
  * @param       dist                The distribution to draw the inputs from.
  * @param       inputs              the list to write them to.
  * @param       count               The amount of measurements to write.
  */
-static void create_inputs(distribution_et dist, input_st *inputs, size_t count)
+static void generate_inputs(distribution_et dist, input_st *inputs, size_t count)
 {
     for (size_t i = 0; i < count; i++)
         set_values(UNIFORMLY, &inputs[i].a, &inputs[i].b);
@@ -208,6 +208,18 @@ static void initialize_measurements(uint64_t *measurements[ITERATIONS], size_t c
 }
 
 /**
+ * @struct      analysis_st
+ * @brief       Contains all values that are needed to make measurements
+ */
+typedef struct
+{
+    distribution_et dist;
+    input_st *inputs;
+    uint64_t *(*measurements)[ITERATIONS];
+    size_t count;
+} analysis_st;
+
+/**
  * @fn          write_data
  * @brief       Write the measurements to a file.
  * @param       filename            The name of the file to write to.
@@ -216,8 +228,12 @@ static void initialize_measurements(uint64_t *measurements[ITERATIONS], size_t c
  * @param       count               The amount of measurements to write.
  * @param       flags               The flags used to compile the program.
  */
-static void write_data(const char *filename, uint64_t *measurements[ITERATIONS], const input_st *inputs, size_t count, const char *flags)
+static void write_data(const char *filename, const char *flags, const analysis_st *analysis)
 {
+    uint64_t **measurements = *(analysis->measurements);
+    const input_st *inputs = analysis->inputs;
+    size_t count = analysis->count;
+
     FILE *fs = fopen(filename, "w");
     if (fs == NULL)
     {
@@ -249,6 +265,21 @@ static void write_data(const char *filename, uint64_t *measurements[ITERATIONS],
     fclose(fs);
 }
 
+/**
+ * @fn          run
+ * @brief       Run measurements according to analysis parameter and save results.
+ * @param       analysis            The specifications for the measurement.
+ * @param       out_file            The filename to save the results.
+ * @param       flags               The flags used to compile the program.
+ */
+static void run(analysis_st *analysis, const char *out_file, const char *flags)
+{
+    generate_inputs(analysis->dist, analysis->inputs, analysis->count);
+    initialize_measurements(*(analysis->measurements), analysis->count);
+    measure(*(analysis->measurements), analysis->inputs, analysis->count);
+    write_data(out_file, flags, analysis);
+}
+
 int main(int argc, char const *argv[])
 {
     if (argc != 3)
@@ -260,36 +291,31 @@ int main(int argc, char const *argv[])
     size_t fuzz_count = atoi(argv[1]);
     const char *opt_flags = argv[2];
 
+    // Allocate memory for input and measurements
     input_st *inputs = malloc(sizeof(*inputs) * fuzz_count);
     uint64_t *measurements[ITERATIONS];
     for (size_t i = 0; i < ITERATIONS; i++)
         measurements[i] = malloc(sizeof(uint64_t) * fuzz_count);
 
-    create_inputs(UNIFORMLY, inputs, fuzz_count);
-    initialize_measurements(measurements, fuzz_count);
-    measure(measurements, inputs, fuzz_count);
-    write_data("./result-uniform.csv", measurements, inputs, fuzz_count, opt_flags);
+    analysis_st analysis;
+    
+    analysis = (analysis_st) {UNIFORMLY, inputs, &measurements, fuzz_count};
+    run(&analysis, "./result-uniform.csv", opt_flags);
 
-    create_inputs(EQUAL, inputs, fuzz_count);
-    initialize_measurements(measurements, fuzz_count);
-    measure(measurements, inputs, fuzz_count);
-    write_data("./result-equal.csv", measurements, inputs, fuzz_count, opt_flags);
+    analysis = (analysis_st) {EQUAL, inputs, &measurements, fuzz_count};
+    run(&analysis, "./result-equal.csv", opt_flags);
 
-    create_inputs(ZERO, inputs, fuzz_count);
-    initialize_measurements(measurements, fuzz_count);
-    measure(measurements, inputs, fuzz_count);
-    write_data("./result-zero.csv", measurements, inputs, fuzz_count, opt_flags);
+    analysis = (analysis_st) {ZERO, inputs, &measurements, fuzz_count};
+    run(&analysis, "./result-zero.csv", opt_flags);
 
-    create_inputs(MAX64, inputs, fuzz_count);
-    initialize_measurements(measurements, fuzz_count);
-    measure(measurements, inputs, fuzz_count);
-    write_data("./result-max64.csv", measurements, inputs, fuzz_count, opt_flags);
+    analysis = (analysis_st) {MAX64, inputs, &measurements, fuzz_count};
+    run(&analysis, "./result-max64.csv", opt_flags);
 
-    create_inputs(UMAX64, inputs, fuzz_count);
-    initialize_measurements(measurements, fuzz_count);
-    measure(measurements, inputs, fuzz_count);
-    write_data("./result-umax64.csv", measurements, inputs, fuzz_count, opt_flags);
+    analysis = (analysis_st) {UMAX64, inputs, &measurements, fuzz_count};
+    run(&analysis, "./result-umax64.csv", opt_flags);
 
+    // Free input for memory and measurements
+    free(inputs);
     for (size_t i = 0; i < ITERATIONS; i++)
         free(measurements[i]);
 
