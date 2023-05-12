@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import copy
 import string
 from typing_extensions import override
 import pandas as pd
@@ -10,11 +11,13 @@ from dataclasses import dataclass
 import subprocess
 
 # Constants for parsing
-CLOCKS_COLUMN = 'clock_cycles'
+MIN_CLOCKS_COLUMN = 'min_clock_measured'
 RESULTS_FOLDER = '../fuzzer/results'
 LATEX_FOLDER = 'latex'
 LATEX_OUTPUT_FOLDER = f'{LATEX_FOLDER}/generated_latex'
 FLAGGED_FOLDER = 'flagged'
+ITERATION_PREFIX = 'it'
+NO_OF_ITERATIONS = 10
 
 # Output constants
 NO_OF_BINS = 100
@@ -77,8 +80,11 @@ class TexLrbox(TexBlock):
         return self.start+super().finalize()+self.end
     
 class TexTikzPic(TexBlock):
-    def __init__(self, xmin, xmax, ymax, color, data):
+    def __init__(self, xmin, xmax, ymax, color, data, X_LABEL=X_LABEL,Y_LABEL=Y_LABEL, ymin=0, time_plot=False):
         super().__init__()
+        plot_settings = f"[color={color},mark=none,smooth]" \
+                        if time_plot \
+                        else f"[ybar interval,mark=no,color={color},fill={color},fill opacity=0.5]"
         self.start = None
         self.end = None
         self.tikzpic = \
@@ -93,16 +99,13 @@ class TexTikzPic(TexBlock):
                 ylabel={{{Y_LABEL}}},
                 x label style={{at={{(axis description cs:0.5,-0.1)}},anchor=north}},
                 y label style={{at={{(axis description cs:-0.1,.5)}},rotate=90,anchor=south,yshift=4mm}},
-                area style,
-                ymin= 0,
+                {"" if time_plot else "area style"},
+                ymin={ymin},
                 xmin={xmin},
                 xmax={xmax},
                 ymax={ymax}
                 ]
-                \\addplot+ [ybar interval,mark=no,
-                color={color},
-                fill={color}, 
-                fill opacity=0.5] table {{
+                \\addplot+ {plot_settings} table {{
                     {data}
                 }};
             \\end{{axis}}
@@ -133,7 +136,6 @@ def run(args):
 
 def parse_aux_info(aux):
     """Parses first line of CSV fuzzing data
-    (Currently only returns used compiler flag)
 
     Parameters
     ----------
@@ -145,7 +147,8 @@ def parse_aux_info(aux):
     # Remove brackets from each match
     res = list(map(lambda x: x.replace("[", "").replace("]", ""), re_brackets))
     compiler_flag = res[0]
-    return compiler_flag
+    fuzz_class = res[1]
+    return compiler_flag, fuzz_class
 
 
 def gen_header(prog_id: str, prog_seed: str):
@@ -159,8 +162,10 @@ def gen_header(prog_id: str, prog_seed: str):
 
 @dataclass
 class ParsedCSV:
-    clocks: pd.Series
+    min_clocks: pd.Series
+    all_clocks: pd.Series
     compile_flag: str
+    fuzz_class: str
 
 def parse_csv(file):
     """Generates a LaTeX figure for the CSV-files provided.\n
@@ -170,33 +175,38 @@ def parse_csv(file):
     Parameters
     ----------
     file : str
-        File path and name to parse
+        File name to parse
 
     Returns
     ----------
     A ParsedCSV containing compile-flag used and all measured clocks as a pd series
     """
+    file = f"{RESULTS_FOLDER}/{file}"
+
     # Read first line of CSV containing auxiliary information
     with open(file) as f: aux_info = f.readline()
-    compile_flag = parse_aux_info(aux_info)
+    compile_flag, fuzz_class = parse_aux_info(aux_info)
 
     # Read the rest of the CSV - skip the auxiliary line
     df = pd.read_csv(file, sep=",", skiprows=[0])
 
-    min_clock, max_clock = df[CLOCKS_COLUMN].min(), df[CLOCKS_COLUMN].max()
+    min_clock, max_clock = df[MIN_CLOCKS_COLUMN].min(), df[MIN_CLOCKS_COLUMN].max()
     diff = max_clock-min_clock
     # Cap the bins_count to NO_OF_BINS.
     # If we have fewer than the cap, then just use that amount of bins
     bins_count = diff if diff < NO_OF_BINS else NO_OF_BINS
+    # If min_clock = max_clock then we have to make sure that there exist at least one bin
+    bins_count = max(bins_count, 1)
 
     # Generate labels for bins
     edges = np.linspace(min_clock, max_clock, bins_count+1).astype(int)
     labels = [edges[i]+round((edges[i+1]-edges[i])/2) for i in range(bins_count)]
 
     # Group into bins, receiving a list of (interval, count)
-    clocks = pd.cut(df[CLOCKS_COLUMN], bins=bins_count,labels=labels).value_counts(sort=False)  
+    min_clocks = pd.cut(df[MIN_CLOCKS_COLUMN], bins=bins_count,labels=labels).value_counts(sort=False)  
+    all_clocks = pd.concat([df[f"it{i}"] for i in range(1,NO_OF_ITERATIONS+1)], axis=0)
 
-    return ParsedCSV(clocks, compile_flag)
+    return ParsedCSV(min_clocks, all_clocks, compile_flag, fuzz_class)
 
 def get_program_source(seed):
     """Retrieves source code of program.
@@ -233,7 +243,7 @@ def trim_assembly(asm):
     asm = '\n'.join(asm[4:LFE0+1])
     return asm
 
-def gen_plot_asm_fig(seed, parsed_csv: list[ParsedCSV], colors):
+def gen_plot_asm_fig(seed, parsed_csv: list[ParsedCSV], colors, placeholder=[]):
     """Generates a LaTeX figure for the CSV-files provided.\n
     CPU-clocks will be plotted and colored.\n
     Assembly lstlistings will also be generated.
@@ -246,36 +256,73 @@ def gen_plot_asm_fig(seed, parsed_csv: list[ParsedCSV], colors):
         List of parsed CSV files
     colors : str list
         List of colors to use for the plots
+    placeholder : int list
+        Indices of which subfigures should be left blank
 
     Returns
     ----------
-    LaTeX figure as string
+    Tuple (a,b) where:\n
+    a:
+        Non-finalized LaTeX figure - that is; caller can keep modifying tree
+    b:
+        List of placeholder LaTeX subfigures, which are empty. The caller can 
+        populate these at a later point.
     """
+
     if len(colors) < len(parsed_csv):
-        ex = f"Not enough colors to color parsed CSVs. " \
+        ex = f"Not enough colors provided to color parsed CSVs. " \
              f"Colors: {len(colors)} - CSVs: {len(parsed_csv)}"
         raise Exception(ex)
     
     # Determine the width according to what we can fit
-    # i.e. len(parse_csv) = 3  ==>  width = 0.3
-    width = 1/len(parsed_csv)-0.03
+    # i.e. len(amount_of_subfigs) = 3  ==>  width = 0.3
+    amount_of_subfigs = len(parsed_csv)+len(placeholder)
+    width = 1/amount_of_subfigs-0.03
     figure = TexFigure()
 
-    # Generate tikzpictures
-    for i, csv in enumerate(parsed_csv):
-        data = "\n".join(f"{bin} {count}" for bin, count in zip(csv.clocks.index.tolist(), csv.clocks.tolist()))
-        xmin = round(csv.clocks.index.min()*1/X_MARGIN)
-        xmax = round(csv.clocks.index.max()*X_MARGIN)
-        ymax = round(csv.clocks.max()*Y_MARGIN)
+    placeholder_subfigures = []
+    placeholder_original = copy.copy(placeholder)
 
-        lrbox = TexLrbox().add_child(TexTikzPic(xmin,xmax,ymax,colors[i], data))
+    # Generate tikzpictures
+    i = 1
+    while (i <= len(parsed_csv)):
+        if i in placeholder:
+            subfig = TexSubFigure(width=width, caption="")
+            figure.add_child(subfig)
+            placeholder_subfigures.append(subfig)
+            placeholder.remove(i)
+            continue
+        csv = parsed_csv[i-1]
+        data = "\n".join(f"{bin} {count}" for bin, count in zip(csv.min_clocks.index.tolist(), csv.min_clocks.tolist()))
+        xmin = round(csv.min_clocks.index.min()*1/X_MARGIN)
+        xmax = round(csv.min_clocks.index.max()*X_MARGIN)
+        ymax = round(csv.min_clocks.max()*Y_MARGIN)
+
+        lrbox = TexLrbox().add_child(TexTikzPic(xmin,xmax,ymax,colors[i-1], data))
         subfig = TexSubFigure(width=width, caption=csv.compile_flag).add_child(lrbox)
         figure.add_child(subfig)
+        i = i+1
+    
+    # Include placeholder with indices greater than len(parsed_csv)
+    for i in placeholder:
+        subfig = TexSubFigure(width=width, caption="")
+        figure.add_child(subfig)
+        placeholder_subfigures.append(subfig)
+
+    placeholder = copy.copy(placeholder_original)
 
     # Move the first lstlisting a little
     figure.append_string("\\hspace*{6mm}\n")
     # Generate asm lstlistings
-    for i, csv in enumerate(parsed_csv):
+    i = 1
+    while (i <= len(parsed_csv)):
+        if i in placeholder:
+            subfig = TexSubFigure(width=width, caption="")
+            figure.add_child(subfig)
+            placeholder_subfigures.append(subfig)
+            placeholder.remove(i)
+            continue
+        csv = parsed_csv[i-1]
         asm = run(
             ["gcc", f"{FLAGGED_FOLDER}/{seed}.c", "-S", f"-{csv.compile_flag}", "-w", "-c", "-o", "/dev/stdout"]
         )
@@ -288,10 +335,12 @@ def gen_plot_asm_fig(seed, parsed_csv: list[ParsedCSV], colors):
         subfig = TexSubFigure(width=width-0.03).add_child(lstlisting)
         figure.add_child(subfig)
         # Don't add hspace after last lstlisting
-        if i != len(parsed_csv)-1:
+        if i != len(parsed_csv):
             figure.append_string("\\hspace*{8mm}\n")
+
+        i = i+1
     
-    return figure.finalize()
+    return figure, placeholder_subfigures
 
 def gen_latex_doc(seed, CSV_files, prog_id):
     """Generates all the LaTeX required for the CSV-files provided.
@@ -309,12 +358,38 @@ def gen_latex_doc(seed, CSV_files, prog_id):
     ----------
     LaTeX doc as string
     """
-    parsed_results = [parse_csv(f"{RESULTS_FOLDER}/{x}") for x in CSV_files]
     prog = get_program_source(seed)
     program_lstlisting = TexLstlisting("style=defstyle,language=C", prog).finalize()
 
-    figure1 = gen_plot_asm_fig(seed, parsed_results[:3], COLORS[:3])
-    figure2 = gen_plot_asm_fig(seed, parsed_results[3:], COLORS[3:])
+    # Start by plotting the uniformly distributed data width corresponding asm
+    figure1, _ = gen_plot_asm_fig(seed, CSV_files["uniform"][:3], COLORS[:3])
+    # By telling to placeholder=[3], we essentially tell the function, that we want a 3-wide figure
+    # as len(CSV_files["uniform"][3:5])+len(placeholder) = 3, but where the third element 
+    # should only be created as an empty subfigure
+    figure2, subfigs = gen_plot_asm_fig(seed, CSV_files["uniform"][3:5], COLORS[3:5], placeholder=[3])
+
+    asd = CSV_files["uniform"][0].all_clocks.rolling(window=5000, min_periods=1).mean().round(0).astype(int).iloc[::1000]
+    asd.index = np.arange(1, 101)
+
+    data = "\n".join([f"{i} {clock}" for i, clock in enumerate(asd)])
+    xmin = 0
+    xmax = 99
+    ymin = asd.min()
+    ymax = asd.max()
+
+    # subfigs[0] is the subfigure for the tikzplot
+    # subfigs[1] is the subfigure for an optional lstlisting
+    lrbox = TexLrbox().add_child(
+            TexTikzPic(
+                xmin, xmax, ymax, "firstCol", data, 
+                time_plot=True, ymin=ymin,
+                X_LABEL="Time", Y_LABEL="Clocks"
+            )
+        )
+    subfigs[0].add_child(lrbox)
+
+    # Finalize the figures
+    figure1, figure2 = figure1.finalize(), figure2.finalize()
     new_page = "\\newpage"
 
     header = gen_header(prog_id, seed)
@@ -327,12 +402,22 @@ def gen_latex_doc(seed, CSV_files, prog_id):
 if __name__ == '__main__':
     # Retrieve all generated seeds
     all_seeds = list(map(lambda x: x.replace(".c", ""), os.listdir(FLAGGED_FOLDER)))
-    # Map seed to available results, i.e. seed -> [O0, O2, O3]
+    # Map seed to available results, i.e. seed.c -> [r1.csv, r2.csv, ...]
     all_fuzzing_results = itertools.groupby(sorted(os.listdir(RESULTS_FOLDER)), lambda x: re.search(r'\d+', x).group())
+    # Convert to dictionary and parse all .csv-files in the above
+    all_fuzzing_results = {
+        seed: [parse_csv(csv) for csv in list(csv_files)] 
+        for seed, csv_files in all_fuzzing_results
+    }
+    # Group each fuzzing class, such that seed.c -> {class1: [r1.csv, ...], class2: [r1.csv, ...]}
+    all_fuzzing_results = {
+        seed: {x: list(y) for x, y in itertools.groupby(csv_files, lambda x: x.fuzz_class)}
+        for seed, csv_files in all_fuzzing_results.items()
+    }
 
     # For each program/seed; create a .tex file in the output folder
-    for id, (seed, CSV_files) in enumerate(all_fuzzing_results, 1):
-        latex = gen_latex_doc(seed, list(CSV_files), id)
+    for id, (seed, grouped_CSV_files) in enumerate(all_fuzzing_results.items(), 1):
+        latex = gen_latex_doc(seed, grouped_CSV_files, id)
         f = open(f"{LATEX_OUTPUT_FOLDER}/prog{id}.tex", "w")
         f.write(latex)
         f.close()
