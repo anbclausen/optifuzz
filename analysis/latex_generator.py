@@ -253,7 +253,7 @@ def trim_assembly(asm):
     asm = '\n'.join(asm[4:LFE0+1])
     return asm
 
-def gen_plot_asm_fig(seed, parsed_csv: list[ParsedCSV], colors, placeholder=[]):
+def gen_plot_asm_fig(seed, parsed_csv, colors, placeholder=[]):
     """Generates a LaTeX figure for the CSV-files provided.\n
     CPU-clocks will be plotted and colored.\n
     Assembly lstlistings will also be generated.
@@ -262,8 +262,8 @@ def gen_plot_asm_fig(seed, parsed_csv: list[ParsedCSV], colors, placeholder=[]):
     ----------
     seed : str
         Seed of fuzzed data
-    parsed_csv : list[ParsedCSV]
-        List of parsed CSV files
+    parsed_csv : dict: str -> list[str]
+        Map from a compile flag to a list of different fuzz classes identified by file names for the CSV files
     colors : str list
         List of colors to use for the plots
     placeholder : int list
@@ -278,6 +278,7 @@ def gen_plot_asm_fig(seed, parsed_csv: list[ParsedCSV], colors, placeholder=[]):
         List of placeholder LaTeX subfigures, which are empty. The caller can 
         populate these at a later point.
     """
+    index_to_key = list(parsed_csv.keys())
 
     if len(colors) < len(parsed_csv):
         ex = f"Not enough colors provided to color parsed CSVs. " \
@@ -302,14 +303,15 @@ def gen_plot_asm_fig(seed, parsed_csv: list[ParsedCSV], colors, placeholder=[]):
             placeholder_subfigures.append(subfig)
             placeholder.remove(i)
             continue
-        csv = parsed_csv[i-1]
+
+        csv = parsed_csv[index_to_key[i-1]][3]
         data = "\n".join(f"{bin} {count}" for bin, count in zip(csv.min_clocks.index.tolist(), csv.min_clocks.tolist()))
         xmin = round(csv.min_clocks.index.min()*1/X_MARGIN)
         xmax = round(csv.min_clocks.index.max()*X_MARGIN)
         ymax = round(csv.min_clocks.max()*Y_MARGIN)
 
         lrbox = TexLrbox().add_child(TexTikzPic(xmin,xmax,ymax,colors[i-1], data))
-        subfig = TexSubFigure(width=width, caption=csv.compile_flag).add_child(lrbox)
+        subfig = TexSubFigure(width=width, caption=f"{csv.compile_flag} - {csv.fuzz_class}").add_child(lrbox)
         figure.add_child(subfig)
         i = i+1
     
@@ -332,7 +334,7 @@ def gen_plot_asm_fig(seed, parsed_csv: list[ParsedCSV], colors, placeholder=[]):
             placeholder_subfigures.append(subfig)
             placeholder.remove(i)
             continue
-        csv = parsed_csv[i-1]
+        csv = parsed_csv[index_to_key[i-1]][3]
         asm = run(
             ["gcc", f"{FLAGGED_FOLDER}/{seed}.c", "-S", f"-{csv.compile_flag}", "-w", "-c", "-o", "/dev/stdout"]
         )
@@ -353,7 +355,6 @@ def gen_plot_asm_fig(seed, parsed_csv: list[ParsedCSV], colors, placeholder=[]):
     return figure, placeholder_subfigures
 
 def gen_time_plots(csv_files):
-
     data = []
     min_values = []
     max_values = []
@@ -376,8 +377,8 @@ def gen_latex_doc(seed, CSV_files, prog_id):
     ----------
     seed : str
         Seed of fuzzed data
-    CSV_files : list[str]
-        List of file names for the CSV files
+    CSV_files : dict: str -> list[str]
+        Map from a compile flag to a list of different fuzz classes identified by file names for the CSV files
     prog_id : int
         Identifier of the program 
 
@@ -388,28 +389,31 @@ def gen_latex_doc(seed, CSV_files, prog_id):
     prog = get_program_source(seed)
     program_lstlisting = TexLstlisting("style=defstyle,language=C", prog).finalize()
 
-    # Start by plotting the uniformly distributed data width corresponding asm
-    figure1, _ = gen_plot_asm_fig(seed, CSV_files["uniform"][:3], COLORS[:3])
-    # By telling to placeholder=[3], we essentially tell the function, that we want a 3-wide figure
-    # as len(CSV_files["uniform"][3:5])+len(placeholder) = 3, but where the third element 
-    # should only be created as an empty subfigure
-    figure2, subfigs = gen_plot_asm_fig(seed, CSV_files["uniform"][3:5], COLORS[3:5], placeholder=[3])
+    first_three = dict(itertools.islice(CSV_files.items(), 0, 3))
+    last_two = dict(itertools.islice(CSV_files.items(), 3, 5))
 
-    xmin = 0
-    xmax = 999
-    data, ymin, ymax = gen_time_plots(CSV_files["uniform"])
+    # Start by plotting a 3-width plot with corresponding asm
+    figure1, _ = gen_plot_asm_fig(seed, first_three, COLORS[:3])
+    # By telling to placeholder=[3], we essentially tell the function, that we want a 3-wide figure
+    # as len(last_two)+len(placeholder) = 3, but where the third element 
+    # should only be created as an empty subfigure
+    figure2, subfigs = gen_plot_asm_fig(seed, last_two, COLORS[3:5], placeholder=[3])
+
+    #xmin = 0
+    #xmax = 999
+    #data, ymin, ymax = gen_time_plots(CSV_files["uniform"])
 
     # subfigs[0] is the subfigure for the tikzplot
     # subfigs[1] is a subfigure for an optional lstlisting
-    lrbox = TexLrbox().add_child(
-            TexTikzPic(
-                xmin, xmax, ymax, "firstCol", data, 
-                time_plot=True, ymin=ymin,
-                X_LABEL="Time", Y_LABEL="Clocks"
-            )
-        )
-    subfigs[0].add_child(lrbox)
-    subfigs[0].set_caption("Noise")
+    #lrbox = TexLrbox().add_child(
+    #        TexTikzPic(
+    #            xmin, xmax, ymax, "firstCol", data, 
+    #            time_plot=True, ymin=ymin,
+    #            X_LABEL="Time", Y_LABEL="Clocks"
+    #        )
+    #    )
+    #subfigs[0].add_child(lrbox)
+    #subfigs[0].set_caption("Noise")
 
     # Finalize the figures
     figure1, figure2 = figure1.finalize(), figure2.finalize()
@@ -432,12 +436,14 @@ if __name__ == '__main__':
         seed: [parse_csv(csv) for csv in list(csv_files)] 
         for seed, csv_files in all_fuzzing_results
     }
-    # Group each fuzzing class, such that seed.c -> {class1: [r1.csv, ...], class2: [r1.csv, ...]}
+    for csv_files in all_fuzzing_results.values():
+        csv_files.sort(key=lambda x: x.compile_flag)
+    # Group by compile_flag, such that seed.c -> {O0: [r1.csv, ...], O1: [r1.csv, ...]}
     all_fuzzing_results = {
-        seed: {x: list(y) for x, y in itertools.groupby(csv_files, lambda x: x.fuzz_class)}
+        seed: {x: list(y) for x, y in itertools.groupby(csv_files, lambda x: x.compile_flag)}
         for seed, csv_files in all_fuzzing_results.items()
     }
-
+        
     # For each program/seed; create a .tex file in the output folder
     for id, (seed, grouped_CSV_files) in enumerate(all_fuzzing_results.items(), 1):
         latex = gen_latex_doc(seed, grouped_CSV_files, id)
