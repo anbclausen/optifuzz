@@ -85,7 +85,7 @@ class TexTikzPic(TexBlock):
     def __init__(self, xmin, xmax, ymax, color, data, X_LABEL=X_LABEL,Y_LABEL=Y_LABEL, ymin=0, time_plot=False, means=None):
         super().__init__()
 
-        # Depending on 
+        # ybar plot vs smooth lpot depending on time_plot argument
         def plot_settings(i):
             return f"[color={COLORS[i]},mark=none,smooth]" \
             if time_plot \
