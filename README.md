@@ -42,9 +42,5 @@ make clean                          # cleans all generated files in all steps of
 
 ## TODO
 - LaTeX
-  - Graph that shows computation time vs. fuzz # (to detect low-level CPU optimizations)
   - Write jumps: jle, je, ...
-  - Visualize different fuzz classes with the rainbow technique
-- Misc.
-  - Describe all dependencies used for this project
     
