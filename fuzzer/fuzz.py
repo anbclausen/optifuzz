@@ -2,11 +2,14 @@
 import sys
 import os
 import shutil
+import json
 
 prog_dir = "../analysis/flagged"
+config = json.load(open("../config.json"))
 
-data_points = sys.argv[1]
-optimization_flags = ["O0", "O1", "O2", "O3", "Os"]
+number_of_fuzzing_runs = sys.argv[1] if len(sys.argv) > 1 else config["number_of_fuzzing_runs"]
+optimization_flags = config["compiler_flags"]
+fuzzing_classes = config["fuzzing_classes"]
 
 
 def combine(prog_path, flag):
@@ -41,18 +44,12 @@ for prog in os.listdir(prog_dir):
         for flag in optimization_flags:
             print(f"  {flag}", end="", flush=True)
             combine(prog_path, flag)
-            os.system(f"./out {data_points} {flag}")
-            shutil.copyfile("result-uniform.csv", f"results/{seed}-uniform_{flag}.csv")
-            shutil.copyfile("result-equal.csv", f"results/{seed}-equal_{flag}.csv")
-            shutil.copyfile("result-zero.csv", f"results/{seed}-zero_{flag}.csv")
-            shutil.copyfile("result-max64.csv", f"results/{seed}-max64_{flag}.csv")
-            shutil.copyfile("result-umax64.csv", f"results/{seed}-umax64_{flag}.csv")
+            os.system(f"./out {number_of_fuzzing_runs} {flag}")
+            for fuzzing_class in fuzzing_classes:
+                shutil.copyfile(f"result-{fuzzing_class}.csv", f"results/{seed}-{fuzzing_class}_{flag}.csv")
         
         print()
 
 remove_file_if_exists("out")
-remove_file_if_exists("result-uniform.csv")
-remove_file_if_exists("result-equal.csv")
-remove_file_if_exists("result-zero.csv")
-remove_file_if_exists("result-max64.csv")
-remove_file_if_exists("result-umax64.csv")
+for fuzzing_class in fuzzing_classes:
+    remove_file_if_exists(f"result-{fuzzing_class}.csv")
