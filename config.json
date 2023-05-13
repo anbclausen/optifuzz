@@ -5,6 +5,6 @@
   "program_max_depth": 5,
   "number_of_programs": 1000,
 
-  "fuzz_classes": ["UNIFORM", "EQUAL", "MAX64", "UMAX64", "ZERO", "X<Y", "Y<X"],
+  "fuzzing_classes": ["uniform", "equal", "max64", "umax64", "zero", "xlty", "yltx"],
   "number_of_fuzzing_runs": 100000
 }
