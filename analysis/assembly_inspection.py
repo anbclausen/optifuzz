@@ -14,7 +14,7 @@ flagged_folder = f"{folder}{os.sep}flagged{os.sep}"
 jmp_regex = re.compile(r"\t(j(?!mp)[a-z][a-z]?)")
 
 optimization_flags = config["compiler_flags"]
-compiler = sys.argv[1] if len(sys.argv) > 1 else config["compiler"]
+compiler = config["compiler"]
 
 
 def run(args):

@@ -1,10 +1,5 @@
 {
   "compiler": "gcc",
   "compiler_flags": ["O0", "O1", "O2", "O3", "Os"],
-
-  "program_max_depth": 5,
-  "number_of_programs": 1000,
-
-  "fuzzing_classes": ["uniform", "equal", "max64", "umax64", "zero", "xlty", "yltx"],
-  "number_of_fuzzing_runs": 100000
+  "fuzzing_classes": ["uniform", "equal", "max64", "umax64", "zero", "xlty", "yltx"]
 }

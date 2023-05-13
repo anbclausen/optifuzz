@@ -7,7 +7,11 @@ import json
 prog_dir = "../analysis/flagged"
 config = json.load(open("../config.json"))
 
-number_of_fuzzing_runs = sys.argv[1] if len(sys.argv) > 1 else config["number_of_fuzzing_runs"]
+if len(sys.argv) < 2:
+    print("Usage: python3 fuzz.py <number of fuzzing runs>")
+    exit(1)
+
+number_of_fuzzing_runs = sys.argv[1]
 optimization_flags = config["compiler_flags"]
 fuzzing_classes = config["fuzzing_classes"]
 
