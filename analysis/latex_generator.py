@@ -82,14 +82,14 @@ class TexLrbox(TexBlock):
         return self.start+super().finalize()+self.end
     
 class TexTikzPic(TexBlock):
-    def __init__(self, xmin, xmax, ymax, color, data, X_LABEL=X_LABEL,Y_LABEL=Y_LABEL, ymin=0, time_plot=False):
+    def __init__(self, xmin, xmax, ymax, color, data, X_LABEL=X_LABEL,Y_LABEL=Y_LABEL, ymin=0, time_plot=False, means=None):
         super().__init__()
 
         # Depending on 
         def plot_settings(i):
             return f"[color={COLORS[i]},mark=none,smooth]" \
             if time_plot \
-            else f"[ybar interval,mark=no,color={color},fill={color},fill opacity=0.5]"
+            else f"[ybar interval,mark=no,color={color},fill={color},fill opacity=0.2]"
         
         # Always wrap data in list
         data = data if isinstance(data, list) else [data]
@@ -97,6 +97,28 @@ class TexTikzPic(TexBlock):
                 f"""\\addplot+ {plot_settings(i)} table {{
                     {x}
                 }};""" for i, x in enumerate(data)])
+        
+        fuzz_classes = list(means.keys())
+        means = "" if None else f"""
+            \\node[below=15mm of ax] (1) {{
+                $\\begin{{aligned}}
+                    \\texttt{{{fuzz_classes[0]}}}_\\mu: & \\,{means[fuzz_classes[0]]}\\\\
+                    \\texttt{{{fuzz_classes[1]}}}_\\mu: & \\,{means[fuzz_classes[1]]}
+                \end{{aligned}}$
+            }};
+            \\node[left=4mm of 1] (2) {{
+                $\\begin{{aligned}}
+                    \\texttt{{{fuzz_classes[2]}}}_\\mu: & \\,{means[fuzz_classes[2]]}\\\\
+                    \\texttt{{{fuzz_classes[3]}}}_\\mu: & \\,{means[fuzz_classes[3]]}
+                \end{{aligned}}$
+            }};
+            \\node[right=4mm of 1] (3) {{
+                $\\begin{{aligned}}
+                    \\texttt{{{fuzz_classes[4]}}}_\\mu: & \\,{means[fuzz_classes[4]]}\\\\
+                    &
+                \end{{aligned}}$
+            }};
+            \\node[fit=(1)(2)(3),draw]{{}};"""
 
         self.start = None
         self.end = None
@@ -105,6 +127,7 @@ class TexTikzPic(TexBlock):
             \\begin{{axis}}[
                 axis x line=center,
                 axis y line=center,
+                name=ax,
                 scaled y ticks=base 10:-3,
                 ytick scale label code/.code={{}},
                 yticklabel={{\\pgfmathprintnumber{{\\tick}} k}},
@@ -119,7 +142,7 @@ class TexTikzPic(TexBlock):
                 ymax={ymax}
                 ]
                 {plot}
-            \\end{{axis}}
+            \\end{{axis}} {means}
             \\end{{tikzpicture}}%
         """
 
@@ -278,7 +301,7 @@ def gen_plot_asm_fig(seed, parsed_csv, colors, placeholder=[]):
         List of placeholder LaTeX subfigures, which are empty. The caller can 
         populate these at a later point.
     """
-    index_to_key = list(parsed_csv.keys())
+    compiler_flags = list(parsed_csv.keys())
 
     if len(colors) < len(parsed_csv):
         ex = f"Not enough colors provided to color parsed CSVs. " \
@@ -303,16 +326,25 @@ def gen_plot_asm_fig(seed, parsed_csv, colors, placeholder=[]):
             placeholder_subfigures.append(subfig)
             placeholder.remove(i)
             continue
+        
+        data,xmin_list,xmax_list,ymax_list = ([] for _ in range(4))
+        means = {}
 
-        csv = parsed_csv[index_to_key[i-1]][3]
-        data = "\n".join(f"{bin} {count}" for bin, count in zip(csv.min_clocks.index.tolist(), csv.min_clocks.tolist()))
-        xmin = round(csv.min_clocks.index.min()*1/X_MARGIN)
-        xmax = round(csv.min_clocks.index.max()*X_MARGIN)
-        ymax = round(csv.min_clocks.max()*Y_MARGIN)
+        for fuzz_csv in parsed_csv[compiler_flags[i-1]]:
+            data.append("\n".join(f"{bin} {count}" 
+                        for bin, count in 
+                        zip(fuzz_csv.min_clocks.index.tolist(), fuzz_csv.min_clocks.tolist())))
+            xmin_list.append(round(fuzz_csv.min_clocks.index.min()*1/X_MARGIN))
+            xmax_list.append(round(fuzz_csv.min_clocks.index.max()*X_MARGIN))
+            ymax_list.append(round(fuzz_csv.min_clocks.max()*Y_MARGIN))
+            means[fuzz_csv.fuzz_class] = round(sum(np.array(list(fuzz_csv.min_clocks.index))*(np.array(list(fuzz_csv.min_clocks))/fuzz_csv.min_clocks.sum())),0).astype(int)
 
-        lrbox = TexLrbox().add_child(TexTikzPic(xmin,xmax,ymax,colors[i-1], data))
-        subfig = TexSubFigure(width=width, caption=f"{csv.compile_flag} - {csv.fuzz_class}").add_child(lrbox)
+        xmin,xmax,ymax = min(xmin_list),max(xmax_list),max(ymax_list)
+
+        lrbox = TexLrbox().add_child(TexTikzPic(xmin,xmax,ymax,colors[i-1],data,means=means))
+        subfig = TexSubFigure(width=width, caption=compiler_flags[i-1]).add_child(lrbox)
         figure.add_child(subfig)
+
         i = i+1
     
     # Include placeholder with indices greater than len(parsed_csv)
@@ -334,7 +366,7 @@ def gen_plot_asm_fig(seed, parsed_csv, colors, placeholder=[]):
             placeholder_subfigures.append(subfig)
             placeholder.remove(i)
             continue
-        csv = parsed_csv[index_to_key[i-1]][3]
+        csv = parsed_csv[compiler_flags[i-1]][3]
         asm = run(
             ["gcc", f"{FLAGGED_FOLDER}/{seed}.c", "-S", f"-{csv.compile_flag}", "-w", "-c", "-o", "/dev/stdout"]
         )
@@ -355,9 +387,7 @@ def gen_plot_asm_fig(seed, parsed_csv, colors, placeholder=[]):
     return figure, placeholder_subfigures
 
 def gen_time_plots(csv_files):
-    data = []
-    min_values = []
-    max_values = []
+    data,min_values,max_values = ([] for _ in range(3))
     window_size = 10000
     for csv in csv_files:
         rolling_est = csv.all_clocks.rolling(window=window_size, min_periods=1).mean().round(0).astype(int).iloc[::1000]
