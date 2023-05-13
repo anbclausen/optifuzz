@@ -30,6 +30,8 @@ typedef enum
     MAX64,     // One is INT64_MAX, other is uniform random
     UMAX64,    // One is UINT64_MAX, other is uniform random. UINT64_MAX is -1 in signed (int64_t)
     ZERO,      // One is 0, other is uniform random
+    ALTB,      // Uniformly random but a < b
+    BLTA,      // Uniformly random but b < a
 } distribution_et;
 
 /**
@@ -71,6 +73,26 @@ static void set_values(distribution_et dist, int64_t *a, int64_t *b)
             RAND64(a);
         else
             RAND64(b);
+        break;
+    case ALTB:
+        RAND64(a);
+        RAND64(b);
+        if (*a > *b)
+        {
+            int64_t tmp = *a;
+            *a = *b;
+            *b = tmp;
+        }
+        break;
+    case BLTA:
+        RAND64(a);
+        RAND64(b);
+        if (*a < *b)
+        {
+            int64_t tmp = *a;
+            *a = *b;
+            *b = tmp;
+        }
         break;
     default:
         fprintf(stderr, "Distribution not yet supported!");
@@ -190,7 +212,7 @@ static void measure(uint64_t *measurements[ITERATIONS], input_st *inputs, size_t
 static void generate_inputs(distribution_et dist, input_st *inputs, size_t count)
 {
     for (size_t i = 0; i < count; i++)
-        set_values(UNIFORMLY, &inputs[i].a, &inputs[i].b);
+        set_values(dist, &inputs[i].a, &inputs[i].b);
 }
 
 /**
@@ -314,6 +336,12 @@ int main(int argc, char const *argv[])
 
     analysis = (analysis_st) {UMAX64, inputs, &measurements, fuzz_count};
     run(&analysis, "./result-umax64.csv", opt_flags, "umax64");
+
+    analysis = (analysis_st) {ALTB, inputs, &measurements, fuzz_count};
+    run(&analysis, "./result-xlty.csv", opt_flags, "xlty");
+
+    analysis = (analysis_st) {BLTA, inputs, &measurements, fuzz_count};
+    run(&analysis, "./result-yltx.csv", opt_flags, "yltx");
 
     // Free input for memory and measurements
     free(inputs);

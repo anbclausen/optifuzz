@@ -103,19 +103,20 @@ class TexTikzPic(TexBlock):
             \\node[below=15mm of ax] (1) {{
                 $\\begin{{aligned}}
                     \\texttt{{{fuzz_classes[0]}}}_\\mu: & \\,{means[fuzz_classes[0]]}\\\\
-                    \\texttt{{{fuzz_classes[1]}}}_\\mu: & \\,{means[fuzz_classes[1]]}
+                    \\texttt{{{fuzz_classes[1]}}}_\\mu: & \\,{means[fuzz_classes[1]]}\\\\
+                    \\texttt{{{fuzz_classes[2]}}}_\\mu: & \\,{means[fuzz_classes[2]]}
                 \end{{aligned}}$
             }};
             \\node[left=4mm of 1] (2) {{
                 $\\begin{{aligned}}
-                    \\texttt{{{fuzz_classes[2]}}}_\\mu: & \\,{means[fuzz_classes[2]]}\\\\
-                    \\texttt{{{fuzz_classes[3]}}}_\\mu: & \\,{means[fuzz_classes[3]]}
+                    \\texttt{{{fuzz_classes[3]}}}_\\mu: & \\,{means[fuzz_classes[3]]}\\\\
+                    \\texttt{{{fuzz_classes[4]}}}_\\mu: & \\,{means[fuzz_classes[4]]}
                 \end{{aligned}}$
             }};
             \\node[right=4mm of 1] (3) {{
                 $\\begin{{aligned}}
-                    \\texttt{{{fuzz_classes[4]}}}_\\mu: & \\,{means[fuzz_classes[4]]}\\\\
-                    &
+                    \\texttt{{{fuzz_classes[5]}}}_\\mu: & \\,{means[fuzz_classes[5]]}\\\\
+                    \\texttt{{{fuzz_classes[6]}}}_\\mu: & \\,{means[fuzz_classes[6]]}
                 \end{{aligned}}$
             }};
             \\node[fit=(1)(2)(3),draw]{{}};"""
