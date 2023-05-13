@@ -99,7 +99,7 @@ class TexTikzPic(TexBlock):
                 }};""" for i, x in enumerate(data)])
         
         fuzz_classes = list(means.keys())
-        means = "" if None else f"""
+        means_table = "" if means is None else f"""
             \\node[below=15mm of ax] (1) {{
                 $\\begin{{aligned}}
                     \\texttt{{{fuzz_classes[0]}}}_\\mu: & \\,{means[fuzz_classes[0]]}\\\\
@@ -119,6 +119,9 @@ class TexTikzPic(TexBlock):
                 \end{{aligned}}$
             }};
             \\node[fit=(1)(2)(3),draw]{{}};"""
+        mean_lines = "" if means is None else "\n".join([f"""\
+                    \draw[color=black, line width=0.2mm, dashed] 
+                    (axis cs:{m}, {-ymax*0.05}) -- (axis cs:{m}, {ymax});""" for m in means.values()])
 
         self.start = None
         self.end = None
@@ -142,7 +145,8 @@ class TexTikzPic(TexBlock):
                 ymax={ymax}
                 ]
                 {plot}
-            \\end{{axis}} {means}
+                {mean_lines}
+            \\end{{axis}} {means_table}
             \\end{{tikzpicture}}%
         """
 
@@ -327,6 +331,8 @@ def gen_plot_asm_fig(seed, parsed_csv, colors, placeholder=[]):
             placeholder.remove(i)
             continue
         
+        # Data holds the plotting data
+        # The other lists keeps track of smallest/greatest min and max for x and y
         data,xmin_list,xmax_list,ymax_list = ([] for _ in range(4))
         means = {}
 
@@ -337,7 +343,13 @@ def gen_plot_asm_fig(seed, parsed_csv, colors, placeholder=[]):
             xmin_list.append(round(fuzz_csv.min_clocks.index.min()*1/X_MARGIN))
             xmax_list.append(round(fuzz_csv.min_clocks.index.max()*X_MARGIN))
             ymax_list.append(round(fuzz_csv.min_clocks.max()*Y_MARGIN))
-            means[fuzz_csv.fuzz_class] = round(sum(np.array(list(fuzz_csv.min_clocks.index))*(np.array(list(fuzz_csv.min_clocks))/fuzz_csv.min_clocks.sum())),0).astype(int)
+
+            # Compute the mean of CPU-clocks by dividing the
+            # frequency measured by the total amount of fuzzes.
+            fuzzing_sum = fuzz_csv.min_clocks.sum()
+            mean = sum(np.array(list(fuzz_csv.min_clocks.index))
+                    * (np.array(list(fuzz_csv.min_clocks))/fuzzing_sum))
+            means[fuzz_csv.fuzz_class] = round(mean,0).astype(int)
 
         xmin,xmax,ymax = min(xmin_list),max(xmax_list),max(ymax_list)
 
