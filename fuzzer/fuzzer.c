@@ -190,7 +190,7 @@ static void measure(uint64_t *measurements[ITERATIONS], input_st *inputs, size_t
 static void generate_inputs(distribution_et dist, input_st *inputs, size_t count)
 {
     for (size_t i = 0; i < count; i++)
-        set_values(UNIFORMLY, &inputs[i].a, &inputs[i].b);
+        set_values(dist, &inputs[i].a, &inputs[i].b);
 }
 
 /**
