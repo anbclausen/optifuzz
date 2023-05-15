@@ -2,10 +2,10 @@
     nodes. Nodes include all non-branching arithmetic, 
     logical and comparison operators in C other than '/'
     and '%'. Leafs can be the variable 'x', the variable
-    'y', an integer, a 6-bit number or a Boolean. *)
+    'y', an integer, a number between 0 and 64 or a Boolean. *)
 
 type size_expr =
-  (* Size - 6-bit number [0, 64] *)
+  (* Size - number between 0 and 64 *)
   | SizeLit of int
 
 type bool_expr =
