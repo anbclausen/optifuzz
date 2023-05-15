@@ -8,6 +8,7 @@
 
 #define MIN(x, y) ((x < y) ? (x) : (y))
 #define RAND64(x) arc4random_buf(x, sizeof(int64_t))
+#define RAND8(x) arc4random_buf(x, sizeof(int8_t))
 
 #define RANDOM (arc4random() > UINT32_MAX / 2)
 
@@ -32,6 +33,7 @@ typedef enum
     ZERO,      // One is 0, other is uniform random
     ALTB,      // Uniformly random but a < b
     BLTA,      // Uniformly random but b < a
+    SMALL,     // Uniformly random but small values
 } distribution_et;
 
 /**
@@ -93,6 +95,10 @@ static void set_values(distribution_et dist, int64_t *a, int64_t *b)
             *a = *b;
             *b = tmp;
         }
+        break;
+    case SMALL:
+        RAND8(a);
+        RAND8(b);
         break;
     default:
         fprintf(stderr, "Distribution not yet supported!");
@@ -342,6 +348,9 @@ int main(int argc, char const *argv[])
 
     analysis = (analysis_st) {BLTA, inputs, &measurements, fuzz_count};
     run(&analysis, "./result-yltx.csv", opt_flags, "yltx");
+
+    analysis = (analysis_st) {SMALL, inputs, &measurements, fuzz_count};
+    run(&analysis, "./result-small.csv", opt_flags, "small");
 
     // Free input for memory and measurements
     free(inputs);

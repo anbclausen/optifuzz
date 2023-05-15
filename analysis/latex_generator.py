@@ -116,7 +116,8 @@ class TexTikzPic(TexBlock):
             \\node[right=4mm of 1] (3) {{
                 $\\begin{{aligned}}
                     \\texttt{{{fuzz_classes[5]}}}_\\mu: & \\,{means[fuzz_classes[5]]}\\\\
-                    \\texttt{{{fuzz_classes[6]}}}_\\mu: & \\,{means[fuzz_classes[6]]}
+                    \\texttt{{{fuzz_classes[6]}}}_\\mu: & \\,{means[fuzz_classes[6]]}\\\\
+                    \\texttt{{{fuzz_classes[7]}}}_\\mu: & \\,{means[fuzz_classes[7]]}
                 \end{{aligned}}$
             }};
             \\node[fit=(1)(2)(3),draw]{{}};"""
