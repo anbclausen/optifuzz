@@ -11,6 +11,7 @@
 #include <linux/random.h>
 #include <linux/moduleparam.h>
 
+// Definitions from libc not available in kernel
 #define INT64_MAX 9223372036854775807LL
 #define UINT64_MAX 0xffffffffffffffffULL
 #define UINT32_MAX 0xffffffffU
@@ -18,8 +19,9 @@
 MODULE_LICENSE("Dual BSD/GPL");
 
 #define MIN(x, y) ((x < y) ? (x) : (y))
-#define RAND64(x) get_random_bytes(x, sizeof(int64_t))
 
+// Kernel functions to get random values replacing BSD lib functions
+#define RAND64(x) get_random_bytes(x, sizeof(int64_t))
 #define RANDOM (get_random_u32() > UINT32_MAX / 2)
 
 #define REPEATS 100   /** The amount of times the program \
@@ -28,11 +30,15 @@ MODULE_LICENSE("Dual BSD/GPL");
                        *  fuzz inputs to lower noise from other CPU \
                        *  tasks. */
 
+// Kernel parameters
 static size_t fuzz_count = 10000;
-module_param_named(count, fuzz_count, long, 0644);
 static char opt_flags[50];
+
+// Registering kernel parameters
+module_param_named(count, fuzz_count, long, 0644);
 module_param_string(flag, opt_flags, 50, 0644);
 
+// Externel program to be timed
 extern int program(int64_t, int64_t);
 
 /**
@@ -49,6 +55,79 @@ typedef enum
 } distribution_et;
 
 #define TOTAL_DISTRIBUTIONS 5
+
+/**
+ * @struct      status_et
+ * @brief       Status of the program.
+ */
+typedef enum
+{
+    RUNNING,
+    DONE
+} status_et;
+
+// The program status
+static status_et status;
+
+// Defines the filenames entries in /proc for reading the program status and the output
+#define PROC_STATUS_FILENAME "optifuzz_status"
+#define PROC_OUTPUT_FILENAME "optifuzz_output"
+
+// Specifies the entries in /proc for interaction with the module
+static struct proc_dir_entry *proc_status;
+static struct proc_dir_entry *proc_output;
+
+// Function signatures for read handlers implemented later in this file
+static ssize_t proc_status_read(struct file *file, char __user *buf, size_t count, loff_t *pos);
+static ssize_t proc_output_read(struct file *file, char __user *buf, size_t count, loff_t *pos);
+
+// Specifies the the read handlers for the proc entries
+static const struct proc_ops proc_status_ops = {.proc_read = proc_status_read};
+static const struct proc_ops proc_output_ops = {.proc_read = proc_output_read};
+
+// Size of char array in link
+#define LINK_SIZE 1000
+
+// Single linked list with char buffer
+typedef struct link
+{
+    struct link *next;
+    size_t index;
+    char buffer[LINK_SIZE];
+} link_buf_st;
+
+// Global list for buffering the result until requested
+static link_buf_st *link_buf;
+
+/**
+ * @fn          new_link
+ * @brief       Allocate space for new link and initialize its values.
+ * @return      Returns new initialized link.
+ */
+link_buf_st *new_link(void)
+{
+    link_buf_st *link = kmalloc(sizeof(link_buf_st), GFP_KERNEL);
+    if (link == NULL)
+        printk(KERN_ERR "Could not allocate memory for list link\n");
+    link->next = NULL;
+    link->index = 0;
+    memset(link->buffer, '\0', LINK_SIZE);
+    return link;
+}
+/**
+ * @fn          free_links
+ * @brief       Free the memory of all links in list.
+ */
+static void free_links(void)
+{
+    link_buf_st *prev;
+    while (link_buf != NULL)
+    {
+        prev = link_buf;
+        link_buf = link_buf->next;
+        kfree(prev);
+    }
+}
 
 /**
  * @fn          set_values
@@ -240,42 +319,16 @@ typedef struct
     size_t count;
 } analysis_st;
 
-#define LINK_CHARS 1000
-typedef struct link
-{
-    struct link *next;
-    size_t index;
-    char buffer[LINK_CHARS];
-} link_buf_st;
-
-link_buf_st *link_buf;
-
-link_buf_st *new_link(void)
-{
-    link_buf_st *link = kmalloc(sizeof(link_buf_st), GFP_KERNEL);
-    if (link == NULL)
-        printk(KERN_ERR "Could not allocate memory for list link\n");
-    link->next = NULL;
-    link->index = 0;
-    memset(link->buffer, '\0', LINK_CHARS);
-    return link;
-}
-
-void free_links(void)
-{
-    link_buf_st *prev;
-    while (link_buf != NULL)
-    {
-        prev = link_buf;
-        link_buf = link_buf->next;
-        kfree(prev);
-    }
-}
-
-void write_chars(const char *str, size_t amount)
+/**
+ * @fn          write_chars
+ * @brief       Write chars to output list.
+ * @param       arr            The array of chars.
+ * @param       amount         The amount of chars to process.
+ */
+static void write_chars(const char *arr, size_t amount)
 {
     link_buf_st *link;
-    
+
     if (link_buf == NULL)
         link_buf = new_link();
 
@@ -283,26 +336,32 @@ void write_chars(const char *str, size_t amount)
     while (link->next != NULL)
         link = link->next;
 
+    // This could be done smarter, but the compiler will probably optimize it
     for (size_t i = 0; i < amount; i++)
     {
-        if (link->index == LINK_CHARS)
+        if (link->index == LINK_SIZE)
         {
             link->next = new_link();
             link = link->next;
         }
-        (link->buffer)[link->index] = str[i];
+        (link->buffer)[link->index] = arr[i];
         (link->index)++;
     }
 }
 
-void write_string(const char *str)
+/**
+ * @fn          write_string
+ * @brief       Wrapper for write_chars taking zero terminated string and writing to output list.
+ * @param       str            The zero terminated string.
+ */
+static void write_string(const char *str)
 {
     write_chars(str, strlen(str));
 }
 
 /**
  * @fn          write_data
- * @brief       Write the measurements to a file.
+ * @brief       Process and write the measurements to the output list.
  * @param       filename            The name of the file to write to.
  * @param       measurements        The measurements to write.
  * @param       inputs              The inputs to write.
@@ -315,7 +374,7 @@ static void write_data(const char *filename, const char *flags, const char *fuzz
     const input_st *inputs = analysis->inputs;
     size_t count = analysis->count;
 
-    char conversion_buffer[50];
+    char conversion_buffer[100];
 
     write_string("# FILE: [");
     write_string(filename);
@@ -370,6 +429,11 @@ static void run(analysis_st *analysis, const char *out_file, const char *flags, 
     write_data(out_file, flags, fuzz_class, analysis);
 }
 
+/**
+ * @fn          start
+ * @brief       Run all measurements.
+ * @param       opt_flags            Optimization flags used to compile the external program.
+ */
 int start(const char *opt_flags)
 {
     analysis_st analysis;
@@ -403,19 +467,10 @@ int start(const char *opt_flags)
     return 0;
 }
 
-typedef enum
-{
-    RUNNING,
-    DONE
-} status_et;
-
-#define PROC_STATUS_FILENAME "optifuzz_status"
-#define PROC_OUTPUT_FILENAME "optifuzz_output"
-status_et status;
-
-static struct proc_dir_entry *proc_status;
-static struct proc_dir_entry *proc_output;
-
+/**
+ * @fn          proc_status_read
+ * @brief       This function handles reads from /proc/optifuzz_status and is called by the kernel.
+ */
 static ssize_t proc_status_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
 {
     const char *actual_msg;
@@ -446,6 +501,10 @@ static ssize_t proc_status_read(struct file *file, char __user *buf, size_t coun
     return ret ?: count;
 }
 
+/**
+ * @fn          proc_output_read
+ * @brief       This function handles reads from /proc/optifuzz_output and is called by the kernel.
+ */
 static ssize_t proc_output_read(struct file *file, char __user *buf, size_t count, loff_t *pos)
 {
     link_buf_st *link;
@@ -456,7 +515,7 @@ static ssize_t proc_output_read(struct file *file, char __user *buf, size_t coun
 
     link = link_buf;
 
-    jumps = *pos / LINK_CHARS;
+    jumps = *pos / LINK_SIZE;
 
     for (size_t i = 0; i < jumps; i++)
     {
@@ -468,7 +527,7 @@ static ssize_t proc_output_read(struct file *file, char __user *buf, size_t coun
     if (link == NULL)
         return 0;
 
-    start_index = *pos % LINK_CHARS;
+    start_index = *pos % LINK_SIZE;
     if (link->index < start_index)
         return 0;
 
@@ -482,14 +541,10 @@ static ssize_t proc_output_read(struct file *file, char __user *buf, size_t coun
     return ret ?: to_read;
 }
 
-static const struct proc_ops proc_status_ops = {
-    .proc_read = proc_status_read,
-};
-
-static const struct proc_ops proc_output_ops = {
-    .proc_read = proc_output_read,
-};
-
+/**
+ * @fn          entry
+ * @brief       This function is the module entry called when it is mounted in the kernel.
+ */
 static int __init entry(void)
 {
     printk(KERN_INFO "Optifuzz Loaded [%s]\n", opt_flags);
@@ -516,6 +571,10 @@ static int __init entry(void)
     return 0;
 }
 
+/**
+ * @fn          end
+ * @brief       This function is the module exit called when it is removed from the kernel.
+ */
 static void __exit end(void)
 {
     proc_remove(proc_status);
@@ -524,5 +583,6 @@ static void __exit end(void)
     printk(KERN_INFO "Optifuzz Unloaded[%s]\n", opt_flags);
 }
 
+// Specifying module init and exit functions
 module_init(entry);
 module_exit(end);
