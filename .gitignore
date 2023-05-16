@@ -39,6 +39,7 @@ generator/generated/
 .vscode
 out
 
+analysis/*,s
 analysis/programs/
 analysis/flagged/
 analysis/latex/*
