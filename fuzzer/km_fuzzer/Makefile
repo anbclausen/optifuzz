@@ -1,4 +1,4 @@
-CFLAGS_program.o += -O0
+CFLAGS_program.o += -Os
 CC_program = gcc
 
 CFLAGS_program.o += -w

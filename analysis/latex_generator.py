@@ -379,6 +379,7 @@ def gen_plot_asm_fig(seed, parsed_csv, colors, placeholder=[]):
             placeholder.remove(i)
             continue
         csv = parsed_csv[compiler_flags[i-1]][3]
+        assert(csv.compile_flag != "")
         asm = run(
             ["gcc", f"{FLAGGED_FOLDER}/{seed}.c", "-S", f"-{csv.compile_flag}", "-w", "-c", "-o", "/dev/stdout"]
         )

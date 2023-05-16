@@ -31,7 +31,7 @@ MODULE_LICENSE("Dual BSD/GPL");
 static size_t fuzz_count = 10000;
 module_param_named(count, fuzz_count, long, 0644);
 static char opt_flags[50];
-module_param_string(flags, opt_flags, 50, 0644);
+module_param_string(flag, opt_flags, 50, 0644);
 
 extern int program(int64_t, int64_t);
 
@@ -492,7 +492,7 @@ static const struct proc_ops proc_output_ops = {
 
 static int __init entry(void)
 {
-    printk(KERN_INFO "Fuzzer Loaded [%s]!\n", opt_flags);
+    printk(KERN_INFO "Optifuzz Loaded [%s]\n", opt_flags);
     status = RUNNING;
 
     proc_status = proc_create(PROC_STATUS_FILENAME, 0, NULL, &proc_status_ops);
@@ -511,7 +511,7 @@ static int __init entry(void)
 
     start(opt_flags);
 
-    printk(KERN_INFO "Fuzzer Done[%s]!\n", opt_flags);
+    printk(KERN_INFO "Optifuzz Done[%s]\n", opt_flags);
     status = DONE;
     return 0;
 }
@@ -521,7 +521,7 @@ static void __exit end(void)
     proc_remove(proc_status);
     proc_remove(proc_output);
     free_links();
-    printk(KERN_INFO "Fuzzer Unloaded[%s]!\n", opt_flags);
+    printk(KERN_INFO "Optifuzz Unloaded[%s]\n", opt_flags);
 }
 
 module_init(entry);
