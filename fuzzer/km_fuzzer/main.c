@@ -54,8 +54,6 @@ typedef enum
     ZERO,      // One is 0, other is uniform random
 } distribution_et;
 
-#define TOTAL_DISTRIBUTIONS 5
-
 /**
  * @struct      status_et
  * @brief       Status of the program.
