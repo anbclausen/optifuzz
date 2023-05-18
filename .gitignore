@@ -39,11 +39,18 @@ generator/generated/
 .vscode
 out
 
+analysis/*,s
 analysis/programs/
 analysis/flagged/
 analysis/latex/*
 !analysis/latex/*.tex
 !analysis/latex/generated_latex/
+
+fuzzer/km_fuzzer/program.c
+fuzzer/km_fuzzer/modprog*
+fuzzer/km_fuzzer/Module*
+fuzzer/km_fuzzer/modules*
+fuzzer/km_fuzzer/.*
 
 fuzzer/result-*.csv
 fuzzer/results
