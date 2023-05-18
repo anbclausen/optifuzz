@@ -15,7 +15,7 @@ number_of_fuzzing_runs = sys.argv[1]
 optimization_flags = config["compiler_flags"]
 fuzzing_classes = config["fuzzing_classes"]
 
-compiler = "gcc" # FIXME - not getting passed to this script..
+compiler = config["compiler"]
 
 kernel_mode = True # FIXME - make parameter
 
