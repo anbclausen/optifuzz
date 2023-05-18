@@ -17,7 +17,7 @@ fuzzing_classes = config["fuzzing_classes"]
 
 compiler = config["compiler"]
 
-kernel_mode = True # FIXME - make parameter
+kernel_mode = config["kernel_mode"]
 
 def combine(prog_path, flag):
     os.system(f"{compiler} -{flag} -c -w -o template.o {prog_path}")
