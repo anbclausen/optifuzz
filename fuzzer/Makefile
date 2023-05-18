@@ -15,4 +15,4 @@ clean-objects:
 
 .PHONY : clean
 clean: clean-results clean-objects
-	$(MAKE) -C km_fuzzer clean
+	# $(MAKE) -C km_fuzzer clean

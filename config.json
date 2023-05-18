@@ -2,5 +2,5 @@
   "compiler": "gcc",
   "compiler_flags": ["O0", "O1", "O2", "O3", "Os"],
   "fuzzing_classes": ["uniform", "equal", "max64", "umax64", "zero", "xlty", "yltx"],
-  "kernel_mode": true
+  "kernel_mode": false
 }
