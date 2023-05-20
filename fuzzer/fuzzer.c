@@ -8,6 +8,14 @@
 
 #define MIN(x, y) ((x < y) ? (x) : (y))
 #define RAND64(x) arc4random_buf(x, sizeof(int64_t))
+#define RAND8(x) arc4random_buf(x, sizeof(int8_t))
+#define RANDXLTY(x, y) RAND64(x); \
+                       RAND64(y); \
+                       if (*x > *y) { \
+                           int64_t tmp = *x; \
+                           *x = *y; \
+                           *y = tmp; \
+                       }
 
 #define RANDOM (arc4random() > UINT32_MAX / 2)
 
@@ -30,6 +38,9 @@ typedef enum
     MAX64,     // One is INT64_MAX, other is uniform random
     UMAX64,    // One is UINT64_MAX, other is uniform random. UINT64_MAX is -1 in signed (int64_t)
     ZERO,      // One is 0, other is uniform random
+    ALTB,      // Uniformly random but a < b
+    BLTA,      // Uniformly random but b < a
+    SMALL,     // Uniformly random but small values
 } distribution_et;
 
 /**
@@ -71,6 +82,16 @@ static void set_values(distribution_et dist, int64_t *a, int64_t *b)
             RAND64(a);
         else
             RAND64(b);
+        break;
+    case ALTB:
+        RANDXLTY(a, b);
+        break;
+    case BLTA:
+        RANDXLTY(b, a);
+        break;
+    case SMALL:
+        RAND8(a);
+        RAND8(b);
         break;
     default:
         fprintf(stderr, "Distribution not yet supported!");
@@ -314,6 +335,15 @@ int main(int argc, char const *argv[])
 
     analysis = (analysis_st) {UMAX64, inputs, &measurements, fuzz_count};
     run(&analysis, "./result-umax64.csv", opt_flags, "umax64");
+
+    analysis = (analysis_st) {ALTB, inputs, &measurements, fuzz_count};
+    run(&analysis, "./result-xlty.csv", opt_flags, "xlty");
+
+    analysis = (analysis_st) {BLTA, inputs, &measurements, fuzz_count};
+    run(&analysis, "./result-yltx.csv", opt_flags, "yltx");
+
+    analysis = (analysis_st) {SMALL, inputs, &measurements, fuzz_count};
+    run(&analysis, "./result-small.csv", opt_flags, "small");
 
     // Free input for memory and measurements
     free(inputs);

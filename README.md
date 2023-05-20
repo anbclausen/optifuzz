@@ -15,18 +15,18 @@ make generate pn=? md=?             # generates 'pn' programs with ASTs of a
 make generate-seeded s=? md=?       # generates 1 program from seed 's' with AST
                                     # of maximum depth of 'md'
 
-make inspect c=?                    # compiles all programs in analysis/programs
-                                    # with compiler 'c', inspects the assembly 
-                                    # and flags code with jumps
+make inspect                        # compiles all programs in analysis/programs, 
+                                    # inspects the assembly and flags code with 
+                                    # jumps
 
-make generate-inspect pn=? md=? c=? # generates and inspects code
+make generate-inspect pn=? md=?     # generates and inspects code
 
 make fuzz in=?                      # fuzzes all programs that were flagged from
                                     # the assembly inspection with 'in' inputs
 
 make visualize                      # visualizes results from fuzzing
 
-make all pn=? md=? c=? in=?         # runs the whole pipeline: generates, 
+make all pn=? md=? in=?             # runs the whole pipeline: generates, 
                                     # inspects, fuzzes and analyzes
 
 make latexgen                       # generates results of CSVs in: 
@@ -42,9 +42,5 @@ make clean                          # cleans all generated files in all steps of
 
 ## TODO
 - LaTeX
-  - Graph that shows computation time vs. fuzz # (to detect low-level CPU optimizations)
   - Write jumps: jle, je, ...
-  - Visualize different fuzz classes with the rainbow technique
-- Misc.
-  - Describe all dependencies used for this project
     

@@ -3,6 +3,9 @@ import os
 import re
 import sys
 import subprocess
+import json
+
+config = json.load(open("../config.json"))
 
 folder = os.path.dirname(os.path.realpath(__file__))
 flagged_folder = f"{folder}{os.sep}flagged{os.sep}"
@@ -10,8 +13,8 @@ flagged_folder = f"{folder}{os.sep}flagged{os.sep}"
 # Match all jx(x) instructions that is not jmp
 jmp_regex = re.compile(r"\t(j(?!mp)[a-z][a-z]?)")
 
-optimization_flags = ["O0", "O1", "O2", "O3", "Os"]
-compiler = sys.argv[1] if len(sys.argv) > 1 else "gcc"
+optimization_flags = config["compiler_flags"]
+compiler = config["compiler"]
 
 
 def run(args):

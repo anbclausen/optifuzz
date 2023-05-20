@@ -1,5 +1,5 @@
 inspect: clean-flagged
-	@./assembly_inspection.py $(c)
+	@./assembly_inspection.py
 
 latexgen:
 	@./latex_generator.py

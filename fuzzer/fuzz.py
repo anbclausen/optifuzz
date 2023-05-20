@@ -2,15 +2,22 @@
 import sys
 import os
 import shutil
+import json
 
 prog_dir = "../analysis/flagged"
+config = json.load(open("../config.json"))
 
-data_points = sys.argv[1]
-optimization_flags = ["O0", "O1", "O2", "O3", "Os"]
+if len(sys.argv) < 2:
+    print("Usage: python3 fuzz.py <number of fuzzing runs>")
+    exit(1)
 
-compiler = "gcc" # FIXME - not getting passed to this script..
+number_of_fuzzing_runs = sys.argv[1]
+optimization_flags = config["compiler_flags"]
+fuzzing_classes = config["fuzzing_classes"]
 
-kernel_mode = True # FIXME - make parameter
+compiler = config["compiler"]
+
+kernel_mode = config["kernel_mode"]
 
 def combine(prog_path, flag):
     os.system(f"{compiler} -{flag} -c -w -o template.o {prog_path}")
@@ -87,24 +94,18 @@ for prog in os.listdir(prog_dir):
             if kernel_mode:
                 compile_km(prog_path, flag)
                 sudo_prefix = "sudo" if not os.getuid() == 0 else ""
-                os.system(f"{sudo_prefix} insmod km_fuzzer/modprog.ko count={data_points} flag={flag}")
+                os.system(f"{sudo_prefix} insmod km_fuzzer/modprog.ko count={number_of_fuzzing_runs} flag={flag}")
                 km_extract_output(name)
                 os.system(f"{sudo_prefix} rmmod modprog")
             else:
                 combine(prog_path, flag)
-                os.system(f"./out {data_points} {flag}")
+                os.system(f"./out {number_of_fuzzing_runs} {flag}")
 
-            shutil.copyfile("result-uniform.csv", f"results/{seed}-uniform_{flag}.csv")
-            shutil.copyfile("result-equal.csv", f"results/{seed}-equal_{flag}.csv")
-            shutil.copyfile("result-zero.csv", f"results/{seed}-zero_{flag}.csv")
-            shutil.copyfile("result-max64.csv", f"results/{seed}-max64_{flag}.csv")
-            shutil.copyfile("result-umax64.csv", f"results/{seed}-umax64_{flag}.csv")
+            for fuzzing_class in fuzzing_classes:
+                shutil.copyfile(f"result-{fuzzing_class}.csv", f"results/{seed}-{fuzzing_class}_{flag}.csv")
         
         print()
 
 remove_file_if_exists("out")
-remove_file_if_exists("result-uniform.csv")
-remove_file_if_exists("result-equal.csv")
-remove_file_if_exists("result-zero.csv")
-remove_file_if_exists("result-max64.csv")
-remove_file_if_exists("result-umax64.csv")
+for fuzzing_class in fuzzing_classes:
+    remove_file_if_exists(f"result-{fuzzing_class}.csv")

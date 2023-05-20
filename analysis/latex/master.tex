@@ -73,13 +73,22 @@
         \noindent\bool_if:NF { \afp_int_ismember_p:nn {\x} {#2} } {\input{generated_latex/prog\x.tex}}
     }
   }
+
+  \NewExpandableDocumentCommand { \AllExperimentResults } {}
+  {
+    % capped at 1000 for safety
+    \foreach \x in {1,...,1000} {
+      \IfFileExists{generated_latex/prog\x.tex}{\noindent \input{generated_latex/prog\x.tex}{}}
+    }
+  }
 \ExplSyntaxOff
 
 
 \begin{document}
 
 % IncludeExperimentResults{n}{x,y,z} includes documents 1 to n, excluding x, y and z
-\IncludeExperimentResults{57}{0}
+%\IncludeExperimentResults{65}{0}
+\AllExperimentResults
 
 
 \end{document}
