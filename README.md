@@ -43,4 +43,19 @@ make clean                          # cleans all generated files in all steps of
 ## TODO
 - LaTeX
   - Write jumps: jle, je, ...
-    
+  - Ensure documentation and refactor if necessary
+- Fuzzer
+  - Refactor `fuzzer` - especially kernel module
+  - Fix the kernel module `make clean` bug
+  - Ensure documentation and refactor if necessary
+- Generation
+  - Generate uniformly random ASTs
+  - Introduce `SmallIntLit` and `TinyIntLit`
+  - Ensure documentation and refactor if necessary
+- General
+  - Make whole pipeline consistent with config.json
+- Docs 
+  - Make better list of requirements
+  - Make sure `make` guide is up to date
+- Paper
+  - Prepare paper structure with files and asset folder
