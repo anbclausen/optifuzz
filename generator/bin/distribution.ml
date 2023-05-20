@@ -60,10 +60,15 @@ let choose state l p =
         choose' xs ys (acc +. y) in
   choose' l p 0.0
 
+(** Takes a Random state, a list of values, and a list of probabilities
+    and returns a value from the list of values with the corresponding
+    probability. The probabilities are normalized before choosing. *)
 let choose_normalized state l p =
   choose state l (normalize p)
 
-(** Generates a random distribution of nodes in the AST. *)
+(** Generates a random distribution of nodes in the AST. Note that a random
+    distribution includes probability of generating int lits in different 
+    ranges. *)
 let random_distribution seed =
   let state = Random.State.make [|seed|] in
   let random_arr = Array.init 24 (fun _ -> Random.State.float state 1.0) in

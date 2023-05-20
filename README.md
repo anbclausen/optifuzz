@@ -48,8 +48,6 @@ make clean                          # cleans all generated files in all steps of
   - Refactor `fuzzer` - especially kernel module
   - Fix the kernel module `make clean` bug
   - Ensure documentation and refactor if necessary
-- Generation
-  - Ensure documentation and refactor if necessary
 - General
   - Make whole pipeline consistent with config.json
 - Docs 

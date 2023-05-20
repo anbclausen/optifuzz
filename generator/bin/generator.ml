@@ -3,18 +3,21 @@ open Distribution
 
 let max_depth = Sys.argv.(3) |> int_of_string
 
+(** Generates a random seed from a state *)
 let random_seed state = 
   Random.State.bits state
 
+(** Generates a random int literal in the range [0; 3]. *)
 let random_tiny_int_lit state =
   let n = Random.State.int64 state 4L in
   IntLit n
 
+(** Generates a random int literal in the range [0; 100]. *)
 let random_small_int_lit state =
   let n = Random.State.int64 state 101L in
   IntLit n
 
-(** Generates a random integer literal. *)
+(** Generates a random 64-bit integer literal. *)
 let random_int_lit state =
   let n = Random.State.bits64 state in
   IntLit n
@@ -73,6 +76,7 @@ let rec random_expr (state: Random.State.t) (depth: int) (p: expr_p) =
       p.bitwise_and_p; p.bitwise_or_p; p.bitwise_complement_p; 
       p.bitwise_xor_p; p.left_shift_p; p.right_shift_p ]
 
+(** Generates a random child of an AST node. *)
 and random_expr_child state depth p =
   let seed = random_seed state in
   let state = Random.State.make [|seed|] in 
