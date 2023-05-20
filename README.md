@@ -10,6 +10,8 @@ We made a paper describing the tool and our findings with it. It can be found in
 ## Documentation
 `make` targets have been added for the whole pipeline. To run the whole pipeline, do `make all pn={# of random programs to generate} md={max depth of the generated ASTs} in={# of inputs the programs should be fuzzed with}`. At the end you will have a generated pdf report visualizing the results, the code, the assembly and some analysis in `analysis/latex/master.pdf`.
 
+As an example `make all pn=1000 md=5 in=100000` will run the whole pipeline on 1000 random programs with ASTs of maximum depth 5 where each program is fuzzed with 100000 inputs.
+
 For a full description of the `make` targets, see:
 ```
 make generate pn=? md=?             # generates 'pn' programs with ASTs of a 
