@@ -57,5 +57,3 @@ make clean                          # cleans all generated files in all steps of
 - Docs 
   - Make better list of requirements
   - Make sure `make` guide is up to date
-- Paper
-  - Prepare paper structure with files and asset folder
