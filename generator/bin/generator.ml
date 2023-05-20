@@ -6,6 +6,14 @@ let max_depth = Sys.argv.(3) |> int_of_string
 let random_seed state = 
   Random.State.bits state
 
+let random_tiny_int_lit state =
+  let n = Random.State.int64 state 4L in
+  IntLit n
+
+let random_small_int_lit state =
+  let n = Random.State.int64 state 101L in
+  IntLit n
+
 (** Generates a random integer literal. *)
 let random_int_lit state =
   let n = Random.State.bits64 state in
@@ -18,7 +26,7 @@ let random_terminal state p =
     Y;
 
     random_int_lit state;
-    
+
     True;
     False;
   ] [ p.x_p; p.y_p; p.int_lit_p; p.true_p; p.false_p ]
@@ -29,6 +37,8 @@ let rec random_expr (state: Random.State.t) (depth: int) (p: expr_p) =
     lazy X;
     lazy Y;
 
+    lazy (random_tiny_int_lit state);
+    lazy (random_small_int_lit state);
     lazy (random_int_lit state);
 
     lazy (Neg (random_expr_child state depth p));

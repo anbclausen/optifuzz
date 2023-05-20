@@ -2,7 +2,7 @@
     nodes. Nodes include all non-branching arithmetic, 
     logical and comparison operators in C other than '/'
     and '%'. Leafs can be the variable 'x', the variable
-    'y', an integer, or a Boolean. *)
+    'y', a 64-bit integer, or a Boolean. *)
 
 type expr =
   (* Input variables *)
