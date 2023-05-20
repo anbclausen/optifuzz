@@ -61,6 +61,5 @@ make clean                          # cleans all generated files in all steps of
   - Make whole pipeline consistent with config.json
 - Docs 
   - Make better list of requirements
-  - Make sure `make` guide is up to date
 - Paper
   - Prepare paper structure with files and asset folder
