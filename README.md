@@ -8,6 +8,9 @@ You should have `ocaml`, `dune`, `python3`, and all python packages in `python_r
 We made a paper describing the tool and our findings with it. It can be found in the `paper` folder.
 
 ## Documentation
+`make` targets have been added for the whole pipeline. To run the whole pipeline, do `make all pn={# of random programs to generate} md={max depth of the generated ASTs} in={# of inputs the programs should be fuzzed with}`. At the end you will have a generated pdf report visualizing the results, the code, the assembly and some analysis in `analysis/latex/master.pdf`.
+
+For a full description of the `make` targets, see:
 ```
 make generate pn=? md=?             # generates 'pn' programs with ASTs of a 
                                     # maximum depth of 'md'
@@ -24,14 +27,14 @@ make generate-inspect pn=? md=?     # generates and inspects code
 make fuzz in=?                      # fuzzes all programs that were flagged from
                                     # the assembly inspection with 'in' inputs
 
-make visualize                      # visualizes results from fuzzing
+make latexgen                       # generates results of CSVs in: 
+                                    # "analysis/latex/generated_latex". compile: 
+                                    # "analysis/latex/master.tex" for a preview
+
+make latexcompile                   # compiles the generated LaTeX with pdflatex
 
 make all pn=? md=? in=?             # runs the whole pipeline: generates, 
-                                    # inspects, fuzzes and analyzes
-
-make latexgen                       # generates results of CSVs in: 
-                                    # "analysis/latex/generated_latex". Compile: 
-                                    # "analysis/latex/master.tex" for a preview
+                                    # inspects, fuzzes, analyzes and visualizes
 
 make clean                          # cleans all generated files in all steps of
                                     # the process
