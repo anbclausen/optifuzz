@@ -2,7 +2,12 @@
 Welcome to Optifuzz! A tool for fuzzing randomly generated C code with different optimization flags to discover side-channel vulnerabilities. This tool was made for the Language-Based Security course at Aarhus University.
 
 ## Prerequisites
-You should have `ocaml`, `dune`, `python3`, and all python packages in `python_requirements.txt` installed.
+Optifuzz depends on a few languages and libraries:
+- You should have [OCaml](https://ocaml.org/docs/up-and-running) and [Dune](https://dune.readthedocs.io/en/stable/quick-start.html) installed.
+- You should have [Python3](https://www.python.org/downloads/) installed alongside all Python packages listed in `python_requirements.txt`. These can be installed with
+```
+pip install -r python_requirements.txt
+```
 
 ## Paper
 We made a paper describing the tool and our findings with it. It can be found in the `paper` folder.
@@ -59,7 +64,5 @@ make clean                          # cleans all generated files in all steps of
   - Ensure documentation and refactor if necessary
 - General
   - Make whole pipeline consistent with config.json
-- Docs 
-  - Make better list of requirements
 - Paper
   - Prepare paper structure with files and asset folder
