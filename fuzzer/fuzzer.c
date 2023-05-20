@@ -9,6 +9,13 @@
 #define MIN(x, y) ((x < y) ? (x) : (y))
 #define RAND64(x) arc4random_buf(x, sizeof(int64_t))
 #define RAND8(x) arc4random_buf(x, sizeof(int8_t))
+#define RANDXLTY(x, y) RAND64(x); \
+                       RAND64(y); \
+                       if (*x > *y) { \
+                           int64_t tmp = *x; \
+                           *x = *y; \
+                           *y = tmp; \
+                       }
 
 #define RANDOM (arc4random() > UINT32_MAX / 2)
 
@@ -77,24 +84,10 @@ static void set_values(distribution_et dist, int64_t *a, int64_t *b)
             RAND64(b);
         break;
     case ALTB:
-        RAND64(a);
-        RAND64(b);
-        if (*a > *b)
-        {
-            int64_t tmp = *a;
-            *a = *b;
-            *b = tmp;
-        }
+        RANDXLTY(a, b);
         break;
     case BLTA:
-        RAND64(a);
-        RAND64(b);
-        if (*a < *b)
-        {
-            int64_t tmp = *a;
-            *a = *b;
-            *b = tmp;
-        }
+        RANDXLTY(b, a);
         break;
     case SMALL:
         RAND8(a);
