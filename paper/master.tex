@@ -11,6 +11,7 @@
 \usepackage{xparse}
 \usepackage{xfp}
 \usepackage{hyperref}
+\usepackage[numbers]{natbib}
 \pgfplotsset{compat=1.12}
 
 \definecolor{mGreen}{rgb}{0,0.6,0}
@@ -109,8 +110,6 @@
   \end{center}
 \end{titlepage}
 
-
-
 \pagebreak
 
 \tableofcontents
@@ -132,5 +131,10 @@
 \section{Conclusion and Future Work}
 \input{chapters/conclusion.tex}
 
+\pagebreak
+
+\addcontentsline{toc}{chapter}{Bibliography}
+\bibliographystyle{plainnat} 
+\bibliography{refs}
 
 \end{document}
