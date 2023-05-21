@@ -22,7 +22,7 @@ kernel_mode = config["kernel_mode"]
 def combine(prog_path, flag):
     os.system(f"{compiler} -{flag} -c -w -o template.o {prog_path}")
     # Use gcc to link
-    os.system("gcc -o out fuzzer.o template.o -lbsd")
+    os.system("gcc -o out fuzzer.o fuzzer_core.o template.o -lbsd")
     os.remove("template.o")
 
 def compile_km(prog_path, flag):
@@ -33,7 +33,7 @@ def compile_km(prog_path, flag):
     os.system(f"cp {prog_path} km_fuzzer/program.c")
     os.system("cd km_fuzzer && make >/dev/null 2>&1")
 
-def km_extract_output(seed):
+def km_extract_output():
     with open('/proc/optifuzz_output', 'r') as f:
         # Initialize the variables to keep track of the current section and filename
         current_section = []
