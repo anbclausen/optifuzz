@@ -12,6 +12,7 @@ let rec generate_random_ast seed =
   let distribution = random_distribution seed in
   let ast = Lazy.force (random_expr state 0 distribution) in
   let prg = program (string_of_expr ast) in
+  
   (* Body of the function should contain both x and y *)
   if String.contains_from prg 58 'x' && String.contains_from prg 58 'y' then
     let filename = "generated/" ^ (string_of_int seed) ^ ".c" in
