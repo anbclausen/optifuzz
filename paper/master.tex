@@ -11,7 +11,10 @@
 \usepackage{xparse}
 \usepackage{xfp}
 \usepackage{hyperref}
+
 \usepackage[numbers]{natbib}
+\renewcommand{\bibsection}{\section*{Bibliography}}
+
 \pgfplotsset{compat=1.12}
 
 \definecolor{mGreen}{rgb}{0,0.6,0}
@@ -132,9 +135,14 @@
 \input{chapters/conclusion.tex}
 
 \pagebreak
-
-\addcontentsline{toc}{chapter}{Bibliography}
+\phantomsection
+\addcontentsline{toc}{section}{Bibliography}
 \bibliographystyle{plainnat} 
 \bibliography{refs}
+
+\pagebreak
+\phantomsection
+\addcontentsline{toc}{section}{Appendix}
+\section*{Appendix}
 
 \end{document}
