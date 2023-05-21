@@ -44,6 +44,7 @@ make clean                          # cleans all generated files in all steps of
 - LaTeX
   - Write jumps: jle, je, ...
   - Ensure documentation and refactor if necessary
+  - For each result page, write all the meta data (what compiler, what flags were tested, what fuzz classes were used, ...)
 - Fuzzer
   - Refactor `fuzzer` - especially kernel module
   - Fix the kernel module `make clean` bug
