@@ -76,11 +76,10 @@ make clean                          # cleans all generated files in all steps of
   - Refactor `fuzzer` - especially kernel module
   - Fix the kernel module `make clean` bug
   - Ensure documentation and refactor if necessary
-- Generation
-  - Generate uniformly random ASTs
-  - Introduce `SmallIntLit` and `TinyIntLit`
-  - Ensure documentation and refactor if necessary
 - General
   - Make whole pipeline consistent with config.json
 - Paper
   - Prepare paper structure with files and asset folder
+
+## Notes
+- It seems like `expr << expr` and `y op (x == const)` are causing branching. Would be awesome to find some real-life examples of tricks like these being used in crypto libraries.
