@@ -4,6 +4,9 @@
 #include <linux/random.h>
 #define RANDOM_BUF get_random_bytes
 #define RANDOM_U32 get_random_u32
+#define malloc(size) kmalloc(size, GFP_KERNEL)
+#define calloc(nmamb, size) kcalloc(nmamb, size, GFP_KERNEL)
+#define free(ptr) kfree(ptr)
 #else
 #include <bsd/stdlib.h>
 #define RANDOM_BUF arc4random_buf

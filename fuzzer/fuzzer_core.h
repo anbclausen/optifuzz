@@ -2,6 +2,13 @@
 #define FUZZER_CORE_H
 
 #ifdef KERNEL_MODE
+// Definitions from libc not available in kernel
+#define INT64_MAX 9223372036854775807LL
+#define UINT64_MAX 0xffffffffffffffffULL
+#define UINT32_MAX 0xffffffffU
+
+#define error_exit(...) (printk(KERN_ERR __VA_ARGS__))
+
 #else
 #include <stdint.h>
 #include <stddef.h>
