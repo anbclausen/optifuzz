@@ -1,5 +1,30 @@
 #include "fuzzer_core.h"
 
+#ifdef KERNEL_MODE
+#include <linux/random.h>
+#define RANDOM_BUF get_random_bytes
+#define RANDOM_U32 get_random_u32
+#else
+#include <bsd/stdlib.h>
+#define RANDOM_BUF arc4random_buf
+#define RANDOM_U32 arc4random
+#endif
+
+#define RAND64(x) RANDOM_BUF(x, sizeof(int64_t))
+#define RAND8(x) RANDOM_BUF(x, sizeof(int8_t))
+#define RANDOM (RANDOM_U32() > UINT32_MAX / 2)
+
+#define RANDXLTY(x, y)    \
+    RAND64(x);            \
+    RAND64(y);            \
+    if (*x > *y)          \
+    {                     \
+        int64_t tmp = *x; \
+        *x = *y;          \
+        *y = tmp;         \
+    }
+
+
 // Array of all dists
 static const distribution_et dists[DIST_COUNT] = {UNIFORMLY, EQUAL, MAX64, UMAX64, ZERO, XLTY, YLTX, SMALL};
 
@@ -64,8 +89,7 @@ static void set_values(distribution_et dist, int64_t *x, int64_t *y)
         RAND8(y);
         break;
     default:
-        fprintf(stderr, "Distribution not yet supported!");
-        exit(1);
+        error_exit("Distribution not yet supported!\n");
     }
 }
 

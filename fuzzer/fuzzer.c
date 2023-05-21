@@ -23,10 +23,7 @@ static void write_data(const char *filename, const char *flags, const char *fuzz
 
     FILE *fs = fopen(filename, "w");
     if (fs == NULL)
-    {
-        fprintf(stderr, "Error when opening file\n");
-        exit(EXIT_FAILURE);
-    }
+        error_exit("Error when opening file\n");
 
     fprintf(fs, "# compile flags: [%s], fuzz class: [%s]\n", flags, fuzz_class);
     fprintf(fs, "input_a,input_b,min_clock_measured");
@@ -79,6 +76,9 @@ int main(int argc, char const *argv[])
         run(&analysis);
 
         dist_str = dist_to_string(dist);
+        if (dist_str == NULL)
+            error_exit("Could not convert distribution with index \"%ld\" to string!\n", i);
+
         memset(format_buf, '\0', sizeof(format_buf));
         snprintf(format_buf, buf_size, "./result-%s.csv", dist_str);
         write_data(format_buf, opt_flags, dist_str, &analysis);

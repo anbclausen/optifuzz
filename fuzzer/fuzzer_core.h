@@ -4,6 +4,8 @@
 #ifdef KERNEL_MODE
 #else
 #include <stdint.h>
+#include <stddef.h>
+#define error_exit(...) (fprintf(stderr, __VA_ARGS__), exit(EXIT_FAILURE))
 #endif
 
 #define REPEATS 100   /** The amount of times the program \
@@ -15,30 +17,6 @@
 extern int program(int64_t, int64_t);
 
 #define MIN(x, y) ((x < y) ? (x) : (y))
-
-#ifdef KERNEL_MODE
-#include <linux/random.h>
-#define RANDOM_BUF get_random_bytes
-#define RANDOM_U32 get_random_u32
-#else
-#include <bsd/stdlib.h>
-#define RANDOM_BUF arc4random_buf
-#define RANDOM_U32 arc4random
-#endif
-
-#define RAND64(x) RANDOM_BUF(x, sizeof(int64_t))
-#define RAND8(x) RANDOM_BUF(x, sizeof(int8_t))
-#define RANDOM (RANDOM_U32() > UINT32_MAX / 2)
-
-#define RANDXLTY(x, y)    \
-    RAND64(x);            \
-    RAND64(y);            \
-    if (*x > *y)          \
-    {                     \
-        int64_t tmp = *x; \
-        *x = *y;          \
-        *y = tmp;         \
-    }
 
 /**
  * @struct      distribution_et
