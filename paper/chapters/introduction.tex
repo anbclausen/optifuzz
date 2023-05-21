@@ -15,6 +15,8 @@ However, to the best of our knowledge, no study has quantified the issue of timi
 
 In this paper, we try to quantify the issue of timing attacks introduced by the two most popular C compilers, gcc\footnote{\url{https://gcc.gnu.org/}.} and clang\footnote{\url{https://clang.llvm.org/}.}.
 We do this by implementing a tool, OptiFuzz, that generates, analyzes and fuzzes random C programs.
+For simplicity, the generated programs are limited to only containing non-branching arithmetic, logical and comparison operations.
+Also \texttt{/} and \texttt{\%} are avoided, to mitigate division-by-zero errors.
 We investigate what optimization flags are responsible for introducing timing leaks and compare them.
 Finally, we discuss how the issue of timing attacks introduced by the compiler can be mitigated by using language-based security techniques.
 
