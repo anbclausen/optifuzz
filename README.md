@@ -42,6 +42,7 @@ make clean                          # cleans all generated files in all steps of
 
 ## TODO
 - LaTeX
+  - Note which compiler version was used and (if kernel mode) the kernel version.
   - Write jumps: jle, je, ...
   - Ensure documentation and refactor if necessary
   - For each result page, write all the meta data (what compiler, what flags were tested, what fuzz classes were used, ...)
