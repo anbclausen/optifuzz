@@ -4,7 +4,7 @@ The goal of OptiFuzz is to quantify the issue of timing attacks introduced by C 
 The tool works as follows:
 \begin{itemize}
   \item OptiFuzz generates random C programs consisting of non-branching arithmetic, logical and comparison operations.
-  \item OptiFuzz then compiles the generated C programs with different specified optimization flags enabled and inspects the generated assembly for branching instructions introduced by the compiler.
+  \item OptiFuzz then compiles the generated C programs with different specified optimization flags enabled and inspects the generated assembly for conditional branching instructions introduced by the compiler.
         If branching is found, the program is flagged.
   \item OptiFuzz then fuzzes the flagged programs with various random inputs to test whether the branching instructions can be exploited to leak information about the input.
   \item At last, OptiFuzz reports the results of the fuzzing in the form of a PDF report.
