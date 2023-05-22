@@ -35,7 +35,9 @@ int program(int x, int y) { return !(y * (43 * (x != true))); } \end{lstlisting}
 The code generation module works by generating a random distribution that selects different symbols in the grammar with a certain probability.
 This ensures that not all generated programs will be uniformly random.
 For example, if a generated distribution heavily favors the left-shift operator, then the generated programs will contain a lot of left-shift operations.
-This if useful for detecting whether certain types of programs are more likely to be constant-time than others.
+This is useful for detecting whether certain types of programs are more likely to be constant-time than others.
+
+The grammar in Figure \ref{fig:grammar} generates programs that are not typical 
 
 \todo{Argue why not a more realistic grammar was chosen}
 \todo{Find examples of weird real life programs}
