@@ -20,7 +20,7 @@ all: check_headers program.o
 
 clean: check_headers
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) clean
-	$(RM) program.o ../fuzzer_core.o ../.fuzzer_core.o.cmd
+	$(RM) program.o ../fuzzer_core.o ../.fuzzer_core.o.cmd program.c
 
 program.o: program.c
 	$(CC_program) $(CFLAGS_program.o) -c -o $@ $^
