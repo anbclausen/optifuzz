@@ -1,13 +1,18 @@
-# Optifuzz
-Welcome to Optifuzz! A tool for fuzzing randomly generated C code with different optimization flags to discover side-channel vulnerabilities. This tool was made for the Language-Based Security course at Aarhus University.
+# OptiFuzz
+Welcome to OptiFuzz! A tool for fuzzing randomly generated C code with different optimization flags to discover side-channel vulnerabilities. This tool was made for the Language-Based Security course at Aarhus University.
 
 ## Prerequisites
-Optifuzz depends on a few languages and libraries:
-- You should have [OCaml](https://ocaml.org/docs/up-and-running) and [Dune](https://dune.readthedocs.io/en/stable/quick-start.html) installed.
-- You should have [Python3](https://www.python.org/downloads/) installed alongside all Python packages listed in `python_requirements.txt`. These can be installed with
+OptiFuzz depends on a few languages and libraries:
+- You should have [OCaml](https://ocaml.org/docs/up-and-running) and [Dune](https://dune.readthedocs.io/en/stable/quick-start.html) installed (used for generating the programs).
+- A  [Latex](https://www.latex-project.org/) environment with appropriate libraries for generating the analysis report.
+- The GNU C compiler from [GCC](https://gcc.gnu.org/) (used for some tasks) and any other C compiler you would like to analyze the output of (like [clang](https://clang.llvm.org/)).
+- The [Make](https://www.gnu.org/software/make/) tool is used to build and run the different parts of the project.
+- [Python3](https://www.python.org/downloads/) installed alongside all Python packages listed in `python_requirements.txt`. These can be installed with
 ```
 pip install -r python_requirements.txt
 ```
+- The fuzzer can optionally be run as a kernel module to remove noise from preempting and interrupts. **Note** that this is not the intended use of a kernel module, but it ensures more consistent timing. To use this feature, make sure you have the Linux kernel headers matching your kernel version installed. You will need root privileges to insert/remove the module (sudo is sufficient). The module has been tested on kernel version 6.3.2.
+
 
 ## Paper
 We made a paper describing the tool and our findings with it. It can be found in the `paper` folder.
