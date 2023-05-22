@@ -9,9 +9,8 @@ However, the compiler may introduce timing leaks by optimizing away the constant
 In a recent study \citep{developer-survey-timing-attacks}, it was shown that the vast majority of developers of cryptographic libraries rely on constant-time code practices that in theory result in constant-time code, but may be vulnerable after compilation.
 
 The issues related to timing vulnerabilities introduced by compilers are well-known in the community.
-Timing vulnerabilities have previously been linked to certain compiler optimizations \citep{optimizations-linked-to-timing-attacks}.
-They have also been compared across compiler versions \citep{what-you-c}.
-However, to the best of our knowledge, no study has quantified the issue of timing attacks introduced by the compilers.
+Several proposals have also been made to mitigate the issue \citep{what-you-c, dudect, fact, verified-constant-time-c-comiler}.
+However, the problem persists and to the best of our knowledge, no study has quantified the issue of timing attacks introduced by the compilers.
 
 In this paper, we try to quantify the issue of timing attacks introduced by the two most popular C compilers, gcc\footnote{\url{https://gcc.gnu.org/}.} and clang\footnote{\url{https://clang.llvm.org/}.}.
 We do this by implementing a tool, OptiFuzz, that generates, analyzes and fuzzes random C programs.
@@ -22,7 +21,7 @@ Finally, we discuss how the issue of timing attacks introduced by the compiler c
 
 \subsection{Related Work}
 The issue of timing attacks introduced by the clang C compiler across different versions has been researched by Simon et. al. \citep{what-you-c}. 
-Several studies have investigated potential solutions to the issue, including using constant-time branching instructions \citep{what-you-c}, using black-box testing software \citep{dudect}, a domain specific language \citep{fact}, and notably a verified constant-time C compiler has been developed \citep{verified-constant-time-c-comiler}.
+Several studies have investigated potential solutions to the issue, including using constant-time branching instructions \citep{what-you-c}, using black-box testing software \citep{dudect}, domain-specific languages \citep{fact}, and notably a verified constant-time C compiler has been developed \citep{verified-constant-time-c-comiler}.
 
 \subsection{Contributions}
 We provide a quantitative analysis of timing vulnerabilities introduced by gcc and clang, focusing on specific troublesome optimization flags.
