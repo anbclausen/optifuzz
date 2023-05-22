@@ -11,6 +11,12 @@
 \usepackage{xparse}
 \usepackage{xfp}
 \usepackage{hyperref}
+
+\newcommand\todo[1]{\textcolor{red}{TODO: #1}}
+
+\usepackage[numbers]{natbib}
+\renewcommand{\bibsection}{\section*{Bibliography}}
+
 \pgfplotsset{compat=1.12}
 
 \definecolor{mGreen}{rgb}{0,0.6,0}
@@ -88,18 +94,18 @@
         
     \vspace{0.4cm}
     \large
-    Anders B. Clausen\\ Johan T. Degn\\ Jonathan Eilath
+    Anders B. Clausen \qquad Johan T. Degn \qquad Jonathan Eilath
 
     \vspace{0.2cm}
     \small
     $\{$\href{mailto:clausen@post.au.com}{clausen}, \href{mailto:johandegn@post.au.com}{johandegn}, \href{mailto:eilath@post.au.com}{eilath}$\}$@post.au.dk
 
     \vspace{0.4cm}
-    June, 2023
+    June 2023
   \end{center}
 
   \begin{abstract}
-    Lorem ipsum...
+    \todo{After we have finished the paper}
   \end{abstract}
 
   \vspace*{\fill}
@@ -109,8 +115,6 @@
   \end{center}
 \end{titlepage}
 
-
-
 \pagebreak
 
 \tableofcontents
@@ -118,23 +122,37 @@
 \pagebreak
 \pagenumbering{arabic} 
 \section{Introduction}
-\subsection{Related Work}
-\subsection{Contributions}
-\subsection{Overview}
+\input{chapters/introduction.tex}
 
 \section{Preliminaries}
-\subsection{C Compiler Optimzations}
-\subsection{Side-Channel Attacks}
+\input{chapters/preliminaries.tex}
 
 \section{OptiFuzz}
+\textit{Note: OptiFuzz might be used in a CI pipeline to detect timing vulnerabilities automatically.}
 \subsection{Code Generation}
+\input{chapters/code-generation.tex}
 \subsection{Assembly Inspection}
+\input{chapters/assembly-inspection.tex}
 \subsection{Fuzzing}
+\input{chapters/fuzzing.tex}
 \subsection{Visualization}
+\input{chapters/visualization.tex}
 
 \section{Experimental Results}
+\input{chapters/results.tex}
 
 \section{Conclusion and Future Work}
+\input{chapters/conclusion.tex}
 
+\pagebreak
+\phantomsection
+\addcontentsline{toc}{section}{Bibliography}
+\bibliographystyle{plainnat} 
+\bibliography{refs}
+
+\pagebreak
+\phantomsection
+\addcontentsline{toc}{section}{Appendix}
+\section*{Appendix}
 
 \end{document}
