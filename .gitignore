@@ -51,6 +51,7 @@ fuzzer/km_fuzzer/modprog*
 fuzzer/km_fuzzer/Module*
 fuzzer/km_fuzzer/modules*
 fuzzer/km_fuzzer/.*
+fuzzer/.*
 
 fuzzer/result-*.csv
 fuzzer/results

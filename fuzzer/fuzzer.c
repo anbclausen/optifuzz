@@ -52,7 +52,7 @@ static void write_data(const char *filename, const char *flags, const char *fuzz
 int main(int argc, char const *argv[])
 {
     analysis_st analysis;
-    const char *dist_str, *opt_flags;
+    const char *dist_str, *flag;
     const size_t buf_size = 50;
     char format_buf[buf_size];
     size_t count;
@@ -65,7 +65,7 @@ int main(int argc, char const *argv[])
     }
 
     count = atoi(argv[1]);
-    opt_flags = argv[2];
+    flag = argv[2];
 
     initialize_analysis(&analysis, count);
 
@@ -81,7 +81,7 @@ int main(int argc, char const *argv[])
 
         memset(format_buf, '\0', sizeof(format_buf));
         snprintf(format_buf, buf_size, "./result-%s.csv", dist_str);
-        write_data(format_buf, opt_flags, dist_str, &analysis);
+        write_data(format_buf, flag, dist_str, &analysis);
     }
 
     destroy_analysis(&analysis);

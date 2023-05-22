@@ -11,11 +11,11 @@ fuzz: clean build-fuzzer
 	@./fuzz.py $(in)
 
 clean-results:
-	@-rm results/* 1>/dev/null 2>&1
+	$(RM) results/*
 
 clean-objects:
-	@-rm *.o 1>/dev/null 2>&1
+	$(RM) *.o
 
 .PHONY : clean
 clean: clean-results clean-objects
-	# $(MAKE) -C km_fuzzer clean
+	$(MAKE) -C km_fuzzer clean

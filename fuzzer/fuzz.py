@@ -26,20 +26,14 @@ def combine(prog_path, flag):
     os.remove("template.o")
 
 def compile_km(prog_path, flag):
-    with open("km_fuzzer/Makefile", "w") as f:
-        f.write(f"CFLAGS_program.o += -{flag}\n")
-        f.write(f"CC_program = {compiler}\n")
-    os.system("cat km_fuzzer/MakefileTemplate >> km_fuzzer/Makefile")
     os.system(f"cp {prog_path} km_fuzzer/program.c")
-    os.system("cd km_fuzzer && make >/dev/null 2>&1")
+    os.system(f"cd km_fuzzer && make comp={compiler} flag={flag}>/dev/null 2>&1")
 
 def km_extract_output():
     with open('/proc/optifuzz_output', 'r') as f:
-        # Initialize the variables to keep track of the current section and filename
         current_section = []
         current_filename = None
-        
-        # Loop through each line in the file
+
         for line in f:
             # If the line starts with '# FILE:', it indicates the start of a new section
             if line.startswith('# FILE:'):
@@ -94,9 +88,9 @@ for prog in os.listdir(prog_dir):
             if kernel_mode:
                 compile_km(prog_path, flag)
                 sudo_prefix = "sudo" if not os.getuid() == 0 else ""
-                os.system(f"{sudo_prefix} insmod km_fuzzer/modprog.ko count={number_of_fuzzing_runs} flag={flag}")
-                km_extract_output(name)
-                os.system(f"{sudo_prefix} rmmod modprog")
+                os.system(f"{sudo_prefix} insmod km_fuzzer/optifuzz.ko count={number_of_fuzzing_runs} flag={flag}")
+                km_extract_output()
+                os.system(f"{sudo_prefix} rmmod optifuzz")
             else:
                 combine(prog_path, flag)
                 os.system(f"./out {number_of_fuzzing_runs} {flag}")

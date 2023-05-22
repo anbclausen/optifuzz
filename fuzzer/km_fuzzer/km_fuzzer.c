@@ -11,10 +11,23 @@
 #include <linux/random.h>
 #include <linux/moduleparam.h>
 
+// Compile fuzzer_core in kernel compatability mode
+#ifndef KERNEL_MODE
 #define KERNEL_MODE
-#include "fuzzer_core.h"
+#endif
+#include "../fuzzer_core.h"
 
 MODULE_LICENSE("Dual BSD/GPL");
+MODULE_DESCRIPTION("Optifuzz running in kernel space");
+//MODULE_AUTHOR("");
+
+// Kernel parameters
+static size_t count = 10000;
+static char flag[10];
+
+// Registering kernel parameters
+module_param_named(count, count, long, 0644);
+module_param_string(flag, flag, 10, 0644);
 
 /**
  * @struct      status_et
@@ -129,7 +142,6 @@ static void write_string(const char *str)
 {
     write_chars(str, strlen(str));
 }
-
 
 /**
  * @fn          write_data
@@ -260,41 +272,40 @@ static ssize_t proc_output_read(struct file *file, char __user *buf, size_t coun
     return ret ?: to_read;
 }
 
-
 /**
  * @fn          start
  * @brief       Run all measurements.
- * @param       opt_flags            Optimization flags used to compile the external program.
  */
-int start(const char *opt_flags)
+int start(void)
 {
     analysis_st analysis;
+    const size_t buf_size = 50;
+    char format_buf[buf_size];
+    const char *dist_str;
+    distribution_et dist;
 
     // Allocate memory for input and measurements
-    input_st *inputs = kmalloc(sizeof(*inputs) * fuzz_count, GFP_KERNEL);
-    uint64_t *measurements[ITERATIONS];
-    for (size_t i = 0; i < ITERATIONS; i++)
-        measurements[i] = kmalloc(sizeof(uint64_t) * fuzz_count, GFP_KERNEL);
+    initialize_analysis(&analysis, count);
 
-    analysis = (analysis_st){UNIFORMLY, inputs, &measurements, fuzz_count};
-    run(&analysis, "./result-uniform.csv", opt_flags, "uniform");
+    for (size_t i = 0; i < DIST_COUNT; i++)
+    {
+        dist = get_dist(i);
+        analysis.dist = dist;
+        run(&analysis);
 
-    analysis = (analysis_st){EQUAL, inputs, &measurements, fuzz_count};
-    run(&analysis, "./result-equal.csv", opt_flags, "equal");
+        dist_str = dist_to_string(dist);
+        if (dist_str == NULL)
+        {
+            printk(KERN_INFO "Could not convert distribution with index \"%ld\" to string!\n", i);
+            return -ENOMEM;
+        }
 
-    analysis = (analysis_st){ZERO, inputs, &measurements, fuzz_count};
-    run(&analysis, "./result-zero.csv", opt_flags, "zero");
+        memset(format_buf, '\0', sizeof(format_buf));
+        snprintf(format_buf, buf_size, "./result-%s.csv", dist_str);
+        write_data(format_buf, flag, dist_str, &analysis);
+    }
 
-    analysis = (analysis_st){MAX64, inputs, &measurements, fuzz_count};
-    run(&analysis, "./result-max64.csv", opt_flags, "max64");
-
-    analysis = (analysis_st){UMAX64, inputs, &measurements, fuzz_count};
-    run(&analysis, "./result-umax64.csv", opt_flags, "umax64");
-
-    // Free input for memory and measurements
-    kfree(inputs);
-    for (size_t i = 0; i < ITERATIONS; i++)
-        kfree(measurements[i]);
+    destroy_analysis(&analysis);
 
     return 0;
 }
@@ -305,7 +316,8 @@ int start(const char *opt_flags)
  */
 static int __init entry(void)
 {
-    printk(KERN_INFO "Optifuzz Loaded [%s]\n", opt_flags);
+    int ret = 0;
+    printk(KERN_INFO "Optifuzz Loaded [%s]\n", flag);
     status = RUNNING;
 
     proc_status = proc_create(PROC_STATUS_FILENAME, 0, NULL, &proc_status_ops);
@@ -315,6 +327,8 @@ static int __init entry(void)
         return -ENOMEM;
     }
 
+    ret = start();
+
     proc_output = proc_create(PROC_OUTPUT_FILENAME, 0, NULL, &proc_output_ops);
     if (!proc_output)
     {
@@ -322,11 +336,9 @@ static int __init entry(void)
         return -ENOMEM;
     }
 
-    start(opt_flags);
-
-    printk(KERN_INFO "Optifuzz Done[%s]\n", opt_flags);
+    printk(KERN_INFO "Optifuzz Done[%s]\n", flag);
     status = DONE;
-    return 0;
+    return ret;
 }
 
 /**
@@ -338,7 +350,7 @@ static void __exit end(void)
     proc_remove(proc_status);
     proc_remove(proc_output);
     free_links();
-    printk(KERN_INFO "Optifuzz Unloaded[%s]\n", opt_flags);
+    printk(KERN_INFO "Optifuzz Unloaded[%s]\n", flag);
 }
 
 // Specifying module init and exit functions

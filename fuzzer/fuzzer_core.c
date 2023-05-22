@@ -2,6 +2,7 @@
 
 #ifdef KERNEL_MODE
 #include <linux/random.h>
+#include <linux/slab.h>
 #define RANDOM_BUF get_random_bytes
 #define RANDOM_U32 get_random_u32
 #define malloc(size) kmalloc(size, GFP_KERNEL)
@@ -87,12 +88,12 @@ static void set_values(distribution_et dist, int64_t *x, int64_t *y)
     case YLTX:
         RANDXLTY(y, x);
         break;
-    case SMALL:
+    case SMALL: // TODO - fix not small (clear first)
         RAND8(x);
         RAND8(y);
         break;
     default:
-        error_exit("Distribution not yet supported!\n");
+        error_exit("Distribution not yet supported!\n"); // TODO - kernel mode...
     }
 }
 
