@@ -1,14 +1,8 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
-#include <linux/init.h>
-#include <linux/hardirq.h>
-#include <linux/preempt.h>
 #include <linux/sched.h>
 #include <linux/proc_fs.h>
-#include <asm/uaccess.h>
-#include <linux/mm.h>
 #include <linux/string.h>
-#include <linux/random.h>
 #include <linux/moduleparam.h>
 
 // Compile fuzzer_core in kernel compatability mode
