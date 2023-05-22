@@ -37,7 +37,7 @@ For example, if a generated distribution heavily favors the left-shift operator,
 This is useful for detecting whether certain types of programs are more likely to be constant-time than others.
 
 The code generation module generates programs with integer literals in different ranges. 
-Booleans represent the first range, which is $[0, 1]$.
+Booleans represent the first range.
 Defining Booleans as integers is a common practice in C \cite{c-standard}.
 Integers from this range are included since the constants 0 and 1 are interesting in many operations.
 The second range we consider is $[0, 64]$ as numbers in this range are lower than the size of 64-bit integers.
