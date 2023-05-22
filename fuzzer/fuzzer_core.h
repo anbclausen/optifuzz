@@ -105,4 +105,13 @@ void initialize_analysis(analysis_st *analysis, size_t count);
  */
 void destroy_analysis(analysis_st *analysis);
 
+/**
+ * @fn          construct_filename
+ * @brief       Creates a filename for the given distribution string.
+ * @details     Aditional calls to this function will overwrite the last
+ *              returned string.
+ * @param       dist_str            String represenation of the distribution.
+ */
+const char *construct_filename(const char *dist_str);
+
 #endif

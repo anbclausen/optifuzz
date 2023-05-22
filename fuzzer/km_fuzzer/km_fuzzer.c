@@ -273,9 +273,7 @@ static ssize_t proc_output_read(struct file *file, char __user *buf, size_t coun
 int start(void)
 {
     analysis_st analysis;
-    const size_t buf_size = 50;
-    char format_buf[buf_size];
-    const char *dist_str;
+    const char *dist_str, *filename;
     distribution_et dist;
 
     // Allocate memory for input and measurements
@@ -286,7 +284,6 @@ int start(void)
         dist = get_dist(i);
         analysis.dist = dist;
         run(&analysis);
-
         dist_str = dist_to_string(dist);
         if (dist_str == NULL)
         {
@@ -294,9 +291,8 @@ int start(void)
             return -ENOMEM;
         }
 
-        memset(format_buf, '\0', sizeof(format_buf));
-        snprintf(format_buf, buf_size, "./result-%s.csv", dist_str);
-        write_data(format_buf, flag, dist_str, &analysis);
+        filename = construct_filename(dist_str);
+        write_data(filename, flag, dist_str, &analysis);
     }
 
     destroy_analysis(&analysis);

@@ -52,9 +52,7 @@ static void write_data(const char *filename, const char *flags, const char *fuzz
 int main(int argc, char const *argv[])
 {
     analysis_st analysis;
-    const char *dist_str, *flag;
-    const size_t buf_size = 50;
-    char format_buf[buf_size];
+    const char *dist_str, *flag, *filename;
     size_t count;
     distribution_et dist;
 
@@ -79,9 +77,8 @@ int main(int argc, char const *argv[])
         if (dist_str == NULL)
             error_exit("Could not convert distribution with index \"%ld\" to string!\n", i);
 
-        memset(format_buf, '\0', sizeof(format_buf));
-        snprintf(format_buf, buf_size, "./result-%s.csv", dist_str);
-        write_data(format_buf, flag, dist_str, &analysis);
+        filename = construct_filename(dist_str);
+        write_data(filename, flag, dist_str, &analysis);
     }
 
     destroy_analysis(&analysis);

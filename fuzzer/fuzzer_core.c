@@ -1,5 +1,7 @@
 #include "fuzzer_core.h"
 
+#define FORMAT_BUF_SIZE 50
+
 #ifdef KERNEL_MODE
 #include <linux/random.h>
 #include <linux/slab.h>
@@ -10,6 +12,7 @@
 #define free(ptr) kfree(ptr)
 #else
 #include <bsd/stdlib.h>
+#include <string.h>
 #define RANDOM_BUF arc4random_buf
 #define RANDOM_U32 arc4random
 #endif
@@ -27,7 +30,6 @@
         *x = *y;          \
         *y = tmp;         \
     }
-
 
 // Array of all dists
 static const distribution_et dists[DIST_COUNT] = {UNIFORMLY, EQUAL, MAX64, UMAX64, ZERO, XLTY, YLTX, SMALL};
@@ -295,4 +297,20 @@ void destroy_analysis(analysis_st *analysis)
     for (size_t i = 0; i < ITERATIONS; i++)
         free((*(analysis->measurements))[i]);
     free(*(analysis->measurements));
+}
+
+/**
+ * @fn          construct_filename
+ * @brief       Creates a filename for the given distribution string.
+ * @details     Aditional calls to this function will overwrite the last
+ *              returned string.
+ * @param       dist_str            String represenation of the distribution.
+ */
+const char *construct_filename(const char *dist_str)
+{
+    static char format_buf[FORMAT_BUF_SIZE];
+
+    memset(format_buf, '\0', FORMAT_BUF_SIZE);
+    snprintf(format_buf, FORMAT_BUF_SIZE, "./result-%s.csv", dist_str);
+    return format_buf;
 }
