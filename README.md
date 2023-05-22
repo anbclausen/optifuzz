@@ -76,6 +76,8 @@ make clean                          # cleans all generated files in all steps of
 - Fuzzer
   - Make both fuzzers take as input the fuzz classes to use
     - Probably something like adding them to a queue in fuzzer_core.c from km_fuzzer.c/fuzzer.c. Then use fuzzer_core as an iterator yeilding control to km_fuzzer.c/fuzzer.c after each class so they can handle writing output in each of their ways.
+- Assembly Inspection
+  - Refactor and document
 - General
   - Make whole pipeline consistent with config.json
   - Add all folders used in the pipeline to config.json, and move them to the root folder of the project.
