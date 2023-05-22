@@ -90,9 +90,12 @@ static void set_values(distribution_et dist, int64_t *x, int64_t *y)
     case YLTX:
         RANDXLTY(y, x);
         break;
-    case SMALL: // TODO - fix not small (clear first)
+    case SMALL:
         RAND8(x);
         RAND8(y);
+        // Clear all but lower byte
+        *x &= 255;
+        *y &= 255;
         break;
     default:
         error_exit("Distribution not yet supported!\n"); // TODO - kernel mode...
