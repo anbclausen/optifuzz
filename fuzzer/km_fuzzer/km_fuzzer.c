@@ -13,7 +13,6 @@
 
 MODULE_LICENSE("Dual BSD/GPL");
 MODULE_DESCRIPTION("Optifuzz running in kernel space");
-//MODULE_AUTHOR("");
 
 // Kernel parameters
 static size_t count = 10000;

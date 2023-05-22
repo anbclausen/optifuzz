@@ -5,6 +5,8 @@
 #ifdef KERNEL_MODE
 #include <linux/random.h>
 #include <linux/slab.h>
+#include <linux/irqflags.h>
+#include <linux/preempt.h>
 #define RANDOM_BUF get_random_bytes
 #define RANDOM_U32 get_random_u32
 #define malloc(size) kmalloc(size, GFP_KERNEL)
@@ -165,6 +167,15 @@ static inline uint64_t get_time(int64_t a, int64_t b)
     unsigned cycles_low_before, cycles_high_before,
         cycles_low_after, cycles_high_after;
     uint64_t start, end;
+
+    #ifdef KERNEL_MODE
+    unsigned long flags;
+    // Disables hard interrupts on the local CPU
+    local_irq_save(flags);
+    // Disables preemption (essentially context switches)
+    preempt_disable();
+    #endif
+
     asm volatile( // Force prev instructions to complete before RDTSC bellow
                   // is executed (Serializing instruction execution)
         "CPUID\n\t"
@@ -194,6 +205,13 @@ static inline uint64_t get_time(int64_t a, int64_t b)
         "CPUID\n\t"
         // Restore clobbered registers
         : "=r"(cycles_high_after), "=r"(cycles_low_after)::"%rax", "%rbx", "%rcx", "%rdx");
+
+    #ifdef KERNEL_MODE
+    // Reenables preemption
+    preempt_enable();
+    // Reenables interupts
+    raw_local_irq_restore(flags);
+    #endif
 
     start = (((uint64_t)cycles_high_before << 32) | cycles_low_before);
     end = (((uint64_t)cycles_high_after << 32) | cycles_low_after);
