@@ -79,6 +79,7 @@ make clean                          # cleans all generated files in all steps of
   - Ensure documentation and refactor if necessary
 - General
   - Make whole pipeline consistent with config.json
+  - Add all folders used in the pipeline to config.json, and move them to the root folder of the project.
 
 ## Notes
 - It seems like `expr << expr` and `y op (x == const)` are causing branching. Would be awesome to find some real-life examples of tricks like these being used in crypto libraries.

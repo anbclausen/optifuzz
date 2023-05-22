@@ -12,7 +12,7 @@
 #include "../fuzzer_core.h"
 
 MODULE_LICENSE("Dual BSD/GPL");
-MODULE_DESCRIPTION("Optifuzz running in kernel space");
+MODULE_DESCRIPTION("OptiFuzz running in kernel space");
 
 // Kernel parameters
 static size_t count = 10000;
