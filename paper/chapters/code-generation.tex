@@ -37,8 +37,13 @@ This ensures that not all generated programs will be uniformly random.
 For example, if a generated distribution heavily favors the left-shift operator, then the generated programs will contain a lot of left-shift operations.
 This is useful for detecting whether certain types of programs are more likely to be constant-time than others.
 
-The grammar in Figure \ref{fig:grammar} generates programs that are not typical 
+The grammar in Figure \ref{fig:grammar} generates programs with undefined behavior.
+For example, bit-shifting with a negative number, or a number larger than the size of the type, is undefined behavior in C \cite{c-standard}.
+We chose to include undefined behavior in the grammar since it is a source of timing vulnerabilities \cite{what-you-c}, and it is common in real-life code \cite{undefined-behavior-c}.
+The grammar also does not distinguish operations on Booleans and integers and hence generates untypical C programs.
+For example, the program in Figure \ref{fig:code-gen-example} features multiplication between a Boolean and an integer.
+We chose to include this in the grammar since it is a used trick to avoid branching in constant-time code \cite{what-you-c}.
 
-\todo{Argue why not a more realistic grammar was chosen}
-\todo{Find examples of weird real life programs}
 \subsubsection{Limitations}
+The biggest limitation of this approach is that the generated programs are not representative of real-life code since they use such a limited subset of the C language.
+However, as argued above the simple constant-time programs are representative of how real code might look, and thus gives a useful insight into the issue of timing vulnerabilities introduced by the compiler.
