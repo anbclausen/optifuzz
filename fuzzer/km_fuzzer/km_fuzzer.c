@@ -283,7 +283,7 @@ int start(void)
     {
         dist = get_dist(i);
         analysis.dist = dist;
-        run(&analysis);
+        run_single(&analysis);
         dist_str = dist_to_string(dist);
         if (dist_str == NULL)
         {

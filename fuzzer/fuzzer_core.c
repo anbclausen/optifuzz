@@ -253,11 +253,11 @@ char *dist_to_string(distribution_et dist)
 }
 
 /**
- * @fn          run
+ * @fn          run_single
  * @brief       Run measurements according to analysis parameter and save results.
  * @param       analysis            The specifications for the measurement.
  */
-void run(analysis_st *analysis)
+void run_single(analysis_st *analysis)
 {
     generate_inputs(analysis->dist, analysis->inputs, analysis->count);
     initialize_measurements(*(analysis->measurements), analysis->count);
