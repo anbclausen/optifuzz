@@ -23,7 +23,10 @@ static void write_data(const char *filename, const char *flags, const char *fuzz
 
     FILE *fs = fopen(filename, "w");
     if (fs == NULL)
-        error_exit("Error when opening file\n");
+    {
+        print_error("Error when opening file\n");
+        exit(EXIT_FAILURE);
+    }
 
     fprintf(fs, "# compile flags: [%s], fuzz class: [%s]\n", flags, fuzz_class);
     fprintf(fs, "input_a,input_b,min_clock_measured");
@@ -75,7 +78,10 @@ int main(int argc, char const *argv[])
 
         dist_str = dist_to_string(dist);
         if (dist_str == NULL)
-            error_exit("Could not convert distribution with index \"%ld\" to string!\n", i);
+        {
+            print_error("Could not convert distribution with index \"%ld\" to string!\n", i);
+            exit(EXIT_FAILURE);
+        }
 
         filename = construct_filename(dist_str);
         write_data(filename, flag, dist_str, &analysis);

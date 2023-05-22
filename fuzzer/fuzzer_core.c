@@ -50,8 +50,9 @@ distribution_et get_dist(size_t index)
  * @param       dist                The name of the file to write to.
  * @param       x                   The input value a.
  * @param       y                   The input value b.
+ * @return      Returns 0 on success.
  */
-static void set_values(distribution_et dist, int64_t *x, int64_t *y)
+static int set_values(distribution_et dist, int64_t *x, int64_t *y)
 {
     switch (dist)
     {
@@ -98,8 +99,10 @@ static void set_values(distribution_et dist, int64_t *x, int64_t *y)
         *y &= 255;
         break;
     default:
-        error_exit("Distribution not yet supported!\n"); // TODO - kernel mode...
+        print_error("Distribution not yet supported!\n"); // TODO - kernel mode...
+        return 1;
     }
+    return 0;
 }
 
 /**
@@ -108,11 +111,14 @@ static void set_values(distribution_et dist, int64_t *x, int64_t *y)
  * @param       dist                The distribution to draw the inputs from.
  * @param       inputs              the list to write them to.
  * @param       count               The amount of measurements to write.
+ * @return      Returns 0 on success.
  */
-static void generate_inputs(distribution_et dist, input_st *inputs, size_t count)
+static int generate_inputs(distribution_et dist, input_st *inputs, size_t count)
 {
+    int ret = 0;
     for (size_t i = 0; i < count; i++)
-        set_values(dist, &inputs[i].a, &inputs[i].b);
+        ret |= set_values(dist, &inputs[i].a, &inputs[i].b);
+    return ret;
 }
 
 /**
@@ -256,12 +262,15 @@ char *dist_to_string(distribution_et dist)
  * @fn          run_single
  * @brief       Run measurements according to analysis parameter and save results.
  * @param       analysis            The specifications for the measurement.
+ * @return      Returns 0 on success.
  */
-void run_single(analysis_st *analysis)
+int run_single(analysis_st *analysis)
 {
-    generate_inputs(analysis->dist, analysis->inputs, analysis->count);
+    if (generate_inputs(analysis->dist, analysis->inputs, analysis->count))
+        return 1;
     initialize_measurements(*(analysis->measurements), analysis->count);
     measure(*(analysis->measurements), analysis->inputs, analysis->count);
+    return 0;
 }
 
 /**

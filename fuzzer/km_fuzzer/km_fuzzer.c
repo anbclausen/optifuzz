@@ -269,6 +269,7 @@ static ssize_t proc_output_read(struct file *file, char __user *buf, size_t coun
 /**
  * @fn          start
  * @brief       Run all measurements.
+ * @return      Returns 0 on success.
  */
 int start(void)
 {
@@ -283,7 +284,9 @@ int start(void)
     {
         dist = get_dist(i);
         analysis.dist = dist;
-        run_single(&analysis);
+        if (run_single(&analysis))
+            return -ENOMEM;
+
         dist_str = dist_to_string(dist);
         if (dist_str == NULL)
         {

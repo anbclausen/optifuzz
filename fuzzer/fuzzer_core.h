@@ -7,12 +7,12 @@
 #define INT64_MAX 9223372036854775807LL
 #define UINT64_MAX 0xffffffffffffffffULL
 #define UINT32_MAX 0xffffffffU
-#define error_exit(...) (printk(KERN_ERR __VA_ARGS__))
+#define print_error(...) (printk(KERN_ERR __VA_ARGS__))
 
 #else
 #include <stdint.h>
 #include <stddef.h>
-#define error_exit(...) (fprintf(stderr, __VA_ARGS__), exit(EXIT_FAILURE))
+#define print_error(...) (fprintf(stderr, __VA_ARGS__))
 #endif
 
 #define REPEATS 100   /** The amount of times the program \
@@ -78,7 +78,7 @@ typedef struct
  * @brief       Run measurements according to analysis parameter and save results.
  * @param       analysis            The specifications for the measurement.
  */
-void run_single(analysis_st *analysis);
+int run_single(analysis_st *analysis);
 
 /**
  * @fn          dist_to_string
