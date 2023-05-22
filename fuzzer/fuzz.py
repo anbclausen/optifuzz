@@ -70,7 +70,8 @@ def compile_user(prog_path: str, compiler: str, flag: str):
         Optimization flag (eg. "O3") to compile program
     """
     os.system(f"{compiler} -{flag} -c -w -o template.o {prog_path}")
-    # Use gcc to link
+
+    # Use gcc to link (no compilation happens)
     os.system("gcc -o out fuzzer.o fuzzer_core.o template.o -lbsd")
     remove_file_if_exists("template.o")
 
