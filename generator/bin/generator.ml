@@ -7,14 +7,9 @@ let max_depth = Sys.argv.(3) |> int_of_string
 let random_seed state = 
   Random.State.bits state
 
-(** Generates a random int literal in the range [0; 3]. *)
+(** Generates a random int literal in the range [0; 64]. *)
 let random_tiny_int_lit state =
-  let n = Random.State.int64 state 4L in
-  IntLit n
-
-(** Generates a random int literal in the range [0; 100]. *)
-let random_small_int_lit state =
-  let n = Random.State.int64 state 101L in
+  let n = Random.State.int64 state 65L in
   IntLit n
 
 (** Generates a random 64-bit integer literal. *)
@@ -28,11 +23,12 @@ let random_terminal state p =
     X;
     Y;
 
+    random_tiny_int_lit state;
     random_int_lit state;
 
     True;
     False;
-  ] [ p.x_p; p.y_p; p.int_lit_p; p.true_p; p.false_p ]
+  ] [ p.x_p; p.y_p; p.tiny_int_lit_p; p.int_lit_p; p.true_p; p.false_p ]
 
 (** Generates a random node (non-terminal) of the AST. *)
 let rec random_expr (state: Random.State.t) (depth: int) (p: expr_p) =
@@ -41,7 +37,6 @@ let rec random_expr (state: Random.State.t) (depth: int) (p: expr_p) =
     lazy Y;
 
     lazy (random_tiny_int_lit state);
-    lazy (random_small_int_lit state);
     lazy (random_int_lit state);
 
     lazy (Neg (random_expr_child state depth p));
@@ -67,7 +62,7 @@ let rec random_expr (state: Random.State.t) (depth: int) (p: expr_p) =
     lazy (BitwiseXor (random_expr_child state depth p, random_expr_child state depth p));
     lazy (LeftShift (random_expr_child state depth p, random_expr_child state depth p));
     lazy (RightShift (random_expr_child state depth p, random_expr_child state depth p));
-  ] [ p.x_p; p.y_p; p.int_lit_p; 
+  ] [ p.x_p; p.y_p; p.tiny_int_lit_p; p.int_lit_p; 
       p.neg_p; p.plus_p; p.minus_p; p.times_p; 
       p.true_p; p.false_p; p.not_p; 
       p.less_than_p; p.less_equal_p; 
