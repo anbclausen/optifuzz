@@ -69,15 +69,17 @@ make clean                          # cleans all generated files in all steps of
 
 ## TODO
 - LaTeX
+  - Note which compiler version was used and (if kernel mode) the kernel version.
   - Write jumps: jle, je, ...
   - Ensure documentation and refactor if necessary
   - For each result page, write all the meta data (what compiler, what flags were tested, what fuzz classes were used, ...)
 - Fuzzer
-  - Refactor `fuzzer` - especially kernel module
-  - Fix the kernel module `make clean` bug
+  - Make both fuzzers take as input the fuzz classes to use
+    - Probably something like adding them to a queue in fuzzer_core.c from km_fuzzer.c/fuzzer.c. Then use fuzzer_core as an iterator yeilding control to km_fuzzer.c/fuzzer.c after each class so they can handle writing output in each of their ways.
   - Ensure documentation and refactor if necessary
 - General
   - Make whole pipeline consistent with config.json
+  - Add all folders used in the pipeline to config.json, and move them to the root folder of the project.
 
 ## Notes
 - It seems like `expr << expr` and `y op (x == const)` are causing branching. Would be awesome to find some real-life examples of tricks like these being used in crypto libraries.
