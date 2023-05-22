@@ -6,7 +6,6 @@ type expr_p =
 
     (* Integer literals*)
     tiny_int_lit_p : float;
-    small_int_lit_p : float;
     int_lit_p : float;
 
     (* Arithmetic operations *)
@@ -71,31 +70,30 @@ let choose_normalized state l p =
     ranges. *)
 let random_distribution seed =
   let state = Random.State.make [|seed|] in
-  let random_arr = Array.init 24 (fun _ -> Random.State.float state 1.0) in
+  let random_arr = Array.init 23 (fun _ -> Random.State.float state 1.0) in
   let normalized_arr = Array.map (fun x -> x /. (Array.fold_left (+.) 0.0 random_arr)) random_arr in
   {    
     x_p = normalized_arr.(0);
     y_p = normalized_arr.(1);
     tiny_int_lit_p = normalized_arr.(2);
-    small_int_lit_p = normalized_arr.(3);
-    int_lit_p = normalized_arr.(4);
-    neg_p = normalized_arr.(5);
-    plus_p = normalized_arr.(6);
-    minus_p = normalized_arr.(7);
-    times_p = normalized_arr.(8);
-    true_p = normalized_arr.(9);
-    false_p = normalized_arr.(10);
-    not_p = normalized_arr.(11);
-    less_than_p = normalized_arr.(12);
-    less_equal_p = normalized_arr.(13);
-    greater_than_p = normalized_arr.(14);
-    greater_equal_p = normalized_arr.(15);
-    equal_p = normalized_arr.(16);
-    not_equal_p = normalized_arr.(17);
-    bitwise_and_p = normalized_arr.(18);
-    bitwise_or_p = normalized_arr.(19);
-    bitwise_complement_p = normalized_arr.(20);
-    bitwise_xor_p = normalized_arr.(21);
-    left_shift_p = normalized_arr.(22);
-    right_shift_p = normalized_arr.(23);
+    int_lit_p = normalized_arr.(3);
+    neg_p = normalized_arr.(4);
+    plus_p = normalized_arr.(5);
+    minus_p = normalized_arr.(6);
+    times_p = normalized_arr.(7);
+    true_p = normalized_arr.(8);
+    false_p = normalized_arr.(9);
+    not_p = normalized_arr.(10);
+    less_than_p = normalized_arr.(11);
+    less_equal_p = normalized_arr.(12);
+    greater_than_p = normalized_arr.(13);
+    greater_equal_p = normalized_arr.(14);
+    equal_p = normalized_arr.(15);
+    not_equal_p = normalized_arr.(16);
+    bitwise_and_p = normalized_arr.(17);
+    bitwise_or_p = normalized_arr.(18);
+    bitwise_complement_p = normalized_arr.(19);
+    bitwise_xor_p = normalized_arr.(20);
+    left_shift_p = normalized_arr.(21);
+    right_shift_p = normalized_arr.(22);
   }

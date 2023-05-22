@@ -47,7 +47,7 @@ let rec string_of_expr = function
 
   | IntLit i -> Int64.to_string i
 
-  | Neg e -> "-" ^ string_of_expr e
+  | Neg e -> "-(" ^ string_of_expr e ^ ")"
   | Plus (e1, e2) -> "(" ^ string_of_expr e1 ^ " + " ^ string_of_expr e2 ^ ")"
   | Minus (e1, e2) -> "(" ^ string_of_expr e1 ^ " - " ^ string_of_expr e2 ^ ")"
   | Times (e1, e2) -> "(" ^ string_of_expr e1 ^ " * " ^ string_of_expr e2 ^ ")"
