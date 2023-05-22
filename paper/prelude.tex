@@ -1,0 +1,116 @@
+\usepackage[left=0.8in,right=0.8in,bottom=0.5in,top=0.5in]{geometry}
+\geometry{a4paper}
+\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{titling}
+\usepackage[small,compact]{titlesec}
+
+
+\usepackage{amsmath,amssymb}
+\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+
+
+\newcommand\courseName{Language-Based Security}
+\newcommand\courseNameAbbrv{LBS}
+\newcommand\courseYear{2023}
+\newcommand\courseAndYear{\courseNameAbbrv-\courseYear}
+\newcommand\reportKind{Exam Report}
+
+\newcommand\groupNumber[1]{
+  \makeatletter
+  \def\@courseGroupNumber{#1}
+  \makeatother
+}
+
+\pretitle{\begin{flushright} \bfseries  \large \courseAndYear: \reportKind \end{flushright}   \begin{flushleft}
+\bfseries \LARGE}
+\posttitle{\par\end{flushleft}\vskip 0.5em}
+
+\preauthor{
+\begin{flushleft}
+\large \lineskip 0.5em%
+\bfseries
+\makeatletter Group \@courseGroupNumber \\ \makeatother
+\begin{tabular}[t]{@{}l}}
+\postauthor{\end{tabular}\par\end{flushleft}}
+
+\predate{\begin{flushleft}\bfseries \large}
+\postdate{\par\end{flushleft}}
+
+\usepackage{listings}
+\usepackage{pgfplots}
+\usepackage{adjustbox}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{pgffor}
+\usepackage{expl3}
+\usepackage{xparse}
+\usepackage{xfp}
+
+\newcommand\todo[1]{\textcolor{red}{TODO: #1}}
+
+\pgfplotsset{compat=1.12}
+
+\definecolor{mGreen}{rgb}{0,0.6,0}
+\definecolor{mGray}{rgb}{0.5,0.5,0.5}
+\definecolor{mPurple}{rgb}{0.58,0,0.82}
+\definecolor{backgroundColour}{rgb}{0.95,0.95,0.92}
+
+\definecolor{firstCol}{HTML}{332288}
+\definecolor{secondCol}{HTML}{117733}
+\definecolor{thirdCol}{HTML}{44AA99}
+\definecolor{fourthCol}{HTML}{88CCEE}
+\definecolor{fifthCol}{HTML}{DDCC77}
+\definecolor{sixthCol}{HTML}{DD2255}
+
+\lstdefinestyle{defstyle}{
+    backgroundcolor=\color{backgroundColour},   
+    commentstyle=\color{mGreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{mGray},
+    stringstyle=\color{mPurple},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\newsavebox{\mybox}
+
+\ExplSyntaxOn
+\cs_new:Npn \__afp_ismember_loop:Nnw #1#2#3,
+  {
+    \quark_if_recursion_tail_stop_do:nn {#3}
+      { \prg_return_false: }
+    #1 {#2} {#3}
+      { \use_i_delimit_by_q_recursion_stop:nw { \prg_return_true: } }
+      { \__afp_ismember_loop:Nnw #1 {#2} }
+  }
+\prg_new_conditional:Npnn \afp_int_ismember:nn #1#2 { p, T, F, TF }
+  {
+    \__afp_ismember_loop:Nnw \__afp_int_isequal:nnTF {#1} #2 ,
+    \q_recursion_tail , \q_recursion_stop
+  }
+\prg_new_conditional:Npnn \__afp_int_isequal:nn #1#2 { p, T, F, TF }
+  {
+    \int_compare:nNnTF {#1} = {#2}
+      { \prg_return_true: }
+      { \prg_return_false: }
+  }
+\NewExpandableDocumentCommand { \IncludeExperimentResults } { m m }
+  {
+    \foreach \x in {1,...,#1} {
+        \noindent\bool_if:NF { \afp_int_ismember_p:nn {\x} {#2} } {\input{generated_latex/prog\x.tex}}
+    }
+  }
+\ExplSyntaxOff

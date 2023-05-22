@@ -16,7 +16,7 @@ The code generation module is written in OCaml and works by generating abstract 
   \label{fig:grammar}
 \end{figure}
 
-The grammar defines all programs with 2 variables and non-branching arithmetic, logical and comparison operations in C \cite{c-standard}, excluding division (\texttt{/}) and modulus (\texttt{\%}).
+The grammar defines all programs with 2 variables and non-branching arithmetic, logical and comparison operations in C \citep{c-standard}, excluding division (\texttt{/}) and modulus (\texttt{\%}).
 The reason for excluding division and modulus is that they may cause division-by-zero errors.
 Generated programs are forced to include both input variables, $x$ and $y$.
 $x$ and $y$ are the inputs to the program, and we require both to be present since programs with 0 or 1 input variables are trivially constant-time.
@@ -38,7 +38,7 @@ This is useful for detecting whether certain types of programs are more likely t
 
 The code generation module generates programs with integer literals in different ranges. 
 Booleans represent the first range.
-Defining Booleans as integers is a common practice in C \cite{c-standard}.
+Defining Booleans as integers is a common practice in C \citep{c-standard}.
 Integers from this range are included since the constants 0 and 1 are interesting in many operations.
 The second range we consider is $[0, 64]$ as numbers in this range are lower than the size of 64-bit integers.
 Hence numbers in this range are interesting in bit-shifting operations.
@@ -46,11 +46,11 @@ The third range is the range of signed 64-bit integers.
 Generally, we have included these smaller ranges of integers since they are interesting and it is very unlikely that a uniformly random 64-bit integer would be in these ranges.
 
 The grammar in Figure \ref{fig:grammar} generates programs with undefined behavior.
-For example, bit-shifting with a negative number, or a number larger than the size of the type, is undefined behavior in C \cite{c-standard}.
-We chose to include undefined behavior in the grammar since it is a source of timing vulnerabilities \cite{what-you-c}, and it is common in real-life code \cite{undefined-behavior-c}.
+For example, bit-shifting with a negative number, or a number larger than the size of the type, is undefined behavior in C \citep{c-standard}.
+We chose to include undefined behavior in the grammar since it is a source of timing vulnerabilities \citep{what-you-c}, and it is common in real-life code \citep{undefined-behavior-c}.
 The grammar also does not distinguish operations on Booleans and integers and hence generates untypical C programs.
 For example, the program in Figure \ref{fig:code-gen-example} features multiplication between a Boolean and an integer.
-We chose to include this in the grammar since it is a used trick to avoid branching in constant-time code \cite{what-you-c}.
+We chose to include this in the grammar since it is a used trick to avoid branching in constant-time code \citep{what-you-c}.
 
 \subsubsection{Limitations}
 The biggest limitation of this approach is that the generated programs are not representative of real-life code since they use such a limited subset of the C language.
