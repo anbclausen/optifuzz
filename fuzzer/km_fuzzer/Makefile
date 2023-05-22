@@ -15,12 +15,18 @@ PWD := $(shell pwd)
 
 .PHONY: all clean
 
-all: program.o
+all: check_headers program.o
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
 
-clean:
+clean: check_headers
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) clean
 	$(RM) program.o ../fuzzer_core.o ../.fuzzer_core.o.cmd
 
 program.o: program.c
 	$(CC_program) $(CFLAGS_program.o) -c -o $@ $^
+
+check_headers:
+	@if [ ! -d "$(KERNELDIR)" ]; then \
+		echo "Linux headers not found!" >&2; \
+		exit 0; \
+	fi
