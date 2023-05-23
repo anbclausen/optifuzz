@@ -82,8 +82,7 @@ make clean                          # cleans all generated files in all steps of
   - Ensure documentation and refactor if necessary
   - For each result page, write all the meta data (what compiler, what flags were tested, what fuzz classes were used, ...)
 - Fuzzer
-  - Make both fuzzers take as input the fuzz classes to use
-    - Probably something like adding them to a queue in fuzzer_core.c from km_fuzzer.c/fuzzer.c. Then use fuzzer_core as an iterator yeilding control to km_fuzzer.c/fuzzer.c after each class so they can handle writing output in each of their ways.
+  - Option to set higher priority (lower niceness) to avoid too many context switches. At least when running in userland. Requires root (use setpriority).
 - Assembly Inspection
   - Refactor and document
 - General

@@ -17,10 +17,12 @@ MODULE_DESCRIPTION("OptiFuzz running in kernel space");
 // Kernel parameters
 static size_t count = 10000;
 static char flag[10];
+static char classes[200];
 
 // Registering kernel parameters
 module_param_named(count, count, long, 0644);
 module_param_string(flag, flag, 10, 0644);
+module_param_string(classes, classes, 200, 0644);
 
 /**
  * @struct      status_et
@@ -74,7 +76,7 @@ link_buf_st *new_link(void)
 {
     link_buf_st *link = kmalloc(sizeof(link_buf_st), GFP_KERNEL);
     if (link == NULL)
-        printk(KERN_ERR "Could not allocate memory for list link\n");
+        print_error("Could not allocate memory for list link\n");
     link->next = NULL;
     link->index = 0;
     memset(link->buffer, '\0', LINK_SIZE);
@@ -274,25 +276,29 @@ int start(void)
 {
     analysis_st analysis;
     const char *dist_str, *filename;
-    distribution_et dist;
+
+    if (parse_and_enqueue_classes(classes))
+    {
+        print_error("Could not parse fuzz classes!\n");
+        return -ENOMEM;
+    }
 
     // Allocate memory for input and measurements
-    initialize_analysis(&analysis, count);
-
-    for (size_t i = 0; i < DIST_COUNT; i++)
+    if (initialize_analysis(&analysis, count))
     {
-        dist = get_dist(i);
-        analysis.dist = dist;
-        if (run_single(&analysis))
-            return -ENOMEM;
+        print_error("Could not initialize analysis struct!\n");
+        return -ENOMEM;
+    }
 
-        dist_str = dist_to_string(dist);
-        if (dist_str == NULL)
+    // Fuzz all classes in queue
+    while (!dist_queue_empty())
+    {
+        if (run_next(&analysis))
         {
-            printk(KERN_INFO "Could not convert distribution with index \"%ld\" to string!\n", i);
+            print_error("Fuzz run failed!\n");
             return -ENOMEM;
         }
-
+        dist_str = dist_to_string(analysis.dist);
         filename = construct_filename(dist_str);
         write_data(filename, flag, dist_str, &analysis);
     }
@@ -309,13 +315,13 @@ int start(void)
 static int __init entry(void)
 {
     int ret = 0;
-    printk(KERN_INFO "Optifuzz Loaded [%s]\n", flag);
+    printk(KERN_INFO "OptiFuzz Loaded [%s]\n", flag);
     status = RUNNING;
 
     proc_status = proc_create(PROC_STATUS_FILENAME, 0, NULL, &proc_status_ops);
     if (!proc_status)
     {
-        pr_err("Failed to create proc entry\n");
+        print_error("Failed to create proc entry\n");
         return -ENOMEM;
     }
 
@@ -324,11 +330,11 @@ static int __init entry(void)
     proc_output = proc_create(PROC_OUTPUT_FILENAME, 0, NULL, &proc_output_ops);
     if (!proc_output)
     {
-        pr_err("Failed to create proc entry\n");
+        print_error("Failed to create proc entry\n");
         return -ENOMEM;
     }
 
-    printk(KERN_INFO "Optifuzz Done[%s]\n", flag);
+    printk(KERN_INFO "OptiFuzz Done[%s]\n", flag);
     status = DONE;
     return ret;
 }
@@ -342,7 +348,7 @@ static void __exit end(void)
     proc_remove(proc_status);
     proc_remove(proc_output);
     free_links();
-    printk(KERN_INFO "Optifuzz Unloaded[%s]\n", flag);
+    printk(KERN_INFO "OptiFuzz Unloaded[%s]\n", flag);
 }
 
 // Specifying module init and exit functions
