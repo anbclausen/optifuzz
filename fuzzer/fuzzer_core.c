@@ -22,15 +22,18 @@
 #define RAND64(x) RANDOM_BUF(x, sizeof(int64_t))
 #define RAND8(x) RANDOM_BUF(x, sizeof(int8_t))
 #define RANDOM (RANDOM_U32() > UINT32_MAX / 2)
-
-#define RANDXLTY(x, y)    \
-    RAND64(x);            \
-    RAND64(y);            \
-    if (*x > *y)          \
-    {                     \
-        int64_t tmp = *x; \
-        *x = *y;          \
-        *y = tmp;         \
+#define SWAP(x, y, type) \
+    {                    \
+        type tmp = *x;   \
+        *x = *y;         \
+        *y = tmp;        \
+    }
+#define RANDXLTY(x, y)           \
+    {                            \
+        RAND64(x);               \
+        RAND64(y);               \
+        if (*x > *y)             \
+            SWAP(x, y, int64_t); \
     }
 
 // Array of all diststibutions and their string names
@@ -98,7 +101,7 @@ static int set_values(distribution_et dist, int64_t *x, int64_t *y)
         *y &= 255;
         break;
     default:
-        print_error("Distribution not yet supported!\n"); // TODO - kernel mode...
+        print_error("Distribution not yet supported!\n");
         return 1;
     }
     return 0;
@@ -126,7 +129,6 @@ static int generate_inputs(distribution_et dist, input_st *inputs, size_t count)
  * @param       measurements        The measurements to set.
  * @param       count               The amount of measurements to write.
  */
-
 static void initialize_measurements(uint64_t *measurements[ITERATIONS], size_t count)
 {
     for (size_t j = 0; j < ITERATIONS; j++)
