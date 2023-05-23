@@ -6,7 +6,8 @@ The assembly inspection module is only able to analyze x86-64 assembly.
 In x86-64 assembly, \texttt{Jcc} (note, this does not include \texttt{JMP}), \texttt{LOOP} and \texttt{LOOPcc} are the only conditional branching instructions \citep{intel-reference}.
 This means that the assembly inspection module only needs to look for these instructions.
 Both \texttt{Jcc} and \texttt{LOOPcc} refer to a family of instructions where \texttt{cc} is a condition code.
-For example, \texttt{JE} (jump if equal) is in the \texttt{Jcc} instruction family.
+For example, \texttt{JE} (jump if equal) is in the \texttt{Jcc} instruction family. 
+We did not include conditional move instructions in the analysis since they are constant-time \citep{cmov-is-constant-time}.
 
 \subsubsection{Limitations}
 An obvious limitation of this approach is that it is tailored for x86-64 assembly.
