@@ -74,7 +74,11 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
-    initialize_analysis(&analysis, count);
+    if (initialize_analysis(&analysis, count))
+    {
+        print_error("Could not initialize analysis struct!\n");
+        exit(EXIT_FAILURE);
+    }
 
     // Fuzz all classes in queue
     while (!dist_queue_empty())

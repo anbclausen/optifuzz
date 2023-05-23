@@ -408,20 +408,30 @@ int run_next(analysis_st *analysis)
  * @brief       Alocates memory and initializes an analysis_st struct.
  * @param       analysis            The anaylis to be initialized.
  * @param       count               The amount of measurements to get.
+ * @return      Returns 0 on success.
  */
-void initialize_analysis(analysis_st *analysis, size_t count)
+int initialize_analysis(analysis_st *analysis, size_t count)
 {
     // Allocate memory for input and measurements
     input_st *inputs = calloc(count, sizeof(input_st));
+    if (inputs == NULL)
+        return 1;
     uint64_t *(*measurements)[ITERATIONS] = calloc(ITERATIONS, sizeof(uint64_t *));
+    if (measurements == NULL)
+        return 1;
     for (size_t i = 0; i < ITERATIONS; i++)
+    {
         (*measurements)[i] = calloc(count, sizeof(uint64_t));
+        if ((*measurements)[i] == NULL)
+            return 1;
+    }
 
     // Default dist to UNIFORMLY
     analysis->dist = UNIFORMLY;
     analysis->inputs = inputs;
     analysis->measurements = (uint64_t * (*)[ITERATIONS]) measurements;
     analysis->count = count;
+    return 0;
 }
 
 /**

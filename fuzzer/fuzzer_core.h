@@ -79,8 +79,9 @@ const char *dist_to_string(distribution_et dist);
  * @brief       Alocates memory and initializes an analysis_st struct.
  * @param       analysis            The anaylis to be initialized.
  * @param       count               The amount of measurements to get.
+ * @return      Returns 0 on success.
  */
-void initialize_analysis(analysis_st *analysis, size_t count);
+int initialize_analysis(analysis_st *analysis, size_t count);
 
 /**
  * @fn          destroy_analysis

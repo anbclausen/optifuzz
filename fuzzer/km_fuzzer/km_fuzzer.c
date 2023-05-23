@@ -76,7 +76,7 @@ link_buf_st *new_link(void)
 {
     link_buf_st *link = kmalloc(sizeof(link_buf_st), GFP_KERNEL);
     if (link == NULL)
-        printk(KERN_ERR "Could not allocate memory for list link\n");
+        print_error("Could not allocate memory for list link\n");
     link->next = NULL;
     link->index = 0;
     memset(link->buffer, '\0', LINK_SIZE);
@@ -279,19 +279,23 @@ int start(void)
 
     if (parse_and_enqueue_classes(classes))
     {
-        printk(KERN_INFO "Could not parse fuzz classes!\n");
+        print_error("Could not parse fuzz classes!\n");
         return -ENOMEM;
     }
 
     // Allocate memory for input and measurements
-    initialize_analysis(&analysis, count);
+    if (initialize_analysis(&analysis, count))
+    {
+        print_error("Could not initialize analysis struct!\n");
+        return -ENOMEM;
+    }
 
     // Fuzz all classes in queue
     while (!dist_queue_empty())
     {
         if (run_next(&analysis))
         {
-            printk(KERN_INFO "Fuzz run failed!\n");
+            print_error("Fuzz run failed!\n");
             return -ENOMEM;
         }
         dist_str = dist_to_string(analysis.dist);
@@ -317,7 +321,7 @@ static int __init entry(void)
     proc_status = proc_create(PROC_STATUS_FILENAME, 0, NULL, &proc_status_ops);
     if (!proc_status)
     {
-        pr_err("Failed to create proc entry\n");
+        print_error("Failed to create proc entry\n");
         return -ENOMEM;
     }
 
@@ -326,7 +330,7 @@ static int __init entry(void)
     proc_output = proc_create(PROC_OUTPUT_FILENAME, 0, NULL, &proc_output_ops);
     if (!proc_output)
     {
-        pr_err("Failed to create proc entry\n");
+        print_error("Failed to create proc entry\n");
         return -ENOMEM;
     }
 
