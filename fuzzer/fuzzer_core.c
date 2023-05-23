@@ -102,7 +102,7 @@ static int set_values(distribution_et dist, int64_t *x, int64_t *y)
         *y &= 255;
         break;
     default:
-        print_error("Distribution not yet supported!\n"); // TODO - kernel mode...
+        print_error("Distribution not yet supported!\n");
         return 1;
     }
     return 0;
