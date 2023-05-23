@@ -8,7 +8,6 @@
 #define UINT64_MAX 0xffffffffffffffffULL
 #define UINT32_MAX 0xffffffffU
 #define print_error(...) (printk(KERN_ERR __VA_ARGS__))
-
 #else
 #include <stdint.h>
 #include <stddef.h>
@@ -39,17 +38,12 @@ typedef enum
     XLTY,      // Uniformly random but x < y
     YLTX,      // Uniformly random but y < x
     SMALL,     // Uniformly random but small values
+
+    INVALID // Indicates invalid distribution, no a real distribution
 } distribution_et;
 
 // This needs to match the amount of elements in distribution_et
 #define DIST_COUNT 8
-
-/**
- * @fn          get_dist
- * @brief       Gets the distribution type from its index.
- * @param       index               The index.
- */
-distribution_et get_dist(size_t index);
 
 /**
  * @struct      input_st
@@ -74,18 +68,11 @@ typedef struct
 } analysis_st;
 
 /**
- * @fn          run
- * @brief       Run measurements according to analysis parameter and save results.
- * @param       analysis            The specifications for the measurement.
- */
-int run_single(analysis_st *analysis);
-
-/**
  * @fn          dist_to_string
  * @brief       Converts an element of distribution_et type to its string representation.
  * @param       dist                The name of the file to write to.
  */
-char *dist_to_string(distribution_et dist);
+const char *dist_to_string(distribution_et dist);
 
 /**
  * @fn          initialize_analysis
@@ -113,5 +100,28 @@ void destroy_analysis(analysis_st *analysis);
  * @param       dist_str            String represenation of the distribution.
  */
 const char *construct_filename(const char *dist_str);
+
+/**
+ * @fn          run_next
+ * @brief       Run measurements using the next distribution in queue.
+ * @param       analysis            The specifications for the measurement. Contains the results.
+ * @return      Returns 0 on success.
+ */
+int run_next(analysis_st *analysis);
+
+/**
+ * @fn          parse_and_enqueue_classes
+ * @brief       Parses a string of space seperated distribution names and enqueues them for fuzzing.
+ * @param       str                 A zero terminated string with space seperated distributions.
+ * @return      Returns 0 on success.
+ */
+int parse_and_enqueue_classes(const char *str);
+
+/**
+ * @fn          dist_queue_empty
+ * @brief       Check if the queue is empty.
+ * @return      1 if empty and 0 otherwize.
+ */
+int dist_queue_empty(void);
 
 #endif
