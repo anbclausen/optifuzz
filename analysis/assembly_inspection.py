@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import re
-import sys
 import subprocess
 import json
 
@@ -10,12 +9,17 @@ config = json.load(open("../config.json"))
 folder = os.path.dirname(os.path.realpath(__file__))
 flagged_folder = f"{folder}{os.sep}flagged{os.sep}"
 
-# Match all jx(x) instructions that is not jmp
-jmp_regex = re.compile(r"\t(j(?!mp)[a-z][a-z]?)")
+# Match all jcc instructions that is not jmp, and all loop instructions
+jmp_regex = re.compile(r"\t(j(?!mp)[a-z][a-z]*)|(loop[a-z]*) ")
 
 optimization_flags = config["compiler_flags"]
 compiler = config["compiler"]
 
+def extract_conditional_branching_instructions(s):
+    matches = jmp_regex.findall(s)
+    jmp_matches = [x[0] for x in matches if x[0] != ""]
+    loop_matches = [x[1] for x in matches if x[1] != ""]
+    return jmp_matches + loop_matches
 
 def run(args):
     return subprocess.run(args, capture_output=True, text=True).stdout
@@ -37,7 +41,7 @@ def analyze(file):
         )
 
     for k, v in out.items():
-        out[k] = jmp_regex.findall(v)
+        out[k] = extract_conditional_branching_instructions(v)
 
     # Flag the file if any jumps are reported for any flag (except O0)
     if [None for k, v in out.items() if k != "O0" and v]:
