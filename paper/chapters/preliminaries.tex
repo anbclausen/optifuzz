@@ -41,7 +41,7 @@ Here the common subexpression \texttt{2 * 3 + 5} is extracted and assigned to th
   \centering
      \begin{subfigure}[b]{0.3\textwidth}
         \begin{lstlisting}[style=defstyle, language=C]
-int foo(int x, int arr*) {
+int foo(int x, int *arr) {
   if (x == SECRET) {
     x = arr[0] * 3 + 5;
     x += arr[1] * 3 + 5;
