@@ -9,9 +9,12 @@ OptiFuzz depends on a few languages and libraries:
 - The [Make](https://www.gnu.org/software/make/) tool is used to build and run the different parts of the project.
 - [Python3](https://www.python.org/downloads/) installed alongside all Python packages listed in `python_requirements.txt`. These can be installed with
 ```
-pip install -r python_requirements.txt
+$ pip install -r python_requirements.txt
 ```
-- The fuzzer can optionally be run as a kernel module to remove noise from preempting and interrupts. **Note** that this is not the intended use of a kernel module, but it ensures more consistent timing. To use this feature, make sure you have the Linux kernel headers matching your kernel version installed. You will need root privileges to insert/remove the module (sudo is sufficient). The module has been tested on kernel version 6.3.2.
+- The fuzzer can optionally be run as a kernel module to remove noise from preempting and interrupts. **Note** that this is not the intended use of a kernel module, but it ensures more consistent timing. To use this feature, make sure you have the Linux kernel headers matching your kernel version installed. You will need root privileges to insert/remove the module (sudo is sufficient). The module has been tested on kernel version 6.3.2. To see messages from the kernel module run
+```
+# dmesg -w
+```
 
 
 ## Paper
