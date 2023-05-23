@@ -8,10 +8,8 @@ int foo(int x) {
   if (x < 100) {
     x *= 2;
     x += 7;
-    return x;
-  } else {
-    return x;
   }
+  return x;
 } \end{lstlisting} 
   \caption{Example of a program vulnerable to a timing attack. By analyzing the execution time of the machine code, an attacker can infer whether the input is less than 100 or not.}
   \label{fig:timing-attack-example}
