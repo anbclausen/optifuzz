@@ -98,26 +98,24 @@ def extract_kernel_output():
         the default result file for each fuzzing class
     """
     with open(KM_OUTPUT, 'r') as f:
-        current_section = []
-        current_filename = None
+        section = []
+        filename = None
 
         for line in f:
-            # If new section
             if line.startswith('# FILE:'):
-                # Save last section
-                if current_filename is not None and current_section:
-                    with open(current_filename, 'w') as outfile:
-                        outfile.writelines(current_section)
 
-                current_filename = line.strip().split()[-1][1:-1]
-                current_section = []
+                if filename != None and section != []:
+                    with open(filename, 'w') as outfile:
+                        outfile.writelines(section)
+
+                filename = line.strip().split()[-1][1:-1]
+                section = []
             else:
-                current_section.append(line)
+                section.append(line)
 
-        # write last section
-        if current_filename is not None and current_section:
-            with open(current_filename, 'w') as outfile:
-                outfile.writelines(current_section)
+        if filename != None and section != []:
+            with open(filename, 'w') as outfile:
+                outfile.writelines(section)
 
 
 def fuzz_class_lst_to_argument(fuzzing_classes: list):
