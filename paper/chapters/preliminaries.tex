@@ -65,8 +65,8 @@ int foo(int x, int *arr) {
     x += arr[2] * 3 + 5;
   } else {
     // optimized
-    common = 2 * 3 + 5;
-    x = 3*s;
+    int common = 2 * 3 + 5;
+    x = 3 * common;
   }
   return x;
 } \end{lstlisting} 
