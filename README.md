@@ -9,9 +9,12 @@ OptiFuzz depends on a few languages and libraries:
 - The [Make](https://www.gnu.org/software/make/) tool is used to build and run the different parts of the project.
 - [Python3](https://www.python.org/downloads/) installed alongside all Python packages listed in `python_requirements.txt`. These can be installed with
 ```
-pip install -r python_requirements.txt
+$ pip install -r python_requirements.txt
 ```
-- The fuzzer can optionally be run as a kernel module to remove noise from preempting and interrupts. **Note** that this is not the intended use of a kernel module, but it ensures more consistent timing. To use this feature, make sure you have the Linux kernel headers matching your kernel version installed. You will need root privileges to insert/remove the module (sudo is sufficient). The module has been tested on kernel version 6.3.2.
+- The fuzzer can optionally be run as a kernel module to remove noise from preempting and interrupts. **Note** that this is not the intended use of a kernel module, but it ensures more consistent timing. To use this feature, make sure you have the Linux kernel headers matching your kernel version installed. You will need root privileges to insert/remove the module (sudo is sufficient). The module has been tested on kernel version 6.3.2. To see messages from the kernel module run
+```
+# dmesg -w
+```
 
 
 ## Paper
@@ -80,10 +83,14 @@ make clean                          # cleans all generated files in all steps of
   - For each result page, write all the meta data (what compiler, what flags were tested, what fuzz classes were used, ...)
 - Fuzzer
   - Option to set higher priority (lower niceness) to avoid too many context switches. At least when running in userland. Requeres roort (use setpriority).
+- Assembly Inspection
+  - Refactor and document
 - General
+  - Compile object (.o) files once doing assembly inspection and use these for fuzzing and latex generation. No need to compile do i multiple times.
   - Make whole pipeline consistent with config.json
   - Add all folders used in the pipeline to config.json, and move them to the root folder of the project.
 
 ## Notes
 - It seems like `expr << expr` and `y op (x == const)` are causing branching. Would be awesome to find some real-life examples of tricks like these being used in crypto libraries.
 - OptiFuzz might be used in a CI pipeline to detect timing vulnerabilities automatically.
+- We should only have a few analysis results in the appendix since including all would be overwhelming.
