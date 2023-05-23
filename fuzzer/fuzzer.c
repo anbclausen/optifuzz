@@ -55,34 +55,40 @@ static void write_data(const char *filename, const char *flags, const char *fuzz
 int main(int argc, char const *argv[])
 {
     analysis_st analysis;
-    const char *dist_str, *flag, *filename;
+    const char *dist_str, *flag, *classes, *filename;
     size_t count;
-    distribution_et dist;
 
-    if (argc != 3)
+    if (argc != 4)
     {
-        fprintf(stderr, "usage: %s #data-points flag", argv[0]);
+        fprintf(stderr, "usage: %s #data-points flag \"class1 class2 ...\"", argv[0]);
         return 1;
     }
 
     count = atoi(argv[1]);
     flag = argv[2];
+    classes = argv[3];
 
-    initialize_analysis(&analysis, count);
-
-    for (size_t i = 0; i < DIST_COUNT; i++)
+    if (parse_and_enqueue_classes(classes))
     {
-        dist = get_dist(i);
-        analysis.dist = dist;
-        run_single(&analysis);
+        print_error("Could not parse fuzz classes!\n");
+        exit(EXIT_FAILURE);
+    }
 
-        dist_str = dist_to_string(dist);
-        if (dist_str == NULL)
+    if (initialize_analysis(&analysis, count))
+    {
+        print_error("Could not initialize analysis struct!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Fuzz all classes in queue
+    while (!dist_queue_empty())
+    {
+        if (run_next(&analysis))
         {
-            print_error("Could not convert distribution with index \"%ld\" to string!\n", i);
+            print_error("Fuzz run failed!\n");
             exit(EXIT_FAILURE);
         }
-
+        dist_str = dist_to_string(analysis.dist);
         filename = construct_filename(dist_str);
         write_data(filename, flag, dist_str, &analysis);
     }

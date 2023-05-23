@@ -98,29 +98,42 @@ def extract_kernel_output():
         the default result file for each fuzzing class
     """
     with open(KM_OUTPUT, 'r') as f:
-        current_section = []
-        current_filename = None
+        section = []
+        filename = None
 
         for line in f:
-            # If new section
             if line.startswith('# FILE:'):
-                # Save last section
-                if current_filename is not None and current_section:
-                    with open(current_filename, 'w') as outfile:
-                        outfile.writelines(current_section)
 
-                current_filename = line.strip().split()[-1][1:-1]
-                current_section = []
+                if filename != None and section != []:
+                    with open(filename, 'w') as outfile:
+                        outfile.writelines(section)
+
+                filename = line.strip().split()[-1][1:-1]
+                section = []
             else:
-                current_section.append(line)
+                section.append(line)
 
-        # write last section
-        if current_filename is not None and current_section:
-            with open(current_filename, 'w') as outfile:
-                outfile.writelines(current_section)
+        if filename != None and section != []:
+            with open(filename, 'w') as outfile:
+                outfile.writelines(section)
 
 
-def fuzz_program_user(prog_path: str, compiler: str, flag: str):
+def fuzz_class_lst_to_argument(fuzzing_classes: list):
+    """ Convert list of fuzzing classes to a space seperated string
+
+    Parameters
+    ----------
+    fuzzing_classes : list
+        List of classes to fuzz
+
+    Returns
+    ----------
+    Space seperated string of list items
+    """
+    return " ".join(fuzzing_classes)
+
+
+def fuzz_program_user(prog_path: str, compiler: str, flag: str, fuzzing_classes: list):
     """ Compile and fuzz specified program in user mode 
 
     Parameters
@@ -131,12 +144,15 @@ def fuzz_program_user(prog_path: str, compiler: str, flag: str):
         Compiler used for compilation of program
     flag : str
         Optimization flag to compile program
+    fuzzing_classes : list
+        List of classes to fuzz
     """
     compile_user(prog_path, compiler, flag)
-    os.system(f"./out {number_of_fuzzing_runs} {flag}")
+    class_arg = fuzz_class_lst_to_argument(fuzzing_classes)
+    os.system(f"./out {number_of_fuzzing_runs} {flag} '{class_arg}'")
 
 
-def fuzz_program_kernel(prog_path: str, compiler: str, flag: str):
+def fuzz_program_kernel(prog_path: str, compiler: str, flag: str, fuzzing_classes: list):
     """ Compile and fuzz specified program in kernel module mode 
 
     Parameters
@@ -147,6 +163,8 @@ def fuzz_program_kernel(prog_path: str, compiler: str, flag: str):
         Compiler used for compilation of program
     flag : str
         Optimization flag to compile program
+    fuzzing_classes : list
+        String of classes to fuzz
     """
     compile_kernel(prog_path, compiler, flag)
 
@@ -156,9 +174,10 @@ def fuzz_program_kernel(prog_path: str, compiler: str, flag: str):
         os.system("sudo -v")
         sudo_prefix = "sudo"
 
-    # Load module
+    class_arg = fuzz_class_lst_to_argument(fuzzing_classes)
+    # Load module (yes, all those quotations around class_arg are necessary)
     os.system(
-        f"{sudo_prefix} insmod km_fuzzer/optifuzz.ko count={number_of_fuzzing_runs} flag={flag}")
+        f"{sudo_prefix} insmod km_fuzzer/optifuzz.ko count={number_of_fuzzing_runs} flag={flag} classes='\"{class_arg}\"'")
     # Process results
     extract_kernel_output()
     # Unoad module
@@ -220,9 +239,11 @@ def fuzz(prog_dir: str, fuzzing_classes: list, optimization_flags: list, compile
             for flag in optimization_flags:
 
                 if kernel_mode:
-                    fuzz_program_kernel(prog_path, compiler, flag)
+                    fuzz_program_kernel(prog_path, compiler,
+                                        flag, fuzzing_classes)
                 else:
-                    fuzz_program_user(prog_path, compiler, flag)
+                    fuzz_program_user(prog_path, compiler,
+                                      flag, fuzzing_classes)
                 print(f"  {flag}", end="", flush=True)
 
                 save_results(seed, fuzzing_classes, flag, result_dir)
@@ -261,6 +282,7 @@ if __name__ == '__main__':
     # Ensure that we have a place to save our results
     os.makedirs(result_dir, exist_ok=True)
 
-    fuzz(prog_dir, fuzzing_classes, optimization_flags, compiler, kernel_mode, result_dir)
+    fuzz(prog_dir, fuzzing_classes, optimization_flags,
+         compiler, kernel_mode, result_dir)
 
     clean(fuzzing_classes)
