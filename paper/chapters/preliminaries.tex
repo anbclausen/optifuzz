@@ -1,5 +1,5 @@
 \subsection{Timing Attacks}
-Timing attacks are a class of side-channel attacks that exploit the fact that the execution time of a program depends on the input.
+Timing attacks are a class of side-channel attacks that exploit the fact that the execution time of a program can depend on the input.
 The history of timing attacks goes back several decades where Kocher showed multiple successful timing attacks on well-known cryptographic algorithms such as Diffie-Hellman and RSA \citep{1996-timing-attacks}.
 An example of vulnerable code is shown in Figure \ref{fig:timing-attack-example}.
 \begin{figure}[H]
@@ -8,10 +8,8 @@ int foo(int x) {
   if (x < 100) {
     x *= 2;
     x += 7;
-    return x;
-  } else {
-    return x;
   }
+  return x;
 } \end{lstlisting} 
   \caption{Example of a program vulnerable to a timing attack. By analyzing the execution time of the machine code, an attacker can infer whether the input is less than 100 or not.}
   \label{fig:timing-attack-example}
@@ -43,7 +41,7 @@ Here the common subexpression \texttt{2 * 3 + 5} is extracted and assigned to th
   \centering
      \begin{subfigure}[b]{0.3\textwidth}
         \begin{lstlisting}[style=defstyle, language=C]
-int foo(int x, int arr*) {
+int foo(int x, int *arr) {
   if (x == SECRET) {
     x = arr[0] * 3 + 5;
     x += arr[1] * 3 + 5;
@@ -60,15 +58,15 @@ int foo(int x, int arr*) {
     \hspace{1cm}
     \begin{subfigure}[b]{0.3\textwidth}
       \begin{lstlisting}[style=defstyle, language=C]
-int foo(int x, int arr*) {
+int foo(int x, int *arr) {
   if (x == SECRET) {
     x = arr[0] * 3 + 5;
     x += arr[1] * 3 + 5;
     x += arr[2] * 3 + 5;
   } else {
     // optimized
-    common = 2 * 3 + 5;
-    x = 3*s;
+    int common = 2 * 3 + 5;
+    x = 3 * common;
   }
   return x;
 } \end{lstlisting} 
