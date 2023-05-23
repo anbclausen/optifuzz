@@ -22,16 +22,17 @@
 #define RAND64(x) RANDOM_BUF(x, sizeof(int64_t))
 #define RAND8(x) RANDOM_BUF(x, sizeof(int8_t))
 #define RANDOM (RANDOM_U32() > UINT32_MAX / 2)
-
-#define RANDXLTY(x, y)    \
-    RAND64(x);            \
-    RAND64(y);            \
-    if (*x > *y)          \
-    {                     \
-        int64_t tmp = *x; \
-        *x = *y;          \
-        *y = tmp;         \
-    }
+#define SWAP(x, y, type) { \
+    type tmp = *x; \
+    *x = *y; \
+    *y = tmp; \
+}
+#define RANDXLTY(x, y) {     \
+    RAND64(x);               \
+    RAND64(y);               \
+    if (*x > *y)             \
+        SWAP(x, y, int64_t); \
+}
 
 // Array of all dists
 static const distribution_et dists[DIST_COUNT] = {UNIFORMLY, EQUAL, MAX64, UMAX64, ZERO, XLTY, YLTX, SMALL};
