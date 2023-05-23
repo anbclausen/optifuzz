@@ -22,17 +22,19 @@
 #define RAND64(x) RANDOM_BUF(x, sizeof(int64_t))
 #define RAND8(x) RANDOM_BUF(x, sizeof(int8_t))
 #define RANDOM (RANDOM_U32() > UINT32_MAX / 2)
-#define SWAP(x, y, type) { \
-    type tmp = *x; \
-    *x = *y; \
-    *y = tmp; \
-}
-#define RANDXLTY(x, y) {     \
-    RAND64(x);               \
-    RAND64(y);               \
-    if (*x > *y)             \
-        SWAP(x, y, int64_t); \
-}
+#define SWAP(x, y, type) \
+    {                    \
+        type tmp = *x;   \
+        *x = *y;         \
+        *y = tmp;        \
+    }
+#define RANDXLTY(x, y)           \
+    {                            \
+        RAND64(x);               \
+        RAND64(y);               \
+        if (*x > *y)             \
+            SWAP(x, y, int64_t); \
+    }
 
 // Array of all dists
 static const distribution_et dists[DIST_COUNT] = {UNIFORMLY, EQUAL, MAX64, UMAX64, ZERO, XLTY, YLTX, SMALL};
@@ -130,7 +132,6 @@ static int generate_inputs(distribution_et dist, input_st *inputs, size_t count)
  * @param       measurements        The measurements to set.
  * @param       count               The amount of measurements to write.
  */
-
 static void initialize_measurements(uint64_t *measurements[ITERATIONS], size_t count)
 {
     for (size_t j = 0; j < ITERATIONS; j++)
@@ -169,13 +170,13 @@ static inline uint64_t get_time(int64_t a, int64_t b)
         cycles_low_after, cycles_high_after;
     uint64_t start, end;
 
-    #ifdef KERNEL_MODE
+#ifdef KERNEL_MODE
     unsigned long flags;
     // Disables hard interrupts on the local CPU
     local_irq_save(flags);
     // Disables preemption (essentially context switches)
     preempt_disable();
-    #endif
+#endif
 
     asm volatile( // Force prev instructions to complete before RDTSC bellow
                   // is executed (Serializing instruction execution)
@@ -207,12 +208,12 @@ static inline uint64_t get_time(int64_t a, int64_t b)
         // Restore clobbered registers
         : "=r"(cycles_high_after), "=r"(cycles_low_after)::"%rax", "%rbx", "%rcx", "%rdx");
 
-    #ifdef KERNEL_MODE
+#ifdef KERNEL_MODE
     // Reenables preemption
     preempt_enable();
     // Reenables interupts
     raw_local_irq_restore(flags);
-    #endif
+#endif
 
     start = (((uint64_t)cycles_high_before << 32) | cycles_low_before);
     end = (((uint64_t)cycles_high_after << 32) | cycles_low_after);
