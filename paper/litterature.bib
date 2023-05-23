@@ -106,3 +106,22 @@
   abstract="By carefully measuring the amount of time required to perform private key operations, attackers may be able to find fixed Diffie-Hellman exponents, factor RSA keys, and break other cryptosystems. Against a vulnerable system, the attack is computationally inexpensive and often requires only known ciphertext. Actual systems are potentially at risk, including cryptographic tokens, network-based cryptosystems, and other applications where attackers can make reasonably accurate timing measurements. Techniques for preventing the attack for RSA and Diffie-Hellman are presented. Some cryptosystems will need to be revised to protect against the attack, and new protocols and algorithms may need to incorporate measures to prevent timing attacks.",
   isbn="978-3-540-68697-2"
 }
+
+@manual{intel-reference,
+  title={Intel 64 and IA-32 Architectures Software Developer's Manual},
+  volumes={1, 2A, 2B, 2C, 2D, 3A, 3B, 3C, 3D and 4},
+  author={Intel},
+  year={2023},
+  url={https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html}
+}
+
+@inproceedings{cmov-is-constant-time,
+  author={Coppens, Bart and Verbauwhede, Ingrid and De Bosschere, Koen and De Sutter, Bjorn},
+  booktitle={2009 30th IEEE Symposium on Security and Privacy}, 
+  title={Practical Mitigations for Timing-Based Side-Channel Attacks on Modern x86 Processors}, 
+  year={2009},
+  volume={},
+  number={},
+  pages={45-60},
+  doi={10.1109/SP.2009.19}
+}
