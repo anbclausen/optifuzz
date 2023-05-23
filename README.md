@@ -94,3 +94,4 @@ make clean                          # cleans all generated files in all steps of
 ## Notes
 - It seems like `expr << expr` and `y op (x == const)` are causing branching. Would be awesome to find some real-life examples of tricks like these being used in crypto libraries.
 - OptiFuzz might be used in a CI pipeline to detect timing vulnerabilities automatically.
+- We should only have a few analysis results in the appendix since including all would be overwhelming.
