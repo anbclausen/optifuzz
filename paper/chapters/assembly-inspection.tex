@@ -19,7 +19,7 @@ For example, the program in Figure \ref{fig:assembly-inspection-example} is flag
   cmpl    $1, -4(%rbp) ; compare TOS to 1
   je      .L2          ; jump to .L2 if equal
   movl    $43, %eax    ; move 43 into %eax
-  jmp     .L3          ; goto end
+  jmp     .L3          ; goto .L3
 .L2:
   movl    $0, %eax     ; move 0 into %eax
 .L3:
