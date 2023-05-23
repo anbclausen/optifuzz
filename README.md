@@ -79,6 +79,7 @@ make clean                          # cleans all generated files in all steps of
 - Assembly Inspection
   - Refactor and document
 - General
+  - Compile object (.o) files once doing assembly inspection and use these for fuzzing and latex generation. No need to compile do i multiple times.
   - Make whole pipeline consistent with config.json
   - Add all folders used in the pipeline to config.json, and move them to the root folder of the project.
 
