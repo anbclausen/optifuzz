@@ -4,8 +4,8 @@
   "fuzzing_classes": ["uniform", "equal", "max64", "umax64", "zero", "xlty", "yltx", "small"],
   "kernel_mode": false,
 
-  "generated_programs_dir": "generated_programs/",
-  "flagged_programs_dir": "flagged_programs/",
-  "fuzzer_results_dir": "fuzzer_results/",
-  "report_dir": "./"
+  "generated_programs_dir": "results/generated_programs/",
+  "flagged_programs_dir": "results/flagged_programs/",
+  "fuzzer_results_dir": "results/fuzzer_results/",
+  "report_dir": "results/"
 }

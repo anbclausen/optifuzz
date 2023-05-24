@@ -24,7 +24,7 @@ COMPILER_USED = config["compiler"]
 
 LATEX_FOLDER = "latex"
 LATEX_OUTPUT_FOLDER = f"{LATEX_FOLDER}/generated_latex"
-FLAGGED_FOLDER = "flagged"
+FLAGGED_FOLDER = f"{config_dir}{os.sep}{config['flagged_programs_dir']}"
 ITERATION_PREFIX = "it"
 NO_OF_ITERATIONS = 10
 

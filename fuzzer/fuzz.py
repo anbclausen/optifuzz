@@ -69,7 +69,7 @@ def compile_user(prog_path: str, compiler: str, flag: str) -> None:
     flag : str
         Optimization flag (eg. "O3") to compile program
     """
-    os.system(f"{compiler} -{flag} -c -w -o template.o {prog_path}")
+    os.system(f"{compiler} -{flag} -c -w -o template.o '{prog_path}'")
 
     # Use gcc to link (no compilation happens)
     os.system("gcc -o out fuzzer.o fuzzer_core.o template.o -lbsd")
@@ -88,7 +88,7 @@ def compile_kernel(prog_path: str, compiler: str, flag: str) -> None:
     flag : str
         Optimization flag (eg. "O3") to compile program
     """
-    os.system(f"cp {prog_path} km_fuzzer/program.c")
+    os.system(f"cp '{prog_path}' km_fuzzer/program.c")
     os.system(
         f"cd km_fuzzer && make comp={compiler} flag={flag}>/dev/null 2>&1")
 
@@ -267,6 +267,9 @@ def clean(fuzzing_classes: list) -> None:
 if __name__ == '__main__':
     prog_dir = get_config_path('flagged_programs_dir')
     result_dir = get_config_path('fuzzer_results_dir')
+
+    os.makedirs(prog_dir, exist_ok=True)
+    os.makedirs(result_dir, exist_ok=True)
 
     if len(sys.argv) < 2:
         print("Usage: python3 fuzz.py <number of fuzzing runs>")
