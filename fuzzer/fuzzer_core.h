@@ -20,8 +20,6 @@
                        *  fuzz inputs to lower noise from other CPU \
                        *  tasks. */
 
-extern int program(int64_t, int64_t);
-
 #define MIN(x, y) ((x < y) ? (x) : (y))
 
 /**

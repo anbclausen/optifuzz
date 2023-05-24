@@ -1,5 +1,7 @@
 #include "fuzzer_core.h"
 
+extern int program(int64_t, int64_t);
+
 #define FORMAT_BUF_SIZE 50
 
 #ifdef KERNEL_MODE
