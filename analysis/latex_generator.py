@@ -20,8 +20,6 @@ config = json.load(open(f"{config_dir}{os.sep}{CONFIG_FILENAME}"))
 
 # config["fuzzer_results"] holds the path relative to the config_dir
 RESULTS_FOLDER = os.path.join(config_dir, config["fuzzer_results"])
-CONFIG_FILE = os.path.join(config_dir, CONFIG_FILENAME)
-
 
 LATEX_FOLDER = 'latex'
 LATEX_OUTPUT_FOLDER = f'{LATEX_FOLDER}/generated_latex'
@@ -239,13 +237,10 @@ def gen_header(prog_id: str, prog_seed: str) -> str:
     ----------
     Header as LaTeX string
     """
-    with open(CONFIG_FILE, 'r') as file:
-        config_data = json.load(file)
-
-    compiler = config_data['compiler']
-    compiler_flags = config_data['compiler_flags']
-    fuzzing_classes = config_data['fuzzing_classes']
-    kernel_mode = config_data['kernel_mode']
+    compiler = config['compiler']
+    compiler_flags = config['compiler_flags']
+    fuzzing_classes = config['fuzzing_classes']
+    kernel_mode = config['kernel_mode']
 
     compiled_with = compiler+" "+" ".join(compiler_flags)
     fuzzclasses = "Classes: "+" ".join(fuzzing_classes)
