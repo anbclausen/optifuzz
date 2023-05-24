@@ -320,10 +320,6 @@ def get_jumps(asm):
     """
     # https://cdrdv2.intel.com/v1/dl/getContent/671200
     # Table 7-4
-    jump_instructions = ["je", "jne", "jg", "jge", "ja", "jae", "jl", 
-                         "jle", "jb", "jbe", "jz", "jnz", "js", "jns", 
-                         "jc", "jnc", "jo", "jno", "jcxz", "jecxz", "jrcxz"]
-    
     jump_instructions = [# Unsigned Conditional Jumps
                         "ja", "jnbe", "jae", "jnb", "jb", 
                         "jnae", "jbe", "jna", "jc", "je", 
