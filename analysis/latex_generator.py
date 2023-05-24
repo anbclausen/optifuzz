@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import copy
+import json
 import string
 import pandas as pd
 import numpy as np
@@ -12,6 +13,7 @@ import subprocess
 # Constants for parsing
 MIN_CLOCKS_COLUMN = 'min_clock_measured'
 RESULTS_FOLDER = '../fuzzer/results'
+CONFIG_FILE = '../config.json'
 LATEX_FOLDER = 'latex'
 LATEX_OUTPUT_FOLDER = f'{LATEX_FOLDER}/generated_latex'
 FLAGGED_FOLDER = 'flagged'
@@ -46,6 +48,7 @@ class TexBlock:
     
     def append_string(self, str):
         self.children.append(TexString(str))
+        return self
 
     def finalize(self) -> string:
         return "".join([x.finalize() for x in self.children])
@@ -189,6 +192,12 @@ def parse_aux_info(aux):
     fuzz_class = res[1]
     return compiler_flag, fuzz_class
 
+@dataclass
+class ParsedCSV:
+    min_clocks: pd.Series
+    all_clocks: pd.Series
+    compile_flag: str
+    fuzz_class: str
 
 def gen_header(prog_id: str, prog_seed: str):
     """Generates a latex header for the program
@@ -197,14 +206,19 @@ def gen_header(prog_id: str, prog_seed: str):
     ----------
     Header as LaTeX string
     """
-    return f"\\textbf{{Program {prog_id}}} -- \\texttt{{Seed {prog_seed}}}\n"
+    with open(CONFIG_FILE, 'r') as file:
+        config_data = json.load(file)
 
-@dataclass
-class ParsedCSV:
-    min_clocks: pd.Series
-    all_clocks: pd.Series
-    compile_flag: str
-    fuzz_class: str
+    compiler = config_data['compiler']
+    compiler_flags = config_data['compiler_flags']
+    fuzzing_classes = config_data['fuzzing_classes']
+    kernel_mode = config_data['kernel_mode']
+
+    compiled_with = compiler+" "+" ".join(compiler_flags)
+    fuzzclasses = "Classes: "+" ".join(fuzzing_classes)
+    newline = "\\\\"
+    return f"\\textbf{{Program {prog_id}}} -- \\texttt{{Seed {prog_seed}}} -- Kernel Mode: {kernel_mode} -- \\texttt{{{compiled_with}}}{newline}\small\\texttt{{{fuzzclasses}}}\n"
+
 
 def parse_csv(file):
     """Generates a LaTeX figure for the CSV-files provided.\n
@@ -265,8 +279,9 @@ def get_program_source(seed):
 
 def trim_assembly(asm):
     """Trims start and end of provided assembly.\n
-    Searches specifically after .LFE0 and trims everything
-    after that point. Also trims away the first 4 lines.
+    Trims away the first 4 lines.
+    Searches specifically after .LFE0 and trims everything after that point. 
+    Trims all instances of ".cfi" prefix
 
     Parameters
     ----------
@@ -279,8 +294,31 @@ def trim_assembly(asm):
     # Trim at start and end, and return the string
     asm[4] = "..."
     asm[LFE0] = "..."
-    asm = '\n'.join(asm[4:LFE0+1])
+    asm = asm[4:LFE0+1]
+    # Remove .cfi lines
+    asm = [line for line in asm if '.cfi' not in line]
+    asm = '\n'.join(asm)
     return asm
+
+def get_jumps(asm):
+    """
+    Finds and returns the kinds of jumps made in the assembly
+
+    Parameters
+    ----------
+    asm : str
+        Assembly given as string
+    """
+    # https://en.wikibooks.org/wiki/X86_Assembly/Control_Flow
+    jump_instructions = ["je", "jne", "jg", "jge", "ja", "jae", "jl", 
+                         "jle", "jb", "jbe", "jz", "jnz", "js", "jns", 
+                         "jc", "jnc", "jo", "jno", "jcxz", "jecxz", "jrcxz"]
+    
+    jump_pattern = r"\b(" + "|".join(jump_instructions) + r")\b"
+    jump_info = [(match.group(), asm.count('\n', 0, match.start()) + 1) for match in re.finditer(jump_pattern, asm, re.MULTILINE)]
+
+    return jump_info
+
 
 def gen_plot_asm_fig(seed, parsed_csv, colors, placeholder=[]):
     """Generates a LaTeX figure for the CSV-files provided.\n
@@ -386,16 +424,21 @@ def gen_plot_asm_fig(seed, parsed_csv, colors, placeholder=[]):
             ["gcc", f"{FLAGGED_FOLDER}/{seed}.c", "-S", f"-{csv.compile_flag}", "-w", "-c", "-o", "/dev/stdout"]
         )
         asm = trim_assembly(asm)
+        jumps = get_jumps(asm)
+        no_jumps_str = "{\color{red} No jumps}"
+        formatted_jumps_string = f"""\
+        \\vspace*{{2mm}}\\tiny {no_jumps_str if len(jumps) == 0 else ", ".join([f"{j[0]} {j[1]}" for j in jumps])}\n
+        """
 
         lstlisting = TexLstlisting(
             style="style=defstyle,language={[x86masm]Assembler},basicstyle=\\tiny\\ttfamily,breaklines=true",
             code=asm
         )
-        subfig = TexSubFigure(width=width-0.03).add_child(lstlisting)
+        subfig = TexSubFigure(width=width-0.03).append_string(formatted_jumps_string).add_child(lstlisting)
         figure.add_child(subfig)
         # Don't add hspace after last lstlisting
         if i != len(parsed_csv):
-            figure.append_string("\\hspace*{8mm}\n")
+            figure.append_string("\\hspace*{10mm}\n")
 
         i = i+1
     
@@ -462,7 +505,7 @@ def gen_latex_doc(seed, CSV_files, prog_id):
 
     # Finalize the figures
     figure1, figure2 = figure1.finalize(), figure2.finalize()
-    new_page = "\\newpage"
+    new_page = "\\newpage\\noindent"
 
     header = gen_header(prog_id, seed)
     first_page = header+program_lstlisting+figure1+new_page
