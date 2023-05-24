@@ -410,20 +410,27 @@ def extract_conditional_branching_instructions(s: str) -> list[str]:
     return jmp_matches + loop_matches
 
 
-def gen_plot_asm_fig(seed, parsed_csv, colors, placeholder=[]):
-    """Generates a LaTeX figure for the CSV-files provided.\n
-    CPU-clocks will be plotted and colored.\n
+def gen_plot_asm_fig(
+    seed: str,
+    parsed_csv: dict[str, list[str]],
+    colors: list[str],
+    blank_indexes: list[int] = [],
+) -> tuple[TexFigure, list[TexSubFigure]]:
+    """Generates a LaTeX figure for the CSV-files provided.
+
+    CPU-clocks will be plotted and colored.
+
     Assembly lstlistings will also be generated.
 
     Parameters
     ----------
     seed : str
         Seed of fuzzed data
-    parsed_csv : dict: str -> list[str]
+    parsed_csv : dict[str, list[str]]
         Map from a compile flag to a list of different fuzz classes identified by file names for the CSV files
     colors : str list
         List of colors to use for the plots
-    placeholder : int list
+    blank_indexes : int list
         Indices of which subfigures should be left blank
 
     Returns
@@ -446,21 +453,21 @@ def gen_plot_asm_fig(seed, parsed_csv, colors, placeholder=[]):
 
     # Determine the width according to what we can fit
     # i.e. len(amount_of_subfigs) = 3  ==>  width = 0.3
-    amount_of_subfigs = len(parsed_csv) + len(placeholder)
+    amount_of_subfigs = len(parsed_csv) + len(blank_indexes)
     width = 1 / amount_of_subfigs - 0.03
     figure = TexFigure()
 
     placeholder_subfigures = []
-    placeholder_original = copy.copy(placeholder)
+    placeholder_original = copy.copy(blank_indexes)
 
     # Generate tikzpictures
     i = 1
     while i <= len(parsed_csv):
-        if i in placeholder:
+        if i in blank_indexes:
             subfig = TexSubFigure(width=width, caption="")
             figure.add_child(subfig)
             placeholder_subfigures.append(subfig)
-            placeholder.remove(i)
+            blank_indexes.remove(i)
             continue
 
         # Data holds the plotting data
@@ -503,23 +510,23 @@ def gen_plot_asm_fig(seed, parsed_csv, colors, placeholder=[]):
         i = i + 1
 
     # Include placeholder with indices greater than len(parsed_csv)
-    for i in placeholder:
+    for i in blank_indexes:
         subfig = TexSubFigure(width=width, caption="")
         figure.add_child(subfig)
         placeholder_subfigures.append(subfig)
 
-    placeholder = copy.copy(placeholder_original)
+    blank_indexes = copy.copy(placeholder_original)
 
     # Move the first lstlisting a little
     figure.append_string("\\hspace*{6mm}\n")
     # Generate asm lstlistings
     i = 1
     while i <= len(parsed_csv):
-        if i in placeholder:
+        if i in blank_indexes:
             subfig = TexSubFigure(width=width, caption="")
             figure.add_child(subfig)
             placeholder_subfigures.append(subfig)
-            placeholder.remove(i)
+            blank_indexes.remove(i)
             continue
         csv = parsed_csv[compiler_flags[i - 1]][3]
         assert csv.compile_flag != ""
@@ -608,7 +615,7 @@ def gen_latex_doc(seed, CSV_files, prog_id):
     # By telling to placeholder=[3], we essentially tell the function, that we want a 3-wide figure
     # as len(last_two)+len(placeholder) = 3, but where the third element
     # should only be created as an empty subfigure
-    figure2, subfigs = gen_plot_asm_fig(seed, last_two, COLORS[3:5], placeholder=[3])
+    figure2, subfigs = gen_plot_asm_fig(seed, last_two, COLORS[3:5], blank_indexes=[3])
 
     # xmin = 0
     # xmax = 999
