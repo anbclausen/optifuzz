@@ -1,4 +1,30 @@
-\todo{Refer to the fact I just wrote that the assembly inspection overapproximates}
+After the assembly inspection has performed the static analysis and flagged programs with potential timing vulnerabilities, the next step is to run a dynamic analysis on them to try and confirm their presence. For this, we have created a fuzzer that runs the programs compiled with the specified compiler and optimization levels fuzzing the arguments it takes as inputs and measuring its execution time. 
+
+The process goes as follows. First, the fuzzer itself is compiled into object files which are not yet linked. This compilation only needs to happen once. Each of the programs flagged by the static assembly analysis is then compiled one at a time with the specified compiler for each of the supplied optimization flags and linked with the fuzzer object files. This includes the flags for which the assembly inspector did not detect any branches. This creates a complete fuzzer including the program to fuzz.
+
+The fuzzer generates inputs according to a fuzzing class. I then runs through the list of inputs and for each calling the internally linked program with them input arguments. The programs' execution time is measured every time it is run. The fuzzer repeats the run-through multiple time to allow for detection of outliers and get as precise results as possible. Note that an input is only repeated after each of the others and not multiple times in a row. This ensures that if the CPU is congested (or any other temporary slowdown) results in long execution times, then they are not concentrated on a few inputs but distributed over all (or many) of them. This way we minimize the chance of falsely identifying an input as the course of a longer execution time.
+
+
+\todo{Reason about fuzzing classes}
+% fuzz classes and why we use them
+% Like probability distribution. A set of rules of how to generate the values.
+The data points are generated according to fuzzing classes. \todo{yada yada}
+
+Precise measurements of a program's execution time is not trivial. It can be influenced by a number of things including context switches, interrupts, out-of-order execution, varying CPU clock speed and congestion. Furthermore, since we are dealing with quite small programs that are quick to run, our options for timing them are reduced. The most obvious way to time a program is using the system clock. But when testing it, it became clear that its resolution was too low. We ended up using the Time Stamp Counter (TSC) which is a high resolution counter that (on newer machines) increase at a fixed rate independent of processor frequency. This method is heavily inspired by the suggestions and results from an Intel white paper \citep{intel-benchmark-code-execution}. Using the TSC as a reference for time is the best we can do on our x86-64 architecture machine, but even using that the time differences can be very small. For this reason, each time we call the program, we do it repeatedly 100 times to scale the measured execution time accordingly. This approach furthermore allowed us to avoid the timings being skewed by the CPU performing out-of-order execution. Out-of-order could lead to the instructions being reordered and not reading the TSC (with the RDTSC(P) instruction) at the exact time we want to. This is done by utilizing the CPUID instructions serializing capabilities that ensures that any modification to flags, registers, and memory for previous instructions are completed before the next instruction is fetched \todo{SOURCE?}.
+
+\todo{Mention that results differed accross machines??? mby}
+
+We consider the fuzzer successful when it is able to consistently measure clear differences in execution time of a program with respect to its inputs. This time difference makes it possible to make an educated guess on what the given inputs look like. I.e. some information could be extracted from the running program using a timing side channel attack. Note that it is not clear how precise the information we gain from these results are. It could be that we are able to determine exactly what the value of one of the inputs where, but it could also be more vague if for example we only gain information on the sign of the value.
+
+If on the other hand the results of this analysis fails to indicate obvious timing differences, then it is however not safe to assume that it is then constant time. This of course could be the case since the assembly inspection approximates and flags a program if compiling it with any optimization flag emits conditional branching. Thus, it is expected that we end up fuzzing programs compiled with optimization levels that did not introduce any branching.
+
+
+
+% kernel and userland version
+% kernel disabling interupts and preemtion
+
 
 \subsubsection{Limitations}
-\todo{Underapproximates since fuzzing might not be perfect/noise}
+\todo{Underapproximates since fuzzing might not be perfect/noise (TSC, context switches, out-of-order execution,)}
+
+\todo{This is automated. We might not catch all. If you specifically target a program, you know what to look for, we just fuzz and hope. But if we find something, it is surely vulnerable.}
