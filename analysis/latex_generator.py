@@ -30,7 +30,23 @@ NO_OF_ITERATIONS = 10
 
 # Output constants
 NO_OF_BINS = 100
-COLORS = ["firstCol", "secondCol", "thirdCol", "fourthCol", "fifthCol", "sixthCol"]
+COLORS = [
+    "firstCol",
+    "secondCol",
+    "thirdCol",
+    "fourthCol",
+    "fifthCol",
+    "sixthCol",
+    "seventhCol",
+    "eighthCol",
+    "ninthCol",
+    "tenthCol",
+    "eleventhCol",
+    "twelfthCol",
+    "thirteenthCol",
+    "fourteenthCol",
+    "fifteenthCol",
+]
 X_LABEL = "CPU Clocks"
 Y_LABEL = "Frequency"
 X_MARGIN = 1.03  # Controls margin to both sides of x-axis
@@ -141,9 +157,11 @@ class TexTikzPic(TexBlock):
 
         def plot_means_if_exists(i: int) -> str:
             if len(fuzz_classes) > i:
-                return f"\\texttt{{{fuzz_classes[i]}}}_\\mu: & \\,{means[fuzz_classes[i]]}"
+                return (
+                    f"\\texttt{{{fuzz_classes[i]}}}_\\mu: & \\,{means[fuzz_classes[i]]}"
+                )
             return "\ "
-        
+
         means_table = (
             ""
             if means is None
@@ -536,7 +554,7 @@ def gen_plot_asm_fig(
             placeholder_subfigures.append(subfig)
             blank_indexes.remove(i)
             continue
-        
+
         assert compiler_flags[i - 1] != ""
         asm = run(
             [
@@ -595,25 +613,33 @@ def gen_latex_doc(seed: str, csv_files: dict[str, list[str]], prog_id: int) -> s
     prog = get_program_source(seed)
     program_lstlisting = TexLstlisting("style=defstyle,language=C", prog).finalize()
 
-    first_three = dict(itertools.islice(csv_files.items(), 0, 3))
-    last_two = dict(itertools.islice(csv_files.items(), 3, 5))
-
-    # Start by plotting a 3-width plot with corresponding asm
-    figure1, _ = gen_plot_asm_fig(seed, first_three, COLORS[:3])
-    # By telling to placeholder=[3], we essentially tell the function, that we want a 3-wide figure
-    # as len(last_two)+len(placeholder) = 3, but where the third element
-    # should only be created as an empty subfigure
-    figure2, _ = gen_plot_asm_fig(seed, last_two, COLORS[3:5], blank_indexes=[3])
-
-    # Finalize the figures
-    figure1, figure2 = figure1.finalize(), figure2.finalize()
-    new_page = "\\newpage\\noindent"
+    grouped_in_three = [
+        dict(itertools.islice(csv_files.items(), i, i + 3))
+        for i in range(0, len(csv_files), 3)
+    ]
 
     header = gen_header(prog_id, seed)
-    first_page = header + program_lstlisting + figure1 + new_page
-    second_page = header + figure2 + new_page
+    new_page = "\\newpage\\noindent"
 
-    return first_page + second_page
+    def gen_group(group, colors, has_program=False):
+        group_indexes = [i for i in range(1, len(group) + 1)]
+        leave_out = [i for i in range(1, 4) if i not in group_indexes]
+        figure, _ = gen_plot_asm_fig(seed, group, colors, blank_indexes=leave_out)
+        finalized = figure.finalize()
+        if has_program:
+            return header + program_lstlisting + finalized + new_page
+        else:
+            return header + finalized + new_page
+
+    if len(grouped_in_three) > 5:
+        raise Exception("Cannot handle more than 15 compile flags")
+
+    generated_latex_groups = [
+        gen_group(group, COLORS[3 * i : 3 * i + 3], has_program=(i == 0))
+        for i, group in enumerate(grouped_in_three)
+    ]
+
+    return "".join(generated_latex_groups)
 
 
 if __name__ == "__main__":
