@@ -76,7 +76,7 @@ make clean                          # cleans all generated files in all steps of
 ## Sources
 - [C operators](https://devdocs.io/c/language/operator_arithmetic): List of all arithmetic operators in C. Used as a basis for defining should-be-constant-time ASTs.
 
-## TODO
+## Improvements
 - Fuzzer
   - Option to set higher priority (lower niceness) to avoid too many context switches. At least when running in userland. Requires root (use setpriority).
 - General
