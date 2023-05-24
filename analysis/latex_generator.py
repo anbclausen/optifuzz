@@ -12,8 +12,17 @@ import subprocess
 
 # Constants for parsing
 MIN_CLOCKS_COLUMN = 'min_clock_measured'
-RESULTS_FOLDER = '../fuzzer/results'
-CONFIG_FILE = '../config.json'
+
+CONFIG_FILENAME = "config.json"
+current_folder = os.path.dirname(os.path.realpath(__file__))
+config_dir = os.path.dirname(current_folder) # Parent folder
+config = json.load(open(f"{config_dir}{os.sep}{CONFIG_FILENAME}"))
+
+# config["fuzzer_results"] holds the path relative to the config_dir
+RESULTS_FOLDER = os.path.join(config_dir, config["fuzzer_results"])
+CONFIG_FILE = os.path.join(config_dir, CONFIG_FILENAME)
+
+
 LATEX_FOLDER = 'latex'
 LATEX_OUTPUT_FOLDER = f'{LATEX_FOLDER}/generated_latex'
 FLAGGED_FOLDER = 'flagged'
@@ -344,10 +353,17 @@ def get_jumps(asm: str) -> list[tuple[str, int]]:
     asm : str
         Assembly given as string
     """
-    # https://en.wikibooks.org/wiki/X86_Assembly/Control_Flow
-    jump_instructions = ["je", "jne", "jg", "jge", "ja", "jae", "jl", 
-                         "jle", "jb", "jbe", "jz", "jnz", "js", "jns", 
-                         "jc", "jnc", "jo", "jno", "jcxz", "jecxz", "jrcxz"]
+    # https://cdrdv2.intel.com/v1/dl/getContent/671200
+    # Table 7-4
+    jump_instructions = [# Unsigned Conditional Jumps
+                        "ja", "jnbe", "jae", "jnb", "jb", 
+                        "jnae", "jbe", "jna", "jc", "je", 
+                        "jz", "jnc", "jne", "jnz", "jnp", 
+                        "jpo", "jp", "jpe", "jcxz", "jecxz", 
+                         # Signed Conditional Jumps
+                         "jg", "jnle", "jge", "jnl", 
+                         "jl", "jnge", "jle", "jng", 
+                         "jno", "jns", "jo", "js"]
     
     jump_pattern = r"\b(" + "|".join(jump_instructions) + r")\b"
     jump_info = [(match.group(), asm.count('\n', 0, match.start()) + 1) for match in re.finditer(jump_pattern, asm, re.MULTILINE)]
