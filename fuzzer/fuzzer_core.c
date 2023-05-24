@@ -39,9 +39,9 @@ extern int program(int64_t, int64_t);
     }
 
 // Array of all diststibutions and their string names
-static const distribution_et dists[DIST_COUNT] = {UNIFORMLY, EQUAL, MAX64, UMAX64, ZERO, XLTY, YLTX, SMALL};
+static const distribution_et dists[DIST_COUNT] = {UNIFORMLY, EQUAL, MAX64, UMAX64, XZERO, YZERO, XLTY, YLTX, SMALL};
 #define MAX_DIST_STR_LEN 10
-static const char dists_strings[DIST_COUNT][MAX_DIST_STR_LEN] = {"uniform", "equal", "max64", "umax64", "zero", "xlty", "yltx", "small"};
+static const char dists_strings[DIST_COUNT][MAX_DIST_STR_LEN] = {"uniform", "equal", "max64", "umax64", "xzero", "yzero", "xlty", "yltx", "small"};
 
 // FILO queue (stack) for distributions to fuzz
 #define MAX_DIST_QUEUE_SIZE 20
@@ -82,12 +82,13 @@ static int set_values(distribution_et dist, int64_t *x, int64_t *y)
         else
             RAND64(y);
         break;
-    case ZERO:
-        *x = *y = 0;
-        if (RANDOM)
-            RAND64(x);
-        else
-            RAND64(y);
+    case XZERO:
+        *x = 0;
+        RAND64(y);
+        break;
+    case YZERO:
+        *y = 0;
+        RAND64(x);
         break;
     case XLTY:
         RANDXLTY(x, y);
