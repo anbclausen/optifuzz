@@ -20,6 +20,7 @@ config = json.load(open(f"{config_dir}{os.sep}{CONFIG_FILENAME}"))
 
 # config["fuzzer_results_dir"] holds the path relative to the config_dir
 RESULTS_FOLDER = os.path.join(config_dir, config["fuzzer_results_dir"])
+COMPILER_USED = config["compiler"]
 
 LATEX_FOLDER = "latex"
 LATEX_OUTPUT_FOLDER = f"{LATEX_FOLDER}/generated_latex"
@@ -532,7 +533,7 @@ def gen_plot_asm_fig(
         assert csv.compile_flag != ""
         asm = run(
             [
-                "gcc",
+                COMPILER_USED,
                 f"{FLAGGED_FOLDER}/{seed}.c",
                 "-S",
                 f"-{csv.compile_flag}",

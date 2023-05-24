@@ -1,6 +1,6 @@
 (** Wraps a one-line C expression in a valid C program.*)
 let program expr = 
-  "#define false 0\n#define true 1\nint program(int x, int y) { return " ^ expr ^ "; }"
+  "#define false 0\n#define true 1\nint program(long long int x, long long int y) { return " ^ expr ^ "; }"
 
 (** Takes filename and content. Writes the content to the file. *)
 let write_file filename content = 
