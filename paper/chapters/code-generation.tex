@@ -16,6 +16,8 @@ The code generation module is written in OCaml and works by generating abstract 
   \label{fig:grammar}
 \end{figure}
 
+
+% We have already mentioned why we exclude division and modulus. Is it necessary to repeat here? Or is it maybe _exactly_ relevant to mention here, and not in the introduction section?
 The grammar defines all programs with 2 variables and non-branching arithmetic, logical and comparison operations in C \citep{c-standard}, excluding division (\texttt{/}) and modulus (\texttt{\%}).
 The reason for excluding division and modulus is that they may cause division-by-zero errors.
 Generated programs are forced to include both input variables, $x$ and $y$.
@@ -35,6 +37,19 @@ The code generation module works by generating a random distribution that select
 This ensures that not all generated programs will be uniformly random.
 For example, if a generated distribution heavily favors the left-shift operator, then the generated programs will contain a lot of left-shift operations.
 This is useful for detecting whether certain types of programs are more likely to be constant-time than others.
+% "This is useful for detecting whether certain types of programs are more likely to be constant-time than others."
+% Well is it? We say that it is useful; but I doubt we will use this observation.
+% An approach (that I can think of) would be to take all deemed variable time programs after our current pipeline, and then compare all of their generation distributions.
+% Then we could hope to see, that when comparison operators and logical operators are of high probability in the generation distribution, then this implies variable-timeness with good confidence.
+% However; you would need tons of data in order to learn problematic distributions. I would argue that the task of mining frequent subgraphs in the ASTs is a more direct approach to accomplish what we want.
+
+% I propose we write something along the lines of:
+%
+% This ensures that not all generated programs will be uniformly random. 
+% Non-uniformly random programs, particularly shorter ones, increase the likelihood of encountering certain prevalent operator(s).
+% If the program happens to be variable in time, it may highlight a specific scenario where the operator could pose  timing leakage issues.
+% In other words, instead of relying on luck for the operator sampling process from a uniform distribution to encounter the mentioned scenario, we can generate distributions that favor our desired outcome.
+
 
 The code generation module generates programs with integer literals in different ranges. 
 Booleans represent the first range.
