@@ -1,6 +1,6 @@
 {
   "compiler": "gcc",
-  "compiler_flags": ["O0", "O1", "O2", "O3", "Os"],
+  "compiler_flags": ["O0"],
   "fuzzing_classes": ["uniform", "equal", "max64", "umax64", "xzero", "yzero", "xlty", "yltx", "small"],
   "kernel_mode": false,
 

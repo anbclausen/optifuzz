@@ -536,14 +536,14 @@ def gen_plot_asm_fig(
             placeholder_subfigures.append(subfig)
             blank_indexes.remove(i)
             continue
-        csv = parsed_csv[compiler_flags[i - 1]][0]
-        assert csv.compile_flag != ""
+        
+        assert compiler_flags[i - 1] != ""
         asm = run(
             [
                 COMPILER_USED,
                 f"{FLAGGED_FOLDER}/{seed}.c",
                 "-S",
-                f"-{csv.compile_flag}",
+                f"-{compiler_flags[i - 1]}",
                 "-w",
                 "-c",
                 "-o",
