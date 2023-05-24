@@ -140,7 +140,7 @@ static void initialize_measurements(uint64_t *measurements[ITERATIONS], size_t c
  * @fn          get_time
  * @brief       Get the time it takes to execute the program with the given inputs.
  * @details     This function is a wrapper around the RDTSC instruction.
- *              It uses CPUID (and DRTSCP) to serialize instructions to avoid out
+ *              It uses CPUID (and RDTSCP) to serialize instructions to avoid out
  *              of order execution for encreased precision.
  *
  *              The code is run multiple times to for a more accurate measurement.
