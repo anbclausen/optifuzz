@@ -11,5 +11,5 @@ generate-seeded:
 
 .PHONY : clean
 clean:
-	@rm -r generated 1>/dev/null 2>&1; true
+	@$(RM) -r generated 1>/dev/null 2>&1; true
 	@mkdir generated

@@ -1,5 +1,7 @@
 CC = gcc
 CFLAGS = -O2 -Wall
+CONFIG_PATH="../config.json"
+KERNEL_MODE = $(shell python3 -c "import json; print(json.load(open('$(CONFIG_PATH)'))['kernel_mode'])")
 
 build-fuzzer-core: fuzzer_core.c fuzzer_core.h
 	@$(CC) $(CFLAGS) -c -o fuzzer_core.o fuzzer_core.c
@@ -18,4 +20,7 @@ clean-objects:
 
 .PHONY : clean
 clean: clean-results clean-objects
-	$(MAKE) -C km_fuzzer clean
+	@if [ "$(KERNEL_MODE)" = "True" ]; then \
+		$(MAKE) -C km_fuzzer clean; \
+	fi
+	
