@@ -432,6 +432,12 @@ def get_jumps(asm: str) -> list[tuple[str, int]]:
         "jns",
         "jo",
         "js",
+        # Loop instructions
+        "loop",
+        "loope",
+        "loopz",
+        "loopne",
+        "loopnz",
     ]
 
     jump_pattern = r"\b(" + "|".join(jump_instructions) + r")\b"
