@@ -8,13 +8,13 @@ latexcompile:
 	@cd latex && pdflatex -halt-on-error master.tex 1>/dev/null 2>&1
 
 clean-programs:
-	@rm programs/* 1>/dev/null 2>&1
+	@$(RM) programs/*
 
 clean-flagged:
-	@rm flagged/* 1>/dev/null 2>&1
+	@$(RM) flagged/*
 
 clean-latex:
-	@rm latex/generated_latex/prog* 1>/dev/null 2>&1
+	@$(RM) latex/generated_latex/prog*
 
 .PHONY : clean
 clean: clean-programs clean-flagged clean-latex
