@@ -29,7 +29,8 @@ You can configure the OptiFuzz in the `config.json` file. Here you can
   - `equal`: Inputs are 64-bit uniformly random numbers, but equal.
   - `max64`: One input is `INT64_MAX` while the other is uniformly random.
   - `umax64`: One input is `UINT64_MAX` while the other is uniformly random.
-  - `zero`: One input is 0 while the other is uniformly random.
+  - `xzero`: `x` is 0 while `y` is uniformly random.
+  - `yzero`: `y` is 0 while `x` is uniformly random.
   - `xlty`: Inputs are 64-bit uniformly random numbers, but the first input is smaller than the second.
   - `yltx`: Inputs are 64-bit uniformly random numbers, but the second input is smaller than the first.
   - `small`: Inputs are 8-bit uniformly random numbers.
@@ -75,13 +76,11 @@ make clean                          # cleans all generated files in all steps of
 ## Sources
 - [C operators](https://devdocs.io/c/language/operator_arithmetic): List of all arithmetic operators in C. Used as a basis for defining should-be-constant-time ASTs.
 
-## TODO
+## Improvements
 - Fuzzer
   - Option to set higher priority (lower niceness) to avoid too many context switches. At least when running in userland. Requires root (use setpriority).
 - General
   - Compile object (.o) files once doing assembly inspection and use these for fuzzing and latex generation. No need to compile do i multiple times.
-  - Make whole pipeline consistent with config.json
-  - Add all folders used in the pipeline to config.json, and move them to the root folder of the project.
 
 ## Notes
 - It seems like `expr << expr` and `y op (x == const)` are causing branching. Would be awesome to find some real-life examples of tricks like these being used in crypto libraries.

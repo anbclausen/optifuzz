@@ -18,19 +18,35 @@ current_folder = os.path.dirname(os.path.realpath(__file__))
 config_dir = os.path.dirname(current_folder)  # Parent folder
 config = json.load(open(f"{config_dir}{os.sep}{CONFIG_FILENAME}"))
 
-# config["fuzzer_results"] holds the path relative to the config_dir
-RESULTS_FOLDER = os.path.join(config_dir, config["fuzzer_results"])
+# config["fuzzer_results_dir"] holds the path relative to the config_dir
+RESULTS_FOLDER = os.path.join(config_dir, config["fuzzer_results_dir"])
 COMPILER_USED = config["compiler"]
 
 LATEX_FOLDER = "latex"
 LATEX_OUTPUT_FOLDER = f"{LATEX_FOLDER}/generated_latex"
-FLAGGED_FOLDER = "flagged"
+FLAGGED_FOLDER = f"{config_dir}{os.sep}{config['flagged_programs_dir']}"
 ITERATION_PREFIX = "it"
 NO_OF_ITERATIONS = 10
 
 # Output constants
 NO_OF_BINS = 100
-COLORS = ["firstCol", "secondCol", "thirdCol", "fourthCol", "fifthCol", "sixthCol"]
+COLORS = [
+    "firstCol",
+    "secondCol",
+    "thirdCol",
+    "fourthCol",
+    "fifthCol",
+    "sixthCol",
+    "seventhCol",
+    "eighthCol",
+    "ninthCol",
+    "tenthCol",
+    "eleventhCol",
+    "twelfthCol",
+    "thirteenthCol",
+    "fourteenthCol",
+    "fifteenthCol",
+]
 X_LABEL = "CPU Clocks"
 Y_LABEL = "Frequency"
 X_MARGIN = 1.03  # Controls margin to both sides of x-axis
@@ -138,28 +154,37 @@ class TexTikzPic(TexBlock):
         )
 
         fuzz_classes = list(means.keys())
+
+        def plot_means_if_exists(i: int) -> str:
+            if len(fuzz_classes) > i:
+                return (
+                    f"\\texttt{{{fuzz_classes[i]}}}_\\mu: & \\,{means[fuzz_classes[i]]}"
+                )
+            return "\ "
+
         means_table = (
             ""
             if means is None
             else f"""
             \\node[below=15mm of ax] (1) {{
                 $\\begin{{aligned}}
-                    \\texttt{{{fuzz_classes[0]}}}_\\mu: & \\,{means[fuzz_classes[0]]}\\\\
-                    \\texttt{{{fuzz_classes[1]}}}_\\mu: & \\,{means[fuzz_classes[1]]}\\\\
-                    \\texttt{{{fuzz_classes[2]}}}_\\mu: & \\,{means[fuzz_classes[2]]}
+                    {plot_means_if_exists(0)}\\\\
+                    {plot_means_if_exists(1)}\\\\
+                    {plot_means_if_exists(2)}
                 \end{{aligned}}$
             }};
             \\node[left=4mm of 1] (2) {{
                 $\\begin{{aligned}}
-                    \\texttt{{{fuzz_classes[3]}}}_\\mu: & \\,{means[fuzz_classes[3]]}\\\\
-                    \\texttt{{{fuzz_classes[4]}}}_\\mu: & \\,{means[fuzz_classes[4]]}
+                    {plot_means_if_exists(3)}\\\\
+                    {plot_means_if_exists(4)}\\\\
+                    {plot_means_if_exists(5)}
                 \end{{aligned}}$
             }};
             \\node[right=4mm of 1] (3) {{
                 $\\begin{{aligned}}
-                    \\texttt{{{fuzz_classes[5]}}}_\\mu: & \\,{means[fuzz_classes[5]]}\\\\
-                    \\texttt{{{fuzz_classes[6]}}}_\\mu: & \\,{means[fuzz_classes[6]]}\\\\
-                    \\texttt{{{fuzz_classes[7]}}}_\\mu: & \\,{means[fuzz_classes[7]]}
+                    {plot_means_if_exists(6)}\\\\
+                    {plot_means_if_exists(7)}\\\\
+                    {plot_means_if_exists(8)}
                 \end{{aligned}}$
             }};
             \\node[fit=(1)(2)(3),draw]{{}};"""
@@ -529,14 +554,14 @@ def gen_plot_asm_fig(
             placeholder_subfigures.append(subfig)
             blank_indexes.remove(i)
             continue
-        csv = parsed_csv[compiler_flags[i - 1]][3]
-        assert csv.compile_flag != ""
+
+        assert compiler_flags[i - 1] != ""
         asm = run(
             [
                 COMPILER_USED,
                 f"{FLAGGED_FOLDER}/{seed}.c",
                 "-S",
-                f"-{csv.compile_flag}",
+                f"-{compiler_flags[i - 1]}",
                 "-w",
                 "-c",
                 "-o",
@@ -588,25 +613,33 @@ def gen_latex_doc(seed: str, csv_files: dict[str, list[str]], prog_id: int) -> s
     prog = get_program_source(seed)
     program_lstlisting = TexLstlisting("style=defstyle,language=C", prog).finalize()
 
-    first_three = dict(itertools.islice(csv_files.items(), 0, 3))
-    last_two = dict(itertools.islice(csv_files.items(), 3, 5))
-
-    # Start by plotting a 3-width plot with corresponding asm
-    figure1, _ = gen_plot_asm_fig(seed, first_three, COLORS[:3])
-    # By telling to placeholder=[3], we essentially tell the function, that we want a 3-wide figure
-    # as len(last_two)+len(placeholder) = 3, but where the third element
-    # should only be created as an empty subfigure
-    figure2, _ = gen_plot_asm_fig(seed, last_two, COLORS[3:5], blank_indexes=[3])
-
-    # Finalize the figures
-    figure1, figure2 = figure1.finalize(), figure2.finalize()
-    new_page = "\\newpage\\noindent"
+    grouped_in_three = [
+        dict(itertools.islice(csv_files.items(), i, i + 3))
+        for i in range(0, len(csv_files), 3)
+    ]
 
     header = gen_header(prog_id, seed)
-    first_page = header + program_lstlisting + figure1 + new_page
-    second_page = header + figure2 + new_page
+    new_page = "\\newpage\\noindent"
 
-    return first_page + second_page
+    def gen_group(group, colors, has_program=False):
+        group_indexes = [i for i in range(1, len(group) + 1)]
+        leave_out = [i for i in range(1, 4) if i not in group_indexes]
+        figure, _ = gen_plot_asm_fig(seed, group, colors, blank_indexes=leave_out)
+        finalized = figure.finalize()
+        if has_program:
+            return header + program_lstlisting + finalized + new_page
+        else:
+            return header + finalized + new_page
+
+    if len(grouped_in_three) > 5:
+        raise Exception("Cannot handle more than 15 compile flags")
+
+    generated_latex_groups = [
+        gen_group(group, COLORS[3 * i : 3 * i + 3], has_program=(i == 0))
+        for i, group in enumerate(grouped_in_three)
+    ]
+
+    return "".join(generated_latex_groups)
 
 
 if __name__ == "__main__":

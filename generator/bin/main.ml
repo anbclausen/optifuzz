@@ -3,8 +3,9 @@ open Generator
 open Distribution
 open Write 
 
-let n = Sys.argv.(1) |> int_of_string
-let seed = Sys.argv.(2) |> int_of_string
+let generated_folder = Sys.argv.(1)
+let n = Sys.argv.(2) |> int_of_string
+let seed = Sys.argv.(3) |> int_of_string
 
 (** Generates a random AST from [seed]. *)
 let rec generate_random_ast seed =
@@ -15,7 +16,7 @@ let rec generate_random_ast seed =
   
   (* Body of the function should contain both x and y *)
   if String.contains_from prg 58 'x' && String.contains_from prg 58 'y' then
-    let filename = "generated/" ^ (string_of_int seed) ^ ".c" in
+    let filename = "../" ^ generated_folder ^ (string_of_int seed) ^ ".c" in
     write_file filename prg
   else 
     generate_random_ast (seed + 1)

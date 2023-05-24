@@ -1,15 +1,11 @@
+CONFIG_PATH="../config.json"
+GENERATED_PATH = $(shell python3 -c "import json; print(json.load(open('$(CONFIG_PATH)'))['generated_programs_dir'])")
+
 build:
 	dune build
 
 generate:
-	mkdir -p generated; \
-	dune exec generator $(pn) 0 $(md)
+	dune exec generator $(GENERATED_PATH) $(pn) 0 $(md)
 
 generate-seeded:
-	mkdir -p generated; \
-	dune exec generator 1 $(s) $(md)
-
-.PHONY : clean
-clean:
-	@rm -r generated 1>/dev/null 2>&1; true
-	@mkdir generated
+	dune exec generator $(GENERATED_PATH) 1 $(s) $(md)
