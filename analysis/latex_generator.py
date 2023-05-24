@@ -35,6 +35,11 @@ Y_LABEL = "Frequency"
 X_MARGIN = 1.03  # Controls margin to both sides of x-axis
 Y_MARGIN = 1.05  # Controls margin to top of y-axis
 
+# Match all jcc instructions that is not jmp, and all loop instructions
+# https://cdrdv2.intel.com/v1/dl/getContent/671200
+# Table 7-4
+jmp_regex = re.compile(r"\t(j(?!mp)[a-z][a-z]*)|(loop[a-z]*) ")
+
 
 class TexString:
     def __init__(self, str):
@@ -387,66 +392,22 @@ def trim_assembly(asm: str) -> str:
     return asm
 
 
-def get_jumps(asm: str) -> list[tuple[str, int]]:
-    """
-    Finds and returns the kinds of jumps made in the assembly
+def extract_conditional_branching_instructions(s: str) -> list[str]:
+    """Extracts all conditional branching instructions from a string
 
     Parameters
     ----------
-    asm : str
-        Assembly given as string
+    path : str
+        The string to be searched
+
+    Returns
+    ----------
+    A list of all conditional branching instructions
     """
-    # https://cdrdv2.intel.com/v1/dl/getContent/671200
-    # Table 7-4
-    jump_instructions = [  # Unsigned Conditional Jumps
-        "ja",
-        "jnbe",
-        "jae",
-        "jnb",
-        "jb",
-        "jnae",
-        "jbe",
-        "jna",
-        "jc",
-        "je",
-        "jz",
-        "jnc",
-        "jne",
-        "jnz",
-        "jnp",
-        "jpo",
-        "jp",
-        "jpe",
-        "jcxz",
-        "jecxz",
-        # Signed Conditional Jumps
-        "jg",
-        "jnle",
-        "jge",
-        "jnl",
-        "jl",
-        "jnge",
-        "jle",
-        "jng",
-        "jno",
-        "jns",
-        "jo",
-        "js",
-        # Loop instructions
-        "loop",
-        "loope",
-        "loopz",
-        "loopne",
-        "loopnz",
-    ]
-
-    jump_pattern = r"\b(" + "|".join(jump_instructions) + r")\b"
-    jump_info = [
-        (match.group(), asm.count("\n", 0, match.start()) + 1)
-        for match in re.finditer(jump_pattern, asm, re.MULTILINE)
-    ]
-
-    return jump_info
+    matches = jmp_regex.findall(s)
+    jmp_matches = [x[0] for x in matches if x[0] != ""]
+    loop_matches = [x[1] for x in matches if x[1] != ""]
+    return jmp_matches + loop_matches
 
 
 def gen_plot_asm_fig(seed, parsed_csv, colors, placeholder=[]):
@@ -575,10 +536,10 @@ def gen_plot_asm_fig(seed, parsed_csv, colors, placeholder=[]):
             ]
         )
         asm = trim_assembly(asm)
-        jumps = get_jumps(asm)
+        jumps = extract_conditional_branching_instructions(asm)
         no_jumps_str = "{\color{red} No jumps}"
         formatted_jumps_string = f"""\
-        \\vspace*{{2mm}}\\tiny {no_jumps_str if len(jumps) == 0 else ", ".join([f"{j[0]} {j[1]}" for j in jumps])}\n
+        \\vspace*{{2mm}}\\tiny {no_jumps_str if len(jumps) == 0 else ", ".join(jumps)}\n
         """
 
         lstlisting = TexLstlisting(
