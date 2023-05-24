@@ -80,8 +80,6 @@ make clean                          # cleans all generated files in all steps of
   - Option to set higher priority (lower niceness) to avoid too many context switches. At least when running in userland. Requires root (use setpriority).
 - General
   - Compile object (.o) files once doing assembly inspection and use these for fuzzing and latex generation. No need to compile do i multiple times.
-  - Make whole pipeline consistent with config.json
-  - Add all folders used in the pipeline to config.json, and move them to the root folder of the project.
 
 ## Notes
 - It seems like `expr << expr` and `y op (x == const)` are causing branching. Would be awesome to find some real-life examples of tricks like these being used in crypto libraries.
