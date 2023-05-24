@@ -133,7 +133,7 @@ def fuzz_class_lst_to_argument(fuzzing_classes: list) -> str:
     return " ".join(fuzzing_classes)
 
 
-def fuzz_program_user(prog_path: str, compiler: str, flag: str, fuzzing_classes: list) -> None:
+def fuzz_program_user(prog_path: str, compiler: str, flag: str, fuzzing_classes: list, datapoints: str) -> None:
     """ Compile and fuzz specified program in user mode 
 
     Parameters
@@ -146,13 +146,15 @@ def fuzz_program_user(prog_path: str, compiler: str, flag: str, fuzzing_classes:
         Optimization flag to compile program
     fuzzing_classes : list
         List of classes to fuzz
+    datapoints : str
+        The amount of data points to create for each fuzzing class
     """
     compile_user(prog_path, compiler, flag)
     class_arg = fuzz_class_lst_to_argument(fuzzing_classes)
-    os.system(f"./out {number_of_fuzzing_runs} {flag} '{class_arg}'")
+    os.system(f"./out {datapoints} {flag} '{class_arg}'")
 
 
-def fuzz_program_kernel(prog_path: str, compiler: str, flag: str, fuzzing_classes: list) -> None:
+def fuzz_program_kernel(prog_path: str, compiler: str, flag: str, fuzzing_classes: list, datapoints: str) -> None:
     """ Compile and fuzz specified program in kernel module mode 
 
     Parameters
@@ -165,6 +167,8 @@ def fuzz_program_kernel(prog_path: str, compiler: str, flag: str, fuzzing_classe
         Optimization flag to compile program
     fuzzing_classes : list
         String of classes to fuzz
+    datapoints : str
+        The amount of data points to create for each fuzzing class
     """
     compile_kernel(prog_path, compiler, flag)
 
@@ -177,7 +181,7 @@ def fuzz_program_kernel(prog_path: str, compiler: str, flag: str, fuzzing_classe
     class_arg = fuzz_class_lst_to_argument(fuzzing_classes)
     # Load module (yes, all those quotations around class_arg are necessary)
     os.system(
-        f"{sudo_prefix} insmod km_fuzzer/optifuzz.ko count={number_of_fuzzing_runs} flag={flag} classes='\"{class_arg}\"'")
+        f"{sudo_prefix} insmod km_fuzzer/optifuzz.ko count={datapoints} flag={flag} classes='\"{class_arg}\"'")
     # Process results
     extract_kernel_output()
     # Unoad module
@@ -203,7 +207,7 @@ def save_results(seed: str, fuzzing_classes: list, flag: str, result_dir: str) -
                         f"{result_dir}{os.sep}{seed}-{fuzzing_class}_{flag}.csv")
 
 
-def fuzz(prog_dir: str, fuzzing_classes: list, optimization_flags: list, compiler: str, kernel_mode: bool, result_dir: str) -> None:
+def fuzz(prog_dir: str, fuzzing_classes: list, optimization_flags: list, compiler: str, kernel_mode: bool, result_dir: str, datapoints: str) -> None:
     """ Fuzz all programs for each optimization flag and fuzzing class in inspecified mode
 
     Parameters
@@ -220,6 +224,8 @@ def fuzz(prog_dir: str, fuzzing_classes: list, optimization_flags: list, compile
         Specify whether or not the programs should be run as kernel modules
     result_dir : str
         The directory to save the results in
+    datapoints : str
+        The amount of data points to create for each fuzzing class
     """
     amount_of_programs = len(os.listdir(prog_dir))
     if amount_of_programs == 0:
@@ -240,10 +246,10 @@ def fuzz(prog_dir: str, fuzzing_classes: list, optimization_flags: list, compile
 
                 if kernel_mode:
                     fuzz_program_kernel(prog_path, compiler,
-                                        flag, fuzzing_classes)
+                                        flag, fuzzing_classes, datapoints)
                 else:
                     fuzz_program_user(prog_path, compiler,
-                                      flag, fuzzing_classes)
+                                      flag, fuzzing_classes, datapoints)
                 print(f"  {flag}", end="", flush=True)
 
                 save_results(seed, fuzzing_classes, flag, result_dir)
