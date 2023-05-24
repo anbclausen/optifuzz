@@ -138,29 +138,35 @@ class TexTikzPic(TexBlock):
         )
 
         fuzz_classes = list(means.keys())
+
+        def plot_means_if_exists(i: int) -> str:
+            if len(fuzz_classes) > i:
+                return f"\\texttt{{{fuzz_classes[i]}}}_\\mu: & \\,{means[fuzz_classes[i]]}"
+            return "\ "
+        
         means_table = (
             ""
             if means is None
             else f"""
             \\node[below=15mm of ax] (1) {{
                 $\\begin{{aligned}}
-                    \\texttt{{{fuzz_classes[0]}}}_\\mu: & \\,{means[fuzz_classes[0]]}\\\\
-                    \\texttt{{{fuzz_classes[1]}}}_\\mu: & \\,{means[fuzz_classes[1]]}\\\\
-                    \\texttt{{{fuzz_classes[2]}}}_\\mu: & \\,{means[fuzz_classes[2]]}
+                    {plot_means_if_exists(0)}\\\\
+                    {plot_means_if_exists(1)}\\\\
+                    {plot_means_if_exists(2)}
                 \end{{aligned}}$
             }};
             \\node[left=4mm of 1] (2) {{
                 $\\begin{{aligned}}
-                    \\texttt{{{fuzz_classes[3]}}}_\\mu: & \\,{means[fuzz_classes[3]]}\\\\
-                    \\texttt{{{fuzz_classes[4]}}}_\\mu: & \\,{means[fuzz_classes[4]]}\\\\
-                    \\texttt{{{fuzz_classes[5]}}}_\\mu: & \\,{means[fuzz_classes[5]]}
+                    {plot_means_if_exists(3)}\\\\
+                    {plot_means_if_exists(4)}\\\\
+                    {plot_means_if_exists(5)}
                 \end{{aligned}}$
             }};
             \\node[right=4mm of 1] (3) {{
                 $\\begin{{aligned}}
-                    \\texttt{{{fuzz_classes[6]}}}_\\mu: & \\,{means[fuzz_classes[6]]}\\\\
-                    \\texttt{{{fuzz_classes[7]}}}_\\mu: & \\,{means[fuzz_classes[7]]}\\\\
-                    \\texttt{{{fuzz_classes[8]}}}_\\mu: & \\,{means[fuzz_classes[8]]}
+                    {plot_means_if_exists(6)}\\\\
+                    {plot_means_if_exists(7)}\\\\
+                    {plot_means_if_exists(8)}
                 \end{{aligned}}$
             }};
             \\node[fit=(1)(2)(3),draw]{{}};"""
@@ -530,7 +536,7 @@ def gen_plot_asm_fig(
             placeholder_subfigures.append(subfig)
             blank_indexes.remove(i)
             continue
-        csv = parsed_csv[compiler_flags[i - 1]][3]
+        csv = parsed_csv[compiler_flags[i - 1]][0]
         assert csv.compile_flag != ""
         asm = run(
             [
