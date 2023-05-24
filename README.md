@@ -77,14 +77,9 @@ make clean                          # cleans all generated files in all steps of
 
 ## TODO
 - LaTeX
-  - Note which compiler version was used and (if kernel mode) the kernel version.
-  - Write jumps: jle, je, ...
   - Ensure documentation and refactor if necessary
-  - For each result page, write all the meta data (what compiler, what flags were tested, what fuzz classes were used, ...)
 - Fuzzer
   - Option to set higher priority (lower niceness) to avoid too many context switches. At least when running in userland. Requires root (use setpriority).
-- Assembly Inspection
-  - Refactor and document
 - General
   - Compile object (.o) files once doing assembly inspection and use these for fuzzing and latex generation. No need to compile do i multiple times.
   - Make whole pipeline consistent with config.json
