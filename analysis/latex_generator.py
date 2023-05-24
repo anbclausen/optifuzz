@@ -568,14 +568,14 @@ def gen_plot_asm_fig(
     return figure, placeholder_subfigures
 
 
-def gen_latex_doc(seed, CSV_files, prog_id):
+def gen_latex_doc(seed: str, csv_files: dict[str, list[str]], prog_id: int) -> str:
     """Generates all the LaTeX required for the CSV-files provided.
 
     Parameters
     ----------
     seed : str
         Seed of fuzzed data
-    CSV_files : dict: str -> list[str]
+    csv_files : dict[str, list[str]]
         Map from a compile flag to a list of different fuzz classes identified by file names for the CSV files
     prog_id : int
         Identifier of the program
@@ -587,15 +587,15 @@ def gen_latex_doc(seed, CSV_files, prog_id):
     prog = get_program_source(seed)
     program_lstlisting = TexLstlisting("style=defstyle,language=C", prog).finalize()
 
-    first_three = dict(itertools.islice(CSV_files.items(), 0, 3))
-    last_two = dict(itertools.islice(CSV_files.items(), 3, 5))
+    first_three = dict(itertools.islice(csv_files.items(), 0, 3))
+    last_two = dict(itertools.islice(csv_files.items(), 3, 5))
 
     # Start by plotting a 3-width plot with corresponding asm
     figure1, _ = gen_plot_asm_fig(seed, first_three, COLORS[:3])
     # By telling to placeholder=[3], we essentially tell the function, that we want a 3-wide figure
     # as len(last_two)+len(placeholder) = 3, but where the third element
     # should only be created as an empty subfigure
-    figure2, subfigs = gen_plot_asm_fig(seed, last_two, COLORS[3:5], blank_indexes=[3])
+    figure2, _ = gen_plot_asm_fig(seed, last_two, COLORS[3:5], blank_indexes=[3])
 
     # Finalize the figures
     figure1, figure2 = figure1.finalize(), figure2.finalize()
