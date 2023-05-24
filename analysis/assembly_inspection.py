@@ -13,6 +13,8 @@ config = json.load(open(f"{config_dir}{os.sep}{CONFIG_FILENAME}"))
 flagged_folder = f"{folder}{os.sep}flagged{os.sep}" # FIXME
 
 # Match all jcc instructions that is not jmp, and all loop instructions
+# https://cdrdv2.intel.com/v1/dl/getContent/671200
+# Table 7-4
 jmp_regex = re.compile(r"\t(j(?!mp)[a-z][a-z]*)|(loop[a-z]*) ")
 
 optimization_flags = config["compiler_flags"]
