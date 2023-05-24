@@ -15,7 +15,7 @@ config_dir = parent_directory = os.path.dirname(folder)
 config = json.load(open(f"{config_dir}{os.sep}{CONFIG_FILENAME}"))
 
 
-def absolute_path(path: str):
+def absolute_path(path: str) -> str:
     """ Converts a path from config_dir to absolute 
 
     Parameters
@@ -30,7 +30,7 @@ def absolute_path(path: str):
     return f"{config_dir}{os.sep}{path}"
 
 
-def get_config_path(entry: str):
+def get_config_path(entry: str) -> str:
     """ Get absolute path from path entry in config 
 
     Parameters
@@ -45,7 +45,7 @@ def get_config_path(entry: str):
     return absolute_path(config[entry])
 
 
-def remove_file_if_exists(path: str):
+def remove_file_if_exists(path: str) -> None:
     """ Silently tries to delete a file if it exists
 
     Parameters
@@ -57,7 +57,7 @@ def remove_file_if_exists(path: str):
         os.remove(path)
 
 
-def compile_user(prog_path: str, compiler: str, flag: str):
+def compile_user(prog_path: str, compiler: str, flag: str) -> None:
     """ Compile program and link with user runtime 
 
     Parameters
@@ -76,7 +76,7 @@ def compile_user(prog_path: str, compiler: str, flag: str):
     remove_file_if_exists("template.o")
 
 
-def compile_kernel(prog_path: str, compiler: str, flag: str):
+def compile_kernel(prog_path: str, compiler: str, flag: str) -> None:
     """ Compile program and link with kernel module 
 
     Parameters
@@ -93,7 +93,7 @@ def compile_kernel(prog_path: str, compiler: str, flag: str):
         f"cd km_fuzzer && make comp={compiler} flag={flag}>/dev/null 2>&1")
 
 
-def extract_kernel_output():
+def extract_kernel_output() -> None:
     """ Extracts the results from the kernel module and saves them in 
         the default result file for each fuzzing class
     """
@@ -118,7 +118,7 @@ def extract_kernel_output():
                 outfile.writelines(section)
 
 
-def fuzz_class_lst_to_argument(fuzzing_classes: list):
+def fuzz_class_lst_to_argument(fuzzing_classes: list) -> str:
     """ Convert list of fuzzing classes to a space seperated string
 
     Parameters
@@ -133,7 +133,7 @@ def fuzz_class_lst_to_argument(fuzzing_classes: list):
     return " ".join(fuzzing_classes)
 
 
-def fuzz_program_user(prog_path: str, compiler: str, flag: str, fuzzing_classes: list):
+def fuzz_program_user(prog_path: str, compiler: str, flag: str, fuzzing_classes: list) -> None:
     """ Compile and fuzz specified program in user mode 
 
     Parameters
@@ -152,7 +152,7 @@ def fuzz_program_user(prog_path: str, compiler: str, flag: str, fuzzing_classes:
     os.system(f"./out {number_of_fuzzing_runs} {flag} '{class_arg}'")
 
 
-def fuzz_program_kernel(prog_path: str, compiler: str, flag: str, fuzzing_classes: list):
+def fuzz_program_kernel(prog_path: str, compiler: str, flag: str, fuzzing_classes: list) -> None:
     """ Compile and fuzz specified program in kernel module mode 
 
     Parameters
@@ -184,7 +184,7 @@ def fuzz_program_kernel(prog_path: str, compiler: str, flag: str, fuzzing_classe
     os.system(f"{sudo_prefix} rmmod optifuzz")
 
 
-def save_results(seed: str, fuzzing_classes: list, flag: str, result_dir: str):
+def save_results(seed: str, fuzzing_classes: list, flag: str, result_dir: str) -> None:
     """ Copy results to results folder and rename to reflect class and flag 
 
     Parameters
@@ -203,7 +203,7 @@ def save_results(seed: str, fuzzing_classes: list, flag: str, result_dir: str):
                         f"{result_dir}{os.sep}{seed}-{fuzzing_class}_{flag}.csv")
 
 
-def fuzz(prog_dir: str, fuzzing_classes: list, optimization_flags: list, compiler: str, kernel_mode: bool, result_dir: str):
+def fuzz(prog_dir: str, fuzzing_classes: list, optimization_flags: list, compiler: str, kernel_mode: bool, result_dir: str) -> None:
     """ Fuzz all programs for each optimization flag and fuzzing class in inspecified mode
 
     Parameters
@@ -251,7 +251,7 @@ def fuzz(prog_dir: str, fuzzing_classes: list, optimization_flags: list, compile
             print()
 
 
-def clean(fuzzing_classes: list):
+def clean(fuzzing_classes: list) -> None:
     """ Remove all temporary result files and program
 
     Parameters
