@@ -155,7 +155,7 @@ class TexTikzPic(TexBlock):
             \\end{{tikzpicture}}%
         """
 
-    def add_child(self, block):
+    def add_child(self):
         raise Exception("It does not make sense to nest anything in a Tikzpicture yet") 
 
     def finalize(self) -> string:
@@ -173,20 +173,37 @@ class TexLstlisting(TexBlock):
 
 
 
-def run(args):
+def run(args: list[str]) -> str:
+    """Runs a command and returns the stdout
+
+    Parameters
+    ----------
+    args : list[str]
+        The command to be run
+
+    Returns
+    ----------
+    The stdout of the command
+    """
     return subprocess.run(args, capture_output=True, text=True).stdout
 
-def parse_aux_info(aux):
+def parse_aux_info(aux: str) -> tuple[str, str]:
     """Parses first line of CSV fuzzing data
 
     Parameters
     ----------
     aux : str
         Auxiliary information in CSV
+
+    Returns
+    ----------
+    Tuple (a,b) where:\n
+    a:
+        Compiler flag used
+    b:
+        Fuzzing class used
     """
-    # Find occurrences of [---] in the string
     re_brackets = re.findall(r'\[.*?\]', aux)
-    # Remove brackets from each match
     res = list(map(lambda x: x.replace("[", "").replace("]", ""), re_brackets))
     compiler_flag = res[0]
     fuzz_class = res[1]
@@ -199,8 +216,15 @@ class ParsedCSV:
     compile_flag: str
     fuzz_class: str
 
-def gen_header(prog_id: str, prog_seed: str):
+def gen_header(prog_id: str, prog_seed: str) -> str:
     """Generates a latex header for the program
+
+    Parameters
+    ----------
+    prog_id : str
+        Identifier of the program
+    prog_seed : str
+        Seed of fuzzed data
 
     Returns
     ----------
@@ -220,15 +244,17 @@ def gen_header(prog_id: str, prog_seed: str):
     return f"\\textbf{{Program {prog_id}}} -- \\texttt{{Seed {prog_seed}}} -- Kernel Mode: {kernel_mode} -- \\texttt{{{compiled_with}}}{newline}\small\\texttt{{{fuzzclasses}}}\n"
 
 
-def parse_csv(file):
-    """Generates a LaTeX figure for the CSV-files provided.\n
-    CPU-clocks will be plotted and colored.\n
+def parse_csv(file: str) -> ParsedCSV:
+    """Generates a LaTeX figure for the CSV-files provided.
+
+    CPU-clocks will be plotted and colored.
+
     Assembly lstlistings will also be generated.
 
     Parameters
     ----------
     file : str
-        File name to parse
+        File path of file to parse
 
     Returns
     ----------
@@ -245,9 +271,9 @@ def parse_csv(file):
 
     min_clock, max_clock = df[MIN_CLOCKS_COLUMN].min(), df[MIN_CLOCKS_COLUMN].max()
     diff = max_clock-min_clock
-    # Cap the bins_count to NO_OF_BINS.
-    # If we have fewer than the cap, then just use that amount of bins
+
     bins_count = diff if diff < NO_OF_BINS else NO_OF_BINS
+    
     # If min_clock = max_clock then we have to make sure that there exist at least one bin
     bins_count = max(bins_count, 1)
 
@@ -261,13 +287,17 @@ def parse_csv(file):
 
     return ParsedCSV(min_clocks, all_clocks, compile_flag, fuzz_class)
 
-def get_program_source(seed):
+def get_program_source(seed: str) -> str:
     """Retrieves source code of program.
 
     Parameters
     ----------
     seed : str
         Seed of fuzzed data
+
+    Returns
+    ----------
+    Program source code as string
     """
     # Read program
     file_reader = open(f'{FLAGGED_FOLDER}/{seed}.c', "r") 
@@ -277,30 +307,35 @@ def get_program_source(seed):
     prog = "...\n"+prog.split("\n",2)[2]
     return prog
 
-def trim_assembly(asm):
-    """Trims start and end of provided assembly.\n
+def trim_assembly(asm: str) -> str:
+    """Trims start and end of provided assembly.
+
     Trims away the first 4 lines.
     Searches specifically after .LFE0 and trims everything after that point. 
-    Trims all instances of ".cfi" prefix
+    Trims all instances of ".cfi" prefix.
 
     Parameters
     ----------
     asm : str
         Assembly given as string
+
+    Returns
+    ----------
+    Trimmed assembly as string
     """
-    # Split to list of instructions instead and search for LFE0
     asm = asm.split("\n") 
     LFE0 = next(i for i, s in enumerate(asm) if s.startswith(".LFE0"))
+
     # Trim at start and end, and return the string
     asm[4] = "..."
     asm[LFE0] = "..."
     asm = asm[4:LFE0+1]
-    # Remove .cfi lines
+
     asm = [line for line in asm if '.cfi' not in line]
     asm = '\n'.join(asm)
     return asm
 
-def get_jumps(asm):
+def get_jumps(asm: str) -> list[tuple[str, int]]:
     """
     Finds and returns the kinds of jumps made in the assembly
 
