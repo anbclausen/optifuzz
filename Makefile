@@ -36,3 +36,4 @@ all: clean generate inspect fuzz latexgen latexcompile
 .PHONY : clean
 clean:
 	$(MAKE) -C fuzzer clean
+	$(MAKE) -C analysis clean

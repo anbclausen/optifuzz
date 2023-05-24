@@ -12,4 +12,9 @@ latexcompile:
 	@cd latex \
 	&& pdflatex -halt-on-error master.tex 1>/dev/null 2>&1 \
 	&& cp master.pdf $(LATEX_REPORT_OUTPUT_DIR)
-	
+
+clean-latex:
+	@$(RM) latex/generated_latex/prog*
+
+.PHONY : clean
+clean: clean-latex
