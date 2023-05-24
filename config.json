@@ -3,6 +3,9 @@
   "compiler_flags": ["O0", "O1", "O2", "O3", "Os"],
   "fuzzing_classes": ["uniform", "equal", "max64", "umax64", "zero", "xlty", "yltx", "small"],
   "kernel_mode": false,
-  "fuzzer_source": "analysis/flagged/",
-  "fuzzer_results": "fuzzer/results/"
+
+  "generated_programs_dir": "generated_programs/",
+  "flagged_programs_dir": "flagged_programs/",
+  "fuzzer_results_dir": "fuzzer_results/",
+  "report_dir": "./"
 }

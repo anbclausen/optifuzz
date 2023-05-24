@@ -265,8 +265,8 @@ def clean(fuzzing_classes: list) -> None:
 
 
 if __name__ == '__main__':
-    prog_dir = get_config_path('fuzzer_source')
-    result_dir = get_config_path('fuzzer_results')
+    prog_dir = get_config_path('flagged_programs_dir')
+    result_dir = get_config_path('fuzzer_results_dir')
 
     if len(sys.argv) < 2:
         print("Usage: python3 fuzz.py <number of fuzzing runs>")

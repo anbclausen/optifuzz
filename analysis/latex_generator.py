@@ -18,8 +18,8 @@ current_folder = os.path.dirname(os.path.realpath(__file__))
 config_dir = os.path.dirname(current_folder)  # Parent folder
 config = json.load(open(f"{config_dir}{os.sep}{CONFIG_FILENAME}"))
 
-# config["fuzzer_results"] holds the path relative to the config_dir
-RESULTS_FOLDER = os.path.join(config_dir, config["fuzzer_results"])
+# config["fuzzer_results_dir"] holds the path relative to the config_dir
+RESULTS_FOLDER = os.path.join(config_dir, config["fuzzer_results_dir"])
 
 LATEX_FOLDER = "latex"
 LATEX_OUTPUT_FOLDER = f"{LATEX_FOLDER}/generated_latex"
