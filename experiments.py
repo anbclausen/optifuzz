@@ -15,8 +15,8 @@ experiments = [
             "small",
         ],
         "pn": 100000,
-        "md": 4,
-        "in": 1000,
+        "md": 5,
+        "in": 10000,
     },
     {
         "compiler": "gcc",
@@ -33,8 +33,8 @@ experiments = [
             "small",
         ],
         "pn": 100000,
-        "md": 4,
-        "in": 1000,
+        "md": 5,
+        "in": 10000,
     },
     {
         "compiler": "gcc",
@@ -51,8 +51,8 @@ experiments = [
             "small",
         ],
         "pn": 100000,
-        "md": 4,
-        "in": 1000,
+        "md": 5,
+        "in": 10000,
     },
     {
         "compiler": "gcc",
@@ -69,8 +69,8 @@ experiments = [
             "small",
         ],
         "pn": 100000,
-        "md": 4,
-        "in": 1000,
+        "md": 5,
+        "in": 10000,
     },
     {
         "compiler": "gcc",
@@ -87,8 +87,8 @@ experiments = [
             "small",
         ],
         "pn": 100000,
-        "md": 4,
-        "in": 1000,
+        "md": 5,
+        "in": 10000,
     },
     {
         "compiler": "gcc",
@@ -106,7 +106,7 @@ experiments = [
         ],
         "pn": 1000,
         "md": 12,
-        "in": 100,
+        "in": 1000,
     },
     {
         "compiler": "gcc",
@@ -124,7 +124,7 @@ experiments = [
         ],
         "pn": 1000,
         "md": 12,
-        "in": 100,
+        "in": 1000,
     },
     {
         "compiler": "gcc",
@@ -142,7 +142,7 @@ experiments = [
         ],
         "pn": 1000,
         "md": 12,
-        "in": 100,
+        "in": 1000,
     },
     {
         "compiler": "gcc",
@@ -160,7 +160,7 @@ experiments = [
         ],
         "pn": 1000,
         "md": 12,
-        "in": 100,
+        "in": 1000,
     },
     {
         "compiler": "gcc",
@@ -178,7 +178,7 @@ experiments = [
         ],
         "pn": 1000,
         "md": 12,
-        "in": 100,
+        "in": 1000,
     },
     {
         "compiler": "clang",
@@ -195,8 +195,8 @@ experiments = [
             "small",
         ],
         "pn": 10000,
-        "md": 4,
-        "in": 1000,
+        "md": 5,
+        "in": 10000,
     },
     {
         "compiler": "clang",
@@ -213,8 +213,8 @@ experiments = [
             "small",
         ],
         "pn": 10000,
-        "md": 4,
-        "in": 1000,
+        "md": 5,
+        "in": 10000,
     },
     {
         "compiler": "clang",
@@ -231,8 +231,8 @@ experiments = [
             "small",
         ],
         "pn": 10000,
-        "md": 4,
-        "in": 1000,
+        "md": 5,
+        "in": 10000,
     },
     {
         "compiler": "clang",
@@ -249,8 +249,8 @@ experiments = [
             "small",
         ],
         "pn": 10000,
-        "md": 4,
-        "in": 1000,
+        "md": 5,
+        "in": 10000,
     },
     {
         "compiler": "clang",
@@ -267,8 +267,8 @@ experiments = [
             "small",
         ],
         "pn": 10000,
-        "md": 4,
-        "in": 1000,
+        "md": 5,
+        "in": 10000,
     },
 ]
 
@@ -276,10 +276,10 @@ small_experiments = [
     {
         "compiler": "gcc",
         "compile_flags": ["O1", "O2", "O3", "Os"],
-        "fuzz_classes": ["uniform", "fixed", "xzero", "yzero", "xlty", "yltx", "small"],
-        "pn": 100,
-        "md": 7,
-        "in": 100000,
+        "fuzz_classes": ["uniform", "fixed", "xzero", "yzero", "xlty", "yltx", "small", "equal", "max64"],
+        "pn": 500,
+        "md": 5,
+        "in": 10000,
     },
 ]
 
@@ -341,9 +341,16 @@ for i, experiment in enumerate(small_experiments):
     )
 
     meta = experiment.copy()
+
+    number_of_flagged = len(os.listdir('results/flagged_programs/'))
     meta[
         "number_of_flagged_files"
-    ] = f"{len(os.listdir('results/flagged_programs/'))}/{experiment['pn']}"
+    ] = f"{number_of_flagged}/{experiment['pn']}: {100 * number_of_flagged / experiment['pn']:.2f}%"
+
+    latex_meta = json.load(open("analysis/latex/generated_latex/meta.json"))
+    for key, value in latex_meta.items():
+        meta[f"H0_dropped_in_{key}"] = f"{value}/{number_of_flagged}: {100 * value / number_of_flagged:.2f}%"
+    
 
     print("  ", "writing meta")
     with open(f"{TOP_DIR}/experiment{i}/meta.json", "w") as f:
