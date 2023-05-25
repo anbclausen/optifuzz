@@ -612,7 +612,7 @@ def gen_plot_asm_fig(
             )
 
             t_test_result = (
-                "\\vspace*{2mm}\\tiny {\color{red}$H_0$ REJECTED!}"
+                "\\vspace*{2mm}\\tiny {\color{red}$H_0$ REJECTED!}\ "
                 if pval <= T_TEST_THRESHOLD
                 else ""
             )
