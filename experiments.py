@@ -276,10 +276,10 @@ small_experiments = [
     {
         "compiler": "gcc",
         "compile_flags": ["O1", "O2", "O3", "Os"],
-        "fuzz_classes": ["uniform", "fixed"],
-        "pn": 250,
-        "md": 4,
-        "in": 1000,
+        "fuzz_classes": ["uniform", "fixed", "xzero", "yzero", "xlty", "yltx", "small"],
+        "pn": 100,
+        "md": 7,
+        "in": 100000,
     },
 ]
 
