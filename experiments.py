@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 experiments = [
     {
         "compiler": "gcc",
@@ -276,7 +277,7 @@ small_experiments = [
         "compiler": "gcc",
         "compile_flags": ["O1", "O2", "O3", "Os"],
         "fuzz_classes": ["uniform", "fixed"],
-        "pn": 500,
+        "pn": 250,
         "md": 4,
         "in": 1000,
     },
