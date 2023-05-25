@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import copy
+import gc
 import json
 import string
 import pandas as pd
@@ -7,8 +8,8 @@ import numpy as np
 import os
 import re
 import itertools
-from dataclasses import dataclass
 import subprocess
+import scipy.stats as stats
 
 # Constants for parsing
 MIN_CLOCKS_COLUMN = "min_clock_measured"
@@ -21,12 +22,13 @@ config = json.load(open(f"{config_dir}{os.sep}{CONFIG_FILENAME}"))
 # config["fuzzer_results_dir"] holds the path relative to the config_dir
 RESULTS_FOLDER = os.path.join(config_dir, config["fuzzer_results_dir"])
 COMPILER_USED = config["compiler"]
+DO_T_TEST = {"fixed", "uniform"}.issubset(set(config["fuzzing_classes"]))
 
 LATEX_FOLDER = "latex"
 LATEX_OUTPUT_FOLDER = f"{LATEX_FOLDER}/generated_latex"
 FLAGGED_FOLDER = f"{config_dir}{os.sep}{config['flagged_programs_dir']}"
 ITERATION_PREFIX = "it"
-NO_OF_ITERATIONS = 10
+NO_OF_ITERATIONS = 5
 
 # Output constants
 NO_OF_BINS = 100
@@ -57,6 +59,7 @@ Y_MARGIN = 1.05  # Controls margin to top of y-axis
 # Table 7-4
 jmp_regex = re.compile(r"\t(j(?!mp)[a-z][a-z]*)|(loop[a-z]*) ")
 
+vulnerable_programs = {opt_flag: 0 for opt_flag in config["compiler_flags"]}
 
 class TexString:
     def __init__(self, str):
@@ -260,36 +263,76 @@ def run(args: list[str]) -> str:
     """
     return subprocess.run(args, capture_output=True, text=True).stdout
 
-
-def parse_aux_info(aux: str) -> tuple[str, str]:
-    """Parses first line of CSV fuzzing data
-
-    Parameters
-    ----------
-    aux : str
-        Auxiliary information in CSV
-
-    Returns
-    ----------
-    Tuple (a,b) where:\n
-    a:
-        Compiler flag used
-    b:
-        Fuzzing class used
-    """
-    re_brackets = re.findall(r"\[.*?\]", aux)
-    res = list(map(lambda x: x.replace("[", "").replace("]", ""), re_brackets))
-    compiler_flag = res[0]
-    fuzz_class = res[1]
-    return compiler_flag, fuzz_class
-
-
-@dataclass
 class ParsedCSV:
     min_clocks: pd.Series
     all_clocks: pd.Series
     compile_flag: str
     fuzz_class: str
+    file: str
+
+    def __init__(self, filename: str):
+        """Parses first line of CSV file according to our format
+
+        Parameters
+        ----------
+        file : str
+            File path of file to parse
+
+        Returns
+        ----------
+        A ParsedCSV containing which compile-flag & fuzz_classes were used, 
+        and stores the filename in the ParsedCSV object
+        """
+        self.file = f"{RESULTS_FOLDER}/{filename}"
+
+        # Read first line of CSV containing auxiliary information
+        with open(self.file) as f:
+            aux_info = f.readline()
+            
+        re_brackets = re.findall(r"\[.*?\]", aux_info)
+        res = list(map(lambda x: x.replace("[", "").replace("]", ""), re_brackets))
+
+        self.compile_flag = res[0]
+        self.fuzz_class = res[1]
+
+
+    def parse_doc(self):
+        """
+        Parses time measurement data from CSV file according to our format
+
+        Returns
+        ----------
+        A ParsedCSV having all measured clocks as a pd series
+        """
+        # Read the rest of the CSV - skip the auxiliary line
+        df = pd.read_csv(self.file, sep=",", skiprows=[0])
+
+        min_clock, max_clock = df[MIN_CLOCKS_COLUMN].min(), df[MIN_CLOCKS_COLUMN].max()
+        diff = max_clock - min_clock
+
+        bins_count = diff if diff < NO_OF_BINS else NO_OF_BINS
+
+        # If min_clock = max_clock then we have to make sure that there exist at least one bin
+        bins_count = max(bins_count, 1)
+
+        # Generate labels for bins
+        edges = np.linspace(min_clock, max_clock, bins_count + 1).astype(int)
+        labels = [
+            edges[i] + round((edges[i + 1] - edges[i]) / 2) for i in range(bins_count)
+        ]
+
+        # Group into bins, receiving a list of (interval, count)
+        min_clocks = pd.cut(
+            df[MIN_CLOCKS_COLUMN], bins=bins_count, labels=labels
+        ).value_counts(sort=False)
+        all_clocks = pd.concat(
+            [df[f"it{i}"] for i in range(1, NO_OF_ITERATIONS + 1)], axis=0
+        )
+
+        self.min_clocks = min_clocks
+        self.all_clocks = all_clocks
+
+        return self
 
 
 def gen_header(prog_id: str, prog_seed: str) -> str:
@@ -315,57 +358,6 @@ def gen_header(prog_id: str, prog_seed: str) -> str:
     fuzzclasses = "Classes: " + " ".join(fuzzing_classes)
     newline = "\\\\"
     return f"\\textbf{{Program {prog_id}}} -- \\texttt{{Seed {prog_seed}}} -- Kernel Mode: {kernel_mode} -- \\texttt{{{compiled_with}}}{newline}\small\\texttt{{{fuzzclasses}}}\n"
-
-
-def parse_csv(file: str) -> ParsedCSV:
-    """Generates a LaTeX figure for the CSV-files provided.
-
-    CPU-clocks will be plotted and colored.
-
-    Assembly lstlistings will also be generated.
-
-    Parameters
-    ----------
-    file : str
-        File path of file to parse
-
-    Returns
-    ----------
-    A ParsedCSV containing compile-flag used and all measured clocks as a pd series
-    """
-    file = f"{RESULTS_FOLDER}/{file}"
-
-    # Read first line of CSV containing auxiliary information
-    with open(file) as f:
-        aux_info = f.readline()
-    compile_flag, fuzz_class = parse_aux_info(aux_info)
-
-    # Read the rest of the CSV - skip the auxiliary line
-    df = pd.read_csv(file, sep=",", skiprows=[0])
-
-    min_clock, max_clock = df[MIN_CLOCKS_COLUMN].min(), df[MIN_CLOCKS_COLUMN].max()
-    diff = max_clock - min_clock
-
-    bins_count = diff if diff < NO_OF_BINS else NO_OF_BINS
-
-    # If min_clock = max_clock then we have to make sure that there exist at least one bin
-    bins_count = max(bins_count, 1)
-
-    # Generate labels for bins
-    edges = np.linspace(min_clock, max_clock, bins_count + 1).astype(int)
-    labels = [
-        edges[i] + round((edges[i + 1] - edges[i]) / 2) for i in range(bins_count)
-    ]
-
-    # Group into bins, receiving a list of (interval, count)
-    min_clocks = pd.cut(
-        df[MIN_CLOCKS_COLUMN], bins=bins_count, labels=labels
-    ).value_counts(sort=False)
-    all_clocks = pd.concat(
-        [df[f"it{i}"] for i in range(1, NO_OF_ITERATIONS + 1)], axis=0
-    )
-
-    return ParsedCSV(min_clocks, all_clocks, compile_flag, fuzz_class)
 
 
 def get_program_source(seed: str) -> str:
@@ -438,7 +430,7 @@ def extract_conditional_branching_instructions(s: str) -> list[str]:
 
 def gen_plot_asm_fig(
     seed: str,
-    parsed_csv: dict[str, list[str]],
+    parsed_csv: dict[str, list[ParsedCSV]],
     colors: list[str],
     blank_indexes: list[int] = [],
 ) -> tuple[TexFigure, list[TexSubFigure]]:
@@ -452,8 +444,8 @@ def gen_plot_asm_fig(
     ----------
     seed : str
         Seed of fuzzed data
-    parsed_csv : dict[str, list[str]]
-        Map from a compile flag to a list of different fuzz classes identified by file names for the CSV files
+    parsed_csv : dict[str, list[ParsedCSV]]
+        Map from a compile flag to a list of different fuzz classes as CSV files
     colors : str list
         List of colors to use for the plots
     blank_indexes : int list
@@ -575,12 +567,27 @@ def gen_plot_asm_fig(
         \\vspace*{{2mm}}\\tiny {no_jumps_str if len(jumps) == 0 else ", ".join(jumps)}\n
         """
 
+        t_test_result = ""
+        if DO_T_TEST:
+            fixed_csv = next(csv for csv in parsed_csv[compiler_flags[i - 1]] if csv.fuzz_class == "fixed")
+            uniform_csv = next(csv for csv in parsed_csv[compiler_flags[i - 1]] if csv.fuzz_class == "uniform")
+            tstatistic, pval = stats.ttest_ind(fixed_csv.min_clocks, uniform_csv.min_clocks, equal_var = False)
+            t_test_result = (
+                "\\vspace*{2mm}\\tiny {\color{green}$H_0$ ACCEPTED!" + " p=" + str("{:.3f}".format(pval)) + " }\ \n"
+                if tstatistic > 10
+                else
+                "\\vspace*{2mm}\\tiny {\color{red}$H_0$ REJECTED!" + " p=" + str("{:.3f}".format(pval)) + " }\ \n"
+            )
+            if tstatistic <= 10:
+                vulnerable_programs[compiler_flags[i - 1]] += 1
+
         lstlisting = TexLstlisting(
             style="style=defstyle,language={[x86masm]Assembler},basicstyle=\\tiny\\ttfamily,breaklines=true",
             code=asm,
         )
         subfig = (
             TexSubFigure(width=width - 0.03)
+            .append_string(t_test_result)
             .append_string(formatted_jumps_string)
             .add_child(lstlisting)
         )
@@ -594,15 +601,15 @@ def gen_plot_asm_fig(
     return figure, placeholder_subfigures
 
 
-def gen_latex_doc(seed: str, csv_files: dict[str, list[str]], prog_id: int) -> str:
+def gen_latex_doc(seed: str, csv_files: dict[str, list[ParsedCSV]], prog_id: int) -> str:
     """Generates all the LaTeX required for the CSV-files provided.
 
     Parameters
     ----------
     seed : str
         Seed of fuzzed data
-    csv_files : dict[str, list[str]]
-        Map from a compile flag to a list of different fuzz classes identified by file names for the CSV files
+    csv_files : dict[str, list[ParsedCSV]]
+        Map from a compile flag to a list of different fuzz classes as CSV files
     prog_id : int
         Identifier of the program
 
@@ -651,7 +658,7 @@ if __name__ == "__main__":
     )
     # Convert to dictionary and parse all .csv-files in the above
     all_fuzzing_results = {
-        seed: [parse_csv(csv) for csv in list(csv_files)]
+        seed: [ParsedCSV(filename=csv) for csv in list(csv_files)]
         for seed, csv_files in all_fuzzing_results
     }
     for csv_files in all_fuzzing_results.values():
@@ -664,10 +671,21 @@ if __name__ == "__main__":
         }
         for seed, csv_files in all_fuzzing_results.items()
     }
-
     # For each program/seed; create a .tex file in the output folder
     for id, (seed, grouped_CSV_files) in enumerate(all_fuzzing_results.items(), 1):
+        grouped_CSV_files = {k: [ParsedCSV.parse_doc(csv) for csv in v] for k,v in grouped_CSV_files.items()}
         latex = gen_latex_doc(seed, grouped_CSV_files, id)
+        # Free up some memory
+        for csvs in grouped_CSV_files.values():
+            for csv in csvs:
+                csv.all_clocks = []
+                csv.min_clocks = []
+        gc.collect()
         f = open(f"{LATEX_OUTPUT_FOLDER}/prog{id}.tex", "w")
         f.write(latex)
         f.close()
+
+    # Print out the number of vulnerable programs in meta.json
+    # This is used for analysis purposes
+    with open(f"{LATEX_OUTPUT_FOLDER}/meta.json", "w") as f:
+        json.dump(vulnerable_programs, f)

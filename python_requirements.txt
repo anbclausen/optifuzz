@@ -1,4 +1,4 @@
 typing_extensions
 pandas
 numpy
-dataclasses
+scipy
