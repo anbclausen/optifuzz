@@ -308,7 +308,8 @@ class ParsedCSV:
         # Read the rest of the CSV - skip the auxiliary line
         df = pd.read_csv(self.file, sep=",", skiprows=[0])
 
-        min_clock, max_clock = df[MIN_CLOCKS_COLUMN].min(), df[MIN_CLOCKS_COLUMN].max()
+        percentile95 = df[MIN_CLOCKS_COLUMN].quantile(0.95)
+        min_clock, max_clock = df[MIN_CLOCKS_COLUMN].min(), percentile95.max().astype(int)
         diff = max_clock - min_clock
 
         bins_count = diff if diff < NO_OF_BINS else NO_OF_BINS
