@@ -186,8 +186,8 @@ static inline uint64_t get_time(int64_t a, int64_t b)
         // Restore clobbered registers
         : "=r"(cycles_high_before), "=r"(cycles_low_before)::"%rax", "%rbx", "%rcx", "%rdx");
 
-    for (size_t i = 0; i < REPEATS; i++)
-        program(a, b);
+    
+    program(a, b);
 
     asm volatile( // Force to wait for all prev instructions before reading
                   // counter. (subsequent instructions may begin execution

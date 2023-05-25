@@ -30,8 +30,6 @@ static void write_data(const char *filename, const char *flags, const char *fuzz
 
     fprintf(fs, "# compile flags: [%s], fuzz class: [%s]\n", flags, fuzz_class);
     fprintf(fs, "input_a,input_b,min_clock_measured");
-    for (int i = 1; i <= ITERATIONS; i++)
-        fprintf(fs, ",it%d", i);
     fprintf(fs, "\n");
 
     for (size_t i = 0; i < count; i++)
@@ -43,9 +41,6 @@ static void write_data(const char *filename, const char *flags, const char *fuzz
         for (int j = 0; j < ITERATIONS; j++)
             min = MIN(min, measurements[j][i]);
         fprintf(fs, ",%lu", min);
-
-        for (int j = 0; j < ITERATIONS; j++)
-            fprintf(fs, ",%lu", measurements[j][i]);
         fprintf(fs, "\n");
     }
 

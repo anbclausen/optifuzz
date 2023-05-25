@@ -13,7 +13,7 @@ $ pip install -r python_requirements.txt
 ```
 - The fuzzer can optionally be run as a kernel module to remove noise from preempting and interrupts. **Note** that this is not the intended use of a kernel module, but it ensures more consistent timing. To use this feature, make sure you have the Linux kernel headers matching your kernel version installed. You will need root privileges to insert/remove the module (sudo is sufficient). The module has been tested on kernel version 6.3.2. To see messages from the kernel module run
 ```
-# dmesg -w
+$ dmesg -w
 ```
 
 
@@ -35,6 +35,14 @@ You can configure the OptiFuzz in the `config.json` file. Here you can
   - `small`: Inputs are 8-bit uniformly random numbers.
   - `fixed`: Both inputs are fixed to `0x12345678`. This fuzzing class is required for statistical analysis purposes (Welch's T-test) that automatically flags programs with timing vulnerabilities based on fuzzing. Additionally, the fuzzing class `uniform` should also be enabled for automatic statistical analysis.
 - Configure if you would like to run the fuzzing in "kernel mode" where context switching and many CPU optimizations are disabled. This will decrease the noise of your results, however, the outcome depends on your specific system.
+
+###
+To make the measurement more accurate (less noise), consider running fuzzing on a single thread and with decreased niceness.
+In Linux this can be done like so:
+```
+$ sudo taskset --cpu-list {cpu index} nice -n -20 make fuzz in={number of fuzzing inputs}
+```
+Note that -20 niceness is the lower cap, and will drastically decrease the number of context switches and interrupts when fuzzing.
 
 ## Documentation
 `make` targets have been added for the whole pipeline. To run the whole pipeline, do `make all pn={# of random programs to generate} md={max depth of the generated ASTs} in={# of inputs the programs should be fuzzed with}`. At the end you will have a generated pdf report visualizing the results, the code, the assembly and some analysis in `analysis/latex/master.pdf`.
