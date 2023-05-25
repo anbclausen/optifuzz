@@ -130,9 +130,6 @@ static void initialize_measurements(uint64_t *measurements[ITERATIONS], size_t c
  *              It uses CPUID (and DRTSCP) to serialize instructions to avoid out
  *              of order execution for encreased precision.
  *
- *              The code is run multiple times to for a more accurate measurement.
- *              The amount of repeats is determined by REPEATS.
- *
  *              Note: On older machines this returns the actual amount of clock
  *              cycles spent. On newer machines this register is increased at a
  *              fixed rate. Even on newer machines the behavior might differ

@@ -5,8 +5,6 @@
 #include <stddef.h>
 #define print_error(...) (fprintf(stderr, __VA_ARGS__))
 
-#define REPEATS 100   /** The amount of times the program \
-                       *  is run to get a more accurate measurement. */
 #define ITERATIONS 5  /** The amount of times to cycle through all  \
                        *  fuzz inputs to lower noise from other CPU \
                        *  tasks. */
