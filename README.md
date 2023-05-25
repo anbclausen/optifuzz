@@ -74,6 +74,10 @@ make all pn=? md=? in=?             # runs the whole pipeline: generates,
 
 make clean                          # cleans all generated files in all steps of
                                     # the process
+
+make experiments                    # a collection of relevant experiments to 
+                                    # run. WARNING: takes multiple hours and
+                                    # is set up for Linux, and uses sudo
 ```
 
 ## Sources

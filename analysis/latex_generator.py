@@ -52,7 +52,7 @@ Y_LABEL = "Frequency"
 X_MARGIN = 1.03  # Controls margin to both sides of x-axis
 Y_MARGIN = 1.05  # Controls margin to top of y-axis
 
-T_TEST_THRESHOLD = 0.01
+T_TEST_THRESHOLD = 0.05
 
 # Match all jcc instructions that is not jmp, and all loop instructions
 # https://cdrdv2.intel.com/v1/dl/getContent/671200
@@ -60,6 +60,7 @@ T_TEST_THRESHOLD = 0.01
 jmp_regex = re.compile(r"\t(j(?!mp)[a-z][a-z]*)|(loop[a-z]*) ")
 
 vulnerable_programs = {opt_flag: 0 for opt_flag in config["compiler_flags"]}
+
 
 class TexString:
     def __init__(self, str):
@@ -263,6 +264,7 @@ def run(args: list[str]) -> str:
     """
     return subprocess.run(args, capture_output=True, text=True).stdout
 
+
 class ParsedCSV:
     min_clocks_aggregated: pd.Series
     min_clocks: pd.Series
@@ -280,7 +282,7 @@ class ParsedCSV:
 
         Returns
         ----------
-        A ParsedCSV containing which compile-flag & fuzz_classes were used, 
+        A ParsedCSV containing which compile-flag & fuzz_classes were used,
         and stores the filename in the ParsedCSV object
         """
         self.file = f"{RESULTS_FOLDER}/{filename}"
@@ -288,13 +290,12 @@ class ParsedCSV:
         # Read first line of CSV containing auxiliary information
         with open(self.file) as f:
             aux_info = f.readline()
-            
+
         re_brackets = re.findall(r"\[.*?\]", aux_info)
         res = list(map(lambda x: x.replace("[", "").replace("]", ""), re_brackets))
 
         self.compile_flag = res[0]
         self.fuzz_class = res[1]
-
 
     def parse_doc(self):
         """
@@ -307,7 +308,8 @@ class ParsedCSV:
         # Read the rest of the CSV - skip the auxiliary line
         df = pd.read_csv(self.file, sep=",", skiprows=[0])
 
-        min_clock, max_clock = df[MIN_CLOCKS_COLUMN].min(), df[MIN_CLOCKS_COLUMN].max()
+        percentile95 = df[MIN_CLOCKS_COLUMN].quantile(0.95)
+        min_clock, max_clock = df[MIN_CLOCKS_COLUMN].min(), percentile95.max().astype(int)
         diff = max_clock - min_clock
 
         bins_count = diff if diff < NO_OF_BINS else NO_OF_BINS
@@ -407,22 +409,46 @@ def trim_assembly(asm: str) -> str:
     return asm
 
 
-def extract_conditional_branching_instructions(s: str) -> list[str]:
+def extract_conditional_branching_instructions(asm: str) -> list[tuple[str, int]]:
     """Extracts all conditional branching instructions from a string
 
     Parameters
     ----------
-    path : str
-        The string to be searched
+    asm : str
+        The assembly to be searched
 
     Returns
     ----------
     A list of all conditional branching instructions
     """
-    matches = jmp_regex.findall(s)
+    matches = jmp_regex.findall(asm)
     jmp_matches = [x[0] for x in matches if x[0] != ""]
     loop_matches = [x[1] for x in matches if x[1] != ""]
     return jmp_matches + loop_matches
+
+
+def extract_branches_with_indexes(asm: str) -> dict[str, list[int]]:
+    """Extracts all conditional branching instructions from a string
+
+    Parameters
+    ----------
+    asm : str
+        The assembly to be searched
+
+    Returns
+    ----------
+    A list of all conditional branching instructions
+    """
+    branching_instrs = extract_conditional_branching_instructions(asm)
+    asm_lines = asm.split("\n")
+    res = {i: [] for i in branching_instrs}
+    for isntr in branching_instrs:
+        for i, asm_line in enumerate(asm_lines):
+            if isntr in asm_line:
+                # +1 since we count lines from 1
+                res[isntr].append(i+1)
+
+    return res
 
 
 def gen_plot_asm_fig(
@@ -495,12 +521,17 @@ def gen_plot_asm_fig(
                 "\n".join(
                     f"{bin} {count}"
                     for bin, count in zip(
-                        fuzz_csv.min_clocks_aggregated.index.tolist(), fuzz_csv.min_clocks_aggregated.tolist()
+                        fuzz_csv.min_clocks_aggregated.index.tolist(),
+                        fuzz_csv.min_clocks_aggregated.tolist(),
                     )
                 )
             )
-            xmin_list.append(round(fuzz_csv.min_clocks_aggregated.index.min() * 1 / X_MARGIN))
-            xmax_list.append(round(fuzz_csv.min_clocks_aggregated.index.max() * X_MARGIN))
+            xmin_list.append(
+                round(fuzz_csv.min_clocks_aggregated.index.min() * 1 / X_MARGIN)
+            )
+            xmax_list.append(
+                round(fuzz_csv.min_clocks_aggregated.index.max() * X_MARGIN)
+            )
             ymax_list.append(round(fuzz_csv.min_clocks_aggregated.max() * Y_MARGIN))
 
             # Compute the mean of CPU-clocks by dividing the
@@ -558,23 +589,34 @@ def gen_plot_asm_fig(
             ]
         )
         asm = trim_assembly(asm)
-        jumps = extract_conditional_branching_instructions(asm)
-        no_jumps_str = "{\color{red} No jumps}"
-        formatted_jumps_string = f"""\
-        \\vspace*{{2mm}}\\tiny {no_jumps_str if len(jumps) == 0 else ", ".join(jumps)}\n
-        """
+        instrs_with_indexes = extract_branches_with_indexes(asm)
+
+        instrs_str = ", ".join(
+            [f"{i} {indexes}" for i, indexes in instrs_with_indexes.items()]
+        )
+        no_jumps_str = "{\\color{red} No jumps}"
+        formatted_jumps_string = f"\\vspace*{{2mm}}\\tiny {instrs_str if len(instrs_with_indexes) > 0 else no_jumps_str}\n"
 
         t_test_result = ""
         if DO_T_TEST:
-            fixed_csv = next(csv for csv in parsed_csv[compiler_flags[i - 1]] if csv.fuzz_class == "fixed")
-            uniform_csv = next(csv for csv in parsed_csv[compiler_flags[i - 1]] if csv.fuzz_class == "uniform")
-            _, pval = stats.ttest_ind(fixed_csv.min_clocks, uniform_csv.min_clocks, equal_var = False)
+            fixed_csv = next(
+                csv
+                for csv in parsed_csv[compiler_flags[i - 1]]
+                if csv.fuzz_class == "fixed"
+            )
+            uniform_csv = next(
+                csv
+                for csv in parsed_csv[compiler_flags[i - 1]]
+                if csv.fuzz_class == "uniform"
+            )
+            _, pval = stats.ttest_ind(
+                fixed_csv.min_clocks, uniform_csv.min_clocks, equal_var=False
+            )
 
             t_test_result = (
-                "\\vspace*{2mm}\\tiny {\color{red}$H_0$ REJECTED!}"
+                "\\vspace*{2mm}\\tiny {\color{red}$H_0$ REJECTED!}\ "
                 if pval <= T_TEST_THRESHOLD
-                else
-                ""
+                else ""
             )
             if pval <= T_TEST_THRESHOLD:
                 vulnerable_programs[compiler_flags[i - 1]] += 1
@@ -599,7 +641,9 @@ def gen_plot_asm_fig(
     return figure, placeholder_subfigures
 
 
-def gen_latex_doc(seed: str, csv_files: dict[str, list[ParsedCSV]], prog_id: int) -> str:
+def gen_latex_doc(
+    seed: str, csv_files: dict[str, list[ParsedCSV]], prog_id: int
+) -> str:
     """Generates all the LaTeX required for the CSV-files provided.
 
     Parameters
@@ -671,7 +715,10 @@ if __name__ == "__main__":
     }
     # For each program/seed; create a .tex file in the output folder
     for id, (seed, grouped_CSV_files) in enumerate(all_fuzzing_results.items(), 1):
-        grouped_CSV_files = {k: [ParsedCSV.parse_doc(csv) for csv in v] for k,v in grouped_CSV_files.items()}
+        grouped_CSV_files = {
+            k: [ParsedCSV.parse_doc(csv) for csv in v]
+            for k, v in grouped_CSV_files.items()
+        }
         latex = gen_latex_doc(seed, grouped_CSV_files, id)
         # Free up some memory
         for csvs in grouped_CSV_files.values():
