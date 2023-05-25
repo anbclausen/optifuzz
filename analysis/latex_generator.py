@@ -27,8 +27,6 @@ DO_T_TEST = {"fixed", "uniform"}.issubset(set(config["fuzzing_classes"]))
 LATEX_FOLDER = "latex"
 LATEX_OUTPUT_FOLDER = f"{LATEX_FOLDER}/generated_latex"
 FLAGGED_FOLDER = f"{config_dir}{os.sep}{config['flagged_programs_dir']}"
-ITERATION_PREFIX = "it"
-NO_OF_ITERATIONS = 5
 
 # Output constants
 NO_OF_BINS = 100
@@ -265,7 +263,6 @@ def run(args: list[str]) -> str:
 
 class ParsedCSV:
     min_clocks: pd.Series
-    all_clocks: pd.Series
     compile_flag: str
     fuzz_class: str
     file: str
@@ -325,12 +322,8 @@ class ParsedCSV:
         min_clocks = pd.cut(
             df[MIN_CLOCKS_COLUMN], bins=bins_count, labels=labels
         ).value_counts(sort=False)
-        all_clocks = pd.concat(
-            [df[f"it{i}"] for i in range(1, NO_OF_ITERATIONS + 1)], axis=0
-        )
 
         self.min_clocks = min_clocks
-        self.all_clocks = all_clocks
 
         return self
 
@@ -678,7 +671,6 @@ if __name__ == "__main__":
         # Free up some memory
         for csvs in grouped_CSV_files.values():
             for csv in csvs:
-                csv.all_clocks = []
                 csv.min_clocks = []
         gc.collect()
         f = open(f"{LATEX_OUTPUT_FOLDER}/prog{id}.tex", "w")
