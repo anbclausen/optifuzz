@@ -262,6 +262,7 @@ def run(args: list[str]) -> str:
     return subprocess.run(args, capture_output=True, text=True).stdout
 
 class ParsedCSV:
+    min_clocks_aggregated: pd.Series
     min_clocks: pd.Series
     compile_flag: str
     fuzz_class: str
@@ -323,7 +324,8 @@ class ParsedCSV:
             df[MIN_CLOCKS_COLUMN], bins=bins_count, labels=labels
         ).value_counts(sort=False)
 
-        self.min_clocks = min_clocks
+        self.min_clocks_aggregated = min_clocks
+        self.min_clocks = df[MIN_CLOCKS_COLUMN]
 
         return self
 
@@ -492,20 +494,20 @@ def gen_plot_asm_fig(
                 "\n".join(
                     f"{bin} {count}"
                     for bin, count in zip(
-                        fuzz_csv.min_clocks.index.tolist(), fuzz_csv.min_clocks.tolist()
+                        fuzz_csv.min_clocks_aggregated.index.tolist(), fuzz_csv.min_clocks_aggregated.tolist()
                     )
                 )
             )
-            xmin_list.append(round(fuzz_csv.min_clocks.index.min() * 1 / X_MARGIN))
-            xmax_list.append(round(fuzz_csv.min_clocks.index.max() * X_MARGIN))
-            ymax_list.append(round(fuzz_csv.min_clocks.max() * Y_MARGIN))
+            xmin_list.append(round(fuzz_csv.min_clocks_aggregated.index.min() * 1 / X_MARGIN))
+            xmax_list.append(round(fuzz_csv.min_clocks_aggregated.index.max() * X_MARGIN))
+            ymax_list.append(round(fuzz_csv.min_clocks_aggregated.max() * Y_MARGIN))
 
             # Compute the mean of CPU-clocks by dividing the
             # frequency measured by the total amount of fuzzes.
-            fuzzing_sum = fuzz_csv.min_clocks.sum()
+            fuzzing_sum = fuzz_csv.min_clocks_aggregated.sum()
             mean = sum(
-                np.array(list(fuzz_csv.min_clocks.index))
-                * (np.array(list(fuzz_csv.min_clocks)) / fuzzing_sum)
+                np.array(list(fuzz_csv.min_clocks_aggregated.index))
+                * (np.array(list(fuzz_csv.min_clocks_aggregated)) / fuzzing_sum)
             )
             means[fuzz_csv.fuzz_class] = round(mean, 0).astype(int)
 
@@ -566,13 +568,18 @@ def gen_plot_asm_fig(
             fixed_csv = next(csv for csv in parsed_csv[compiler_flags[i - 1]] if csv.fuzz_class == "fixed")
             uniform_csv = next(csv for csv in parsed_csv[compiler_flags[i - 1]] if csv.fuzz_class == "uniform")
             tstatistic, pval = stats.ttest_ind(fixed_csv.min_clocks, uniform_csv.min_clocks, equal_var = False)
+
+            # scipy is trying to be fancy and returns a negative t-statistic
+            # however, the signification is the same:
+            # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ttest_ind.html
+            welch_tstatistic = abs(tstatistic)
             t_test_result = (
                 ""
-                if tstatistic < 10
+                if welch_tstatistic < 10
                 else
-                "\\vspace*{2mm}\\tiny {\color{red}$H_0$ REJECTED!" + " p=" + str("{:.3f}".format(pval)) + " }\ \n"
+                "\\vspace*{2mm}\\tiny {\color{red}$H_0$ REJECTED!" + " p=" + str("{:.3f}".format(pval)) + " }\ "
             )
-            if tstatistic >= 10:
+            if welch_tstatistic >= 10:
                 vulnerable_programs[compiler_flags[i - 1]] += 1
 
         lstlisting = TexLstlisting(
@@ -672,7 +679,7 @@ if __name__ == "__main__":
         # Free up some memory
         for csvs in grouped_CSV_files.values():
             for csv in csvs:
-                csv.min_clocks = []
+                csv.min_clocks_aggregated = []
         gc.collect()
         f = open(f"{LATEX_OUTPUT_FOLDER}/prog{id}.tex", "w")
         f.write(latex)
