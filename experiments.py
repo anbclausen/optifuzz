@@ -13,9 +13,9 @@ experiments = [
             "yltx",
             "small",
         ],
-        "pn": 10000,
+        "pn": 100000,
         "md": 4,
-        "in": 10000,
+        "in": 1000,
     },
     {
         "compiler": "gcc",
@@ -31,9 +31,9 @@ experiments = [
             "yltx",
             "small",
         ],
-        "pn": 10000,
+        "pn": 100000,
         "md": 4,
-        "in": 10000,
+        "in": 1000,
     },
     {
         "compiler": "gcc",
@@ -49,9 +49,9 @@ experiments = [
             "yltx",
             "small",
         ],
-        "pn": 10000,
+        "pn": 100000,
         "md": 4,
-        "in": 10000,
+        "in": 1000,
     },
     {
         "compiler": "gcc",
@@ -67,9 +67,9 @@ experiments = [
             "yltx",
             "small",
         ],
-        "pn": 10000,
+        "pn": 100000,
         "md": 4,
-        "in": 10000,
+        "in": 1000,
     },
     {
         "compiler": "gcc",
@@ -85,9 +85,9 @@ experiments = [
             "yltx",
             "small",
         ],
-        "pn": 10000,
+        "pn": 100000,
         "md": 4,
-        "in": 10000,
+        "in": 1000,
     },
     {
         "compiler": "gcc",
@@ -193,9 +193,9 @@ experiments = [
             "yltx",
             "small",
         ],
-        "pn": 1000,
+        "pn": 10000,
         "md": 4,
-        "in": 10000,
+        "in": 1000,
     },
     {
         "compiler": "clang",
@@ -211,9 +211,9 @@ experiments = [
             "yltx",
             "small",
         ],
-        "pn": 1000,
+        "pn": 10000,
         "md": 4,
-        "in": 10000,
+        "in": 1000,
     },
     {
         "compiler": "clang",
@@ -229,9 +229,9 @@ experiments = [
             "yltx",
             "small",
         ],
-        "pn": 1000,
+        "pn": 10000,
         "md": 4,
-        "in": 10000,
+        "in": 1000,
     },
     {
         "compiler": "clang",
@@ -247,9 +247,9 @@ experiments = [
             "yltx",
             "small",
         ],
-        "pn": 1000,
+        "pn": 10000,
         "md": 4,
-        "in": 10000,
+        "in": 1000,
     },
     {
         "compiler": "clang",
@@ -265,32 +265,32 @@ experiments = [
             "yltx",
             "small",
         ],
-        "pn": 1000,
+        "pn": 10000,
         "md": 4,
-        "in": 10000,
+        "in": 1000,
     },
 ]
 
 small_experiments = [
     {
         "compiler": "gcc",
-        "compile_flags": ["O0"],
+        "compile_flags": ["O1", "O2", "O3", "Os"],
         "fuzz_classes": ["uniform", "fixed"],
-        "pn": 100,
+        "pn": 500,
         "md": 4,
-        "in": 100,
+        "in": 1000,
     },
 ]
 
 import os
 import json
 import shutil
-import random
+import datetime
 
 
-random_hash = random.randint(0, 1000000000)
-print("EXPERIMENTS #", random_hash)
-TOP_DIR = f"experiments/{random_hash}"
+now = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+print("EXPERIMENTS: ", now)
+TOP_DIR = f"experiments/{now}"
 
 number_of_experiments = len(experiments)
 
@@ -310,7 +310,6 @@ for i, experiment in enumerate(small_experiments):
                 "compiler": experiment["compiler"],
                 "compiler_flags": experiment["compile_flags"],
                 "fuzzing_classes": experiment["fuzz_classes"],
-                "kernel_mode": False,
                 "generated_programs_dir": "results/generated_programs/",
                 "flagged_programs_dir": "results/flagged_programs/",
                 "fuzzer_results_dir": "results/fuzzer_results/",
@@ -320,9 +319,14 @@ for i, experiment in enumerate(small_experiments):
         )
     print("  ", "running experiment")
     try:
-        run(
-            f"make all pn={experiment['pn']} md={experiment['md']} in={experiment['in']}"
-        )
+        run(f"make generate pn={experiment['pn']} md={experiment['md']}")
+        if os.getuid() != 0:
+            os.system("sudo -v")
+
+        run("sudo taskset --cpu-list 1 nice -n -20 make inspect") # makes this go brr
+        run(f"sudo taskset --cpu-list 2 nice -n -20 make fuzz in={experiment['in']}")
+        run("make latexgen")
+        run("make latexcompile")
     except:
         print("  ^-", "experiment failed - salvaging results")
 
