@@ -268,8 +268,8 @@ class ParsedCSV:
     compile_flag: str
     fuzz_class: str
     file: str
-    
-    def parse_csv_aux(self, filename):
+
+    def __init__(self, filename):
         """Parses first line of CSV file according to our format
 
         Parameters
@@ -279,7 +279,8 @@ class ParsedCSV:
 
         Returns
         ----------
-        A ParsedCSV containing which compile-flag and fuzz_classes were used
+        A ParsedCSV containing which compile-flag & fuzz_classes were used, 
+        and stores the filename in the ParsedCSV object
         """
         self.file = f"{RESULTS_FOLDER}/{filename}"
 
@@ -293,7 +294,6 @@ class ParsedCSV:
         self.compile_flag = res[0]
         self.fuzz_class = res[1]
 
-        return self
 
     def parse_doc(self):
         """
@@ -655,7 +655,7 @@ if __name__ == "__main__":
     )
     # Convert to dictionary and parse all .csv-files in the above
     all_fuzzing_results = {
-        seed: [ParsedCSV().parse_csv_aux(filename=csv) for csv in list(csv_files)]
+        seed: [ParsedCSV(filename=csv) for csv in list(csv_files)]
         for seed, csv_files in all_fuzzing_results
     }
     for csv_files in all_fuzzing_results.values():
