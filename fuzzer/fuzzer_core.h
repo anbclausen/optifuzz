@@ -31,7 +31,6 @@ typedef enum
     UNIFORMLY, // Uniformly random values
     EQUAL,     // Uniformly random but equal values
     MAX64,     // One is INT64_MAX, other is uniform random
-    UMAX64,    // One is UINT64_MAX, other is uniform random. UINT64_MAX is -1 in signed (int64_t)
     XZERO,     // x is 0, y is uniform random
     YZERO,     // y is 0, x is uniform random
     XLTY,      // Uniformly random but x < y
@@ -43,7 +42,7 @@ typedef enum
 } distribution_et;
 
 // This needs to match the amount of elements in distribution_et
-#define DIST_COUNT 10
+#define DIST_COUNT 9
 
 /**
  * @struct      input_st

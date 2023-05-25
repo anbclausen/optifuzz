@@ -28,7 +28,6 @@ You can configure the OptiFuzz in the `config.json` file. Here you can
   - `uniform`: Inputs are 64-bit uniformly random numbers.
   - `equal`: Inputs are 64-bit uniformly random numbers, but equal.
   - `max64`: One input is `INT64_MAX` while the other is uniformly random.
-  - `umax64`: One input is `UINT64_MAX` while the other is uniformly random.
   - `xzero`: `x` is 0 while `y` is uniformly random.
   - `yzero`: `y` is 0 while `x` is uniformly random.
   - `xlty`: Inputs are 64-bit uniformly random numbers, but the first input is smaller than the second.
