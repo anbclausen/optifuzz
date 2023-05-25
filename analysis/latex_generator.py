@@ -582,11 +582,12 @@ def gen_plot_asm_fig(
             fixed_csv = next(csv for csv in parsed_csv[compiler_flags[i - 1]] if csv.fuzz_class == "fixed")
             uniform_csv = next(csv for csv in parsed_csv[compiler_flags[i - 1]] if csv.fuzz_class == "uniform")
             _, pval = stats.ttest_ind(fixed_csv.min_clocks, uniform_csv.min_clocks, equal_var = False)
+            print(pval)
             t_test_result = (
                 "" 
                 if pval > 0.05
                 else
-                "\\vspace*{2mm}\\tiny {\color{red}$H_0$ REJECTED!}\\\\\n"
+                "\\vspace*{2mm}\\tiny {\color{red}$H_0$ REJECTED!" + " p=" + str("{:.3f}".format(pval)) + " }\\\\\n"
             )
 
         lstlisting = TexLstlisting(
