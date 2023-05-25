@@ -2,7 +2,6 @@
   "compiler": "gcc",
   "compiler_flags": ["O0", "O1", "O2", "O3", "Os"],
   "fuzzing_classes": ["uniform", "fixed"],
-  "kernel_mode": false,
 
   "generated_programs_dir": "results/generated_programs/",
   "flagged_programs_dir": "results/flagged_programs/",

@@ -349,12 +349,11 @@ def gen_header(prog_id: str, prog_seed: str) -> str:
     compiler = config["compiler"]
     compiler_flags = config["compiler_flags"]
     fuzzing_classes = config["fuzzing_classes"]
-    kernel_mode = config["kernel_mode"]
 
     compiled_with = compiler + " " + " ".join(compiler_flags)
     fuzzclasses = "Classes: " + " ".join(fuzzing_classes)
     newline = "\\\\"
-    return f"\\textbf{{Program {prog_id}}} -- \\texttt{{Seed {prog_seed}}} -- Kernel Mode: {kernel_mode} -- \\texttt{{{compiled_with}}}{newline}\small\\texttt{{{fuzzclasses}}}\n"
+    return f"\\textbf{{Program {prog_id}}} -- \\texttt{{Seed {prog_seed}}} -- \\texttt{{{compiled_with}}}{newline}\small\\texttt{{{fuzzclasses}}}\n"
 
 
 def get_program_source(seed: str) -> str:
