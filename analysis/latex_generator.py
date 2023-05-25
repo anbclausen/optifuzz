@@ -52,7 +52,7 @@ Y_LABEL = "Frequency"
 X_MARGIN = 1.03  # Controls margin to both sides of x-axis
 Y_MARGIN = 1.05  # Controls margin to top of y-axis
 
-T_TEST_THRESHOLD = 0.1
+T_TEST_THRESHOLD = 0.05
 
 # Match all jcc instructions that is not jmp, and all loop instructions
 # https://cdrdv2.intel.com/v1/dl/getContent/671200
@@ -444,7 +444,8 @@ def extract_branches_with_indexes(asm: str) -> dict[str, list[int]]:
     for isntr in branching_instrs:
         for i, asm_line in enumerate(asm_lines):
             if isntr in asm_line:
-                res[isntr].append(i)
+                # +1 since we count lines from 1
+                res[isntr].append(i+1)
 
     return res
 
