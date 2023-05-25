@@ -59,6 +59,7 @@ Y_MARGIN = 1.05  # Controls margin to top of y-axis
 # Table 7-4
 jmp_regex = re.compile(r"\t(j(?!mp)[a-z][a-z]*)|(loop[a-z]*) ")
 
+vulnerable_programs = {opt_flag: 0 for opt_flag in config["compiler_flags"]}
 
 class TexString:
     def __init__(self, str):
@@ -573,10 +574,12 @@ def gen_plot_asm_fig(
             _, pval = stats.ttest_ind(fixed_csv.min_clocks, uniform_csv.min_clocks, equal_var = False)
             t_test_result = (
                 "" 
-                if pval > 0.05
+                if pval > 0.03
                 else
-                "\\vspace*{2mm}\\tiny {\color{red}$H_0$ REJECTED!" + " p=" + str("{:.3f}".format(pval)) + " }\\\\\n"
+                "\\vspace*{2mm}\\tiny {\color{red}$H_0$ REJECTED!" + " p=" + str("{:.3f}".format(pval)) + " }\ \n"
             )
+            if pval <= 0.03:
+                vulnerable_programs[compiler_flags[i - 1]] += 1
 
         lstlisting = TexLstlisting(
             style="style=defstyle,language={[x86masm]Assembler},basicstyle=\\tiny\\ttfamily,breaklines=true",
@@ -681,3 +684,8 @@ if __name__ == "__main__":
         f = open(f"{LATEX_OUTPUT_FOLDER}/prog{id}.tex", "w")
         f.write(latex)
         f.close()
+
+    # Print out the number of vulnerable programs in meta.json
+    # This is used for analysis purposes
+    with open(f"{LATEX_OUTPUT_FOLDER}/meta.json", "w") as f:
+        json.dump(vulnerable_programs, f)
