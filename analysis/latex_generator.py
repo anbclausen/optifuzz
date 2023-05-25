@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import copy
+import gc
 import json
 import string
 import pandas as pd
@@ -262,36 +263,76 @@ def run(args: list[str]) -> str:
     """
     return subprocess.run(args, capture_output=True, text=True).stdout
 
-
-def parse_aux_info(aux: str) -> tuple[str, str]:
-    """Parses first line of CSV fuzzing data
-
-    Parameters
-    ----------
-    aux : str
-        Auxiliary information in CSV
-
-    Returns
-    ----------
-    Tuple (a,b) where:\n
-    a:
-        Compiler flag used
-    b:
-        Fuzzing class used
-    """
-    re_brackets = re.findall(r"\[.*?\]", aux)
-    res = list(map(lambda x: x.replace("[", "").replace("]", ""), re_brackets))
-    compiler_flag = res[0]
-    fuzz_class = res[1]
-    return compiler_flag, fuzz_class
-
-
-@dataclass
 class ParsedCSV:
     min_clocks: pd.Series
     all_clocks: pd.Series
     compile_flag: str
     fuzz_class: str
+    file: str
+    
+    def parse_csv_aux(self, filename):
+        """Parses first line of CSV file according to our format
+
+        Parameters
+        ----------
+        file : str
+            File path of file to parse
+
+        Returns
+        ----------
+        A ParsedCSV containing which compile-flag and fuzz_classes were used
+        """
+        self.file = f"{RESULTS_FOLDER}/{filename}"
+
+        # Read first line of CSV containing auxiliary information
+        with open(self.file) as f:
+            aux_info = f.readline()
+            
+        re_brackets = re.findall(r"\[.*?\]", aux_info)
+        res = list(map(lambda x: x.replace("[", "").replace("]", ""), re_brackets))
+
+        self.compile_flag = res[0]
+        self.fuzz_class = res[1]
+
+        return self
+
+    def parse_doc(self):
+        """
+        Parses time measurement data from CSV file according to our format
+
+        Returns
+        ----------
+        A ParsedCSV having all measured clocks as a pd series
+        """
+        # Read the rest of the CSV - skip the auxiliary line
+        df = pd.read_csv(self.file, sep=",", skiprows=[0])
+
+        min_clock, max_clock = df[MIN_CLOCKS_COLUMN].min(), df[MIN_CLOCKS_COLUMN].max()
+        diff = max_clock - min_clock
+
+        bins_count = diff if diff < NO_OF_BINS else NO_OF_BINS
+
+        # If min_clock = max_clock then we have to make sure that there exist at least one bin
+        bins_count = max(bins_count, 1)
+
+        # Generate labels for bins
+        edges = np.linspace(min_clock, max_clock, bins_count + 1).astype(int)
+        labels = [
+            edges[i] + round((edges[i + 1] - edges[i]) / 2) for i in range(bins_count)
+        ]
+
+        # Group into bins, receiving a list of (interval, count)
+        min_clocks = pd.cut(
+            df[MIN_CLOCKS_COLUMN], bins=bins_count, labels=labels
+        ).value_counts(sort=False)
+        all_clocks = pd.concat(
+            [df[f"it{i}"] for i in range(1, NO_OF_ITERATIONS + 1)], axis=0
+        )
+
+        self.min_clocks = min_clocks
+        self.all_clocks = all_clocks
+
+        return self
 
 
 def gen_header(prog_id: str, prog_seed: str) -> str:
@@ -317,57 +358,6 @@ def gen_header(prog_id: str, prog_seed: str) -> str:
     fuzzclasses = "Classes: " + " ".join(fuzzing_classes)
     newline = "\\\\"
     return f"\\textbf{{Program {prog_id}}} -- \\texttt{{Seed {prog_seed}}} -- Kernel Mode: {kernel_mode} -- \\texttt{{{compiled_with}}}{newline}\small\\texttt{{{fuzzclasses}}}\n"
-
-
-def parse_csv(file: str) -> ParsedCSV:
-    """Generates a LaTeX figure for the CSV-files provided.
-
-    CPU-clocks will be plotted and colored.
-
-    Assembly lstlistings will also be generated.
-
-    Parameters
-    ----------
-    file : str
-        File path of file to parse
-
-    Returns
-    ----------
-    A ParsedCSV containing compile-flag used and all measured clocks as a pd series
-    """
-    file = f"{RESULTS_FOLDER}/{file}"
-
-    # Read first line of CSV containing auxiliary information
-    with open(file) as f:
-        aux_info = f.readline()
-    compile_flag, fuzz_class = parse_aux_info(aux_info)
-
-    # Read the rest of the CSV - skip the auxiliary line
-    df = pd.read_csv(file, sep=",", skiprows=[0])
-
-    min_clock, max_clock = df[MIN_CLOCKS_COLUMN].min(), df[MIN_CLOCKS_COLUMN].max()
-    diff = max_clock - min_clock
-
-    bins_count = diff if diff < NO_OF_BINS else NO_OF_BINS
-
-    # If min_clock = max_clock then we have to make sure that there exist at least one bin
-    bins_count = max(bins_count, 1)
-
-    # Generate labels for bins
-    edges = np.linspace(min_clock, max_clock, bins_count + 1).astype(int)
-    labels = [
-        edges[i] + round((edges[i + 1] - edges[i]) / 2) for i in range(bins_count)
-    ]
-
-    # Group into bins, receiving a list of (interval, count)
-    min_clocks = pd.cut(
-        df[MIN_CLOCKS_COLUMN], bins=bins_count, labels=labels
-    ).value_counts(sort=False)
-    all_clocks = pd.concat(
-        [df[f"it{i}"] for i in range(1, NO_OF_ITERATIONS + 1)], axis=0
-    )
-
-    return ParsedCSV(min_clocks, all_clocks, compile_flag, fuzz_class)
 
 
 def get_program_source(seed: str) -> str:
@@ -609,15 +599,15 @@ def gen_plot_asm_fig(
     return figure, placeholder_subfigures
 
 
-def gen_latex_doc(seed: str, csv_files: dict[str, list[str]], prog_id: int) -> str:
+def gen_latex_doc(seed: str, csv_files: dict[str, list[ParsedCSV]], prog_id: int) -> str:
     """Generates all the LaTeX required for the CSV-files provided.
 
     Parameters
     ----------
     seed : str
         Seed of fuzzed data
-    csv_files : dict[str, list[str]]
-        Map from a compile flag to a list of different fuzz classes identified by file names for the CSV files
+    csv_files : dict[str, list[ParsedCSV]]
+        Map from a compile flag to a list of different fuzz classes as CSV files
     prog_id : int
         Identifier of the program
 
@@ -666,7 +656,7 @@ if __name__ == "__main__":
     )
     # Convert to dictionary and parse all .csv-files in the above
     all_fuzzing_results = {
-        seed: [parse_csv(csv) for csv in list(csv_files)]
+        seed: [ParsedCSV().parse_csv_aux(filename=csv) for csv in list(csv_files)]
         for seed, csv_files in all_fuzzing_results
     }
     for csv_files in all_fuzzing_results.values():
@@ -679,10 +669,16 @@ if __name__ == "__main__":
         }
         for seed, csv_files in all_fuzzing_results.items()
     }
-
     # For each program/seed; create a .tex file in the output folder
     for id, (seed, grouped_CSV_files) in enumerate(all_fuzzing_results.items(), 1):
+        grouped_CSV_files = {k: [ParsedCSV.parse_doc(csv) for csv in v] for k,v in grouped_CSV_files.items()}
         latex = gen_latex_doc(seed, grouped_CSV_files, id)
+        # Free up some memory
+        for csvs in grouped_CSV_files.values():
+            for csv in csvs:
+                csv.all_clocks = []
+                csv.min_clocks = []
+        gc.collect()
         f = open(f"{LATEX_OUTPUT_FOLDER}/prog{id}.tex", "w")
         f.write(latex)
         f.close()
