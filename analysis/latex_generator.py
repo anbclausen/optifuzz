@@ -269,7 +269,7 @@ class ParsedCSV:
     fuzz_class: str
     file: str
 
-    def __init__(self, filename):
+    def __init__(self, filename: str):
         """Parses first line of CSV file according to our format
 
         Parameters
