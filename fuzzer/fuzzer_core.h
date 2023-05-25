@@ -1,18 +1,9 @@
 #ifndef FUZZER_CORE_H
 #define FUZZER_CORE_H
 
-#ifdef KERNEL_MODE
-#include <linux/types.h>
-// Definitions from libc that are not available in kernel module
-#define INT64_MAX 9223372036854775807LL
-#define UINT64_MAX 0xffffffffffffffffULL
-#define UINT32_MAX 0xffffffffU
-#define print_error(...) (printk(KERN_ERR __VA_ARGS__))
-#else
 #include <stdint.h>
 #include <stddef.h>
 #define print_error(...) (fprintf(stderr, __VA_ARGS__))
-#endif
 
 #define REPEATS 100   /** The amount of times the program \
                        *  is run to get a more accurate measurement. */
