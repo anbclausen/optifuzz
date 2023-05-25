@@ -55,7 +55,7 @@ let rec string_of_expr = function
   | True -> "true"
   | False -> "false"
 
-  | Not e -> "!" ^ string_of_expr e
+  | Not e -> "!(" ^ string_of_expr e ^ ")"
 
   | LessThan (e1, e2) -> "(" ^ string_of_expr e1 ^ " < " ^ string_of_expr e2 ^ ")"
   | LessEqual (e1, e2) -> "(" ^ string_of_expr e1 ^ " <= " ^ string_of_expr e2 ^ ")"
