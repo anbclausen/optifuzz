@@ -9,6 +9,7 @@ import re
 import itertools
 from dataclasses import dataclass
 import subprocess
+import scipy.stats as stats
 
 # Constants for parsing
 MIN_CLOCKS_COLUMN = "min_clock_measured"
@@ -21,6 +22,7 @@ config = json.load(open(f"{config_dir}{os.sep}{CONFIG_FILENAME}"))
 # config["fuzzer_results_dir"] holds the path relative to the config_dir
 RESULTS_FOLDER = os.path.join(config_dir, config["fuzzer_results_dir"])
 COMPILER_USED = config["compiler"]
+DO_T_TEST = {"fixed", "uniform"}.issubset(set(config["fuzzing_classes"]))
 
 LATEX_FOLDER = "latex"
 LATEX_OUTPUT_FOLDER = f"{LATEX_FOLDER}/generated_latex"
@@ -438,7 +440,7 @@ def extract_conditional_branching_instructions(s: str) -> list[str]:
 
 def gen_plot_asm_fig(
     seed: str,
-    parsed_csv: dict[str, list[str]],
+    parsed_csv: dict[str, list[ParsedCSV]],
     colors: list[str],
     blank_indexes: list[int] = [],
 ) -> tuple[TexFigure, list[TexSubFigure]]:
@@ -452,8 +454,8 @@ def gen_plot_asm_fig(
     ----------
     seed : str
         Seed of fuzzed data
-    parsed_csv : dict[str, list[str]]
-        Map from a compile flag to a list of different fuzz classes identified by file names for the CSV files
+    parsed_csv : dict[str, list[ParsedCSV]]
+        Map from a compile flag to a list of different fuzz classes as CSV files
     colors : str list
         List of colors to use for the plots
     blank_indexes : int list
@@ -575,12 +577,25 @@ def gen_plot_asm_fig(
         \\vspace*{{2mm}}\\tiny {no_jumps_str if len(jumps) == 0 else ", ".join(jumps)}\n
         """
 
+        t_test_result = ""
+        if DO_T_TEST:
+            fixed_csv = next(csv for csv in parsed_csv[compiler_flags[i - 1]] if csv.fuzz_class == "fixed")
+            uniform_csv = next(csv for csv in parsed_csv[compiler_flags[i - 1]] if csv.fuzz_class == "uniform")
+            _, pval = stats.ttest_ind(fixed_csv.min_clocks, uniform_csv.min_clocks, equal_var = False)
+            t_test_result = (
+                "" 
+                if pval > 0.05
+                else
+                "\\vspace*{2mm}\\tiny {\color{red}$H_0$ REJECTED!}\\\\\n"
+            )
+
         lstlisting = TexLstlisting(
             style="style=defstyle,language={[x86masm]Assembler},basicstyle=\\tiny\\ttfamily,breaklines=true",
             code=asm,
         )
         subfig = (
             TexSubFigure(width=width - 0.03)
+            .append_string(t_test_result)
             .append_string(formatted_jumps_string)
             .add_child(lstlisting)
         )

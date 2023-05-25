@@ -34,6 +34,7 @@ You can configure the OptiFuzz in the `config.json` file. Here you can
   - `xlty`: Inputs are 64-bit uniformly random numbers, but the first input is smaller than the second.
   - `yltx`: Inputs are 64-bit uniformly random numbers, but the second input is smaller than the first.
   - `small`: Inputs are 8-bit uniformly random numbers.
+  - `fixed`: Both inputs are fixed to `0x12345678`.
 - Configure if you would like to run the fuzzing in "kernel mode" where context switching and many CPU optimizations are disabled. This will decrease the noise of your results, however, the outcome depends on your specific system.
 
 ## Documentation

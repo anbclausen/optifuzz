@@ -39,9 +39,9 @@ extern int program(int64_t, int64_t);
     }
 
 // Array of all diststibutions and their string names
-static const distribution_et dists[DIST_COUNT] = {UNIFORMLY, EQUAL, MAX64, UMAX64, XZERO, YZERO, XLTY, YLTX, SMALL};
+static const distribution_et dists[DIST_COUNT] = {UNIFORMLY, EQUAL, MAX64, UMAX64, XZERO, YZERO, XLTY, YLTX, SMALL, FIXED};
 #define MAX_DIST_STR_LEN 10
-static const char dists_strings[DIST_COUNT][MAX_DIST_STR_LEN] = {"uniform", "equal", "max64", "umax64", "xzero", "yzero", "xlty", "yltx", "small"};
+static const char dists_strings[DIST_COUNT][MAX_DIST_STR_LEN] = {"uniform", "equal", "max64", "umax64", "xzero", "yzero", "xlty", "yltx", "small", "fixed"};
 
 // FILO queue (stack) for distributions to fuzz
 #define MAX_DIST_QUEUE_SIZE 20
@@ -102,6 +102,9 @@ static int set_values(distribution_et dist, int64_t *x, int64_t *y)
         // Clear all but lower byte
         *x &= 255;
         *y &= 255;
+        break;
+    case FIXED:
+        *x = *y = 0x12345678;
         break;
     default:
         print_error("Distribution not yet supported!\n");

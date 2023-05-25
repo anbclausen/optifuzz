@@ -37,12 +37,13 @@ typedef enum
     XLTY,      // Uniformly random but x < y
     YLTX,      // Uniformly random but y < x
     SMALL,     // Uniformly random but small values
+    FIXED,     // x = y = 0x12345678
 
     INVALID // Indicates invalid distribution, no a real distribution
 } distribution_et;
 
 // This needs to match the amount of elements in distribution_et
-#define DIST_COUNT 9
+#define DIST_COUNT 10
 
 /**
  * @struct      input_st
