@@ -295,7 +295,7 @@ class ParsedCSV:
         self.fuzz_class = res[1]
 
 
-    def parse_doc(self) -> ParsedCSV:
+    def parse_doc(self):
         """
         Parses time measurement data from CSV file according to our format
 
