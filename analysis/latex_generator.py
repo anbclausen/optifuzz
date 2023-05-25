@@ -574,11 +574,11 @@ def gen_plot_asm_fig(
             _, pval = stats.ttest_ind(fixed_csv.min_clocks, uniform_csv.min_clocks, equal_var = False)
             t_test_result = (
                 "" 
-                if pval > 0.03
+                if pval > 0.02
                 else
                 "\\vspace*{2mm}\\tiny {\color{red}$H_0$ REJECTED!" + " p=" + str("{:.3f}".format(pval)) + " }\ \n"
             )
-            if pval <= 0.03:
+            if pval <= 0.02:
                 vulnerable_programs[compiler_flags[i - 1]] += 1
 
         lstlisting = TexLstlisting(
