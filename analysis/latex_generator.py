@@ -571,14 +571,14 @@ def gen_plot_asm_fig(
         if DO_T_TEST:
             fixed_csv = next(csv for csv in parsed_csv[compiler_flags[i - 1]] if csv.fuzz_class == "fixed")
             uniform_csv = next(csv for csv in parsed_csv[compiler_flags[i - 1]] if csv.fuzz_class == "uniform")
-            _, pval = stats.ttest_ind(fixed_csv.min_clocks, uniform_csv.min_clocks, equal_var = False)
+            tstatistic, pval = stats.ttest_ind(fixed_csv.min_clocks, uniform_csv.min_clocks, equal_var = False)
             t_test_result = (
                 "\\vspace*{2mm}\\tiny {\color{green}$H_0$ ACCEPTED!" + " p=" + str("{:.3f}".format(pval)) + " }\ \n"
-                if pval > 0.05
+                if tstatistic > 10
                 else
                 "\\vspace*{2mm}\\tiny {\color{red}$H_0$ REJECTED!" + " p=" + str("{:.3f}".format(pval)) + " }\ \n"
             )
-            if pval <= 0.05:
+            if tstatistic <= 10:
                 vulnerable_programs[compiler_flags[i - 1]] += 1
 
         lstlisting = TexLstlisting(
