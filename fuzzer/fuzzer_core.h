@@ -35,7 +35,7 @@ typedef enum
 
 /**
  * @struct      input_st
- * @brief       A tuple (a,b) defining an input to the program
+ * @brief       A tuple (a, b, dist) defining an input to the program
  */
 typedef struct
 {

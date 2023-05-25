@@ -35,17 +35,17 @@ static void write_data(const analysis_st *analysis, distribution_et *dists, size
         fprintf(fs, "input_a,input_b,min_clock_measured");
         fprintf(fs, "\n");
 
-        for (size_t i = 0; i < count; i++)
+        for (size_t j = 0; j < count; j++)
         {
-            if (inputs[i].dist != dists[i])
+            if (inputs[j].dist != dists[i])
                 continue;
 
-            fprintf(fs, "%ld,%ld", inputs[i].a, inputs[i].b);
+            fprintf(fs, "%ld,%ld", inputs[j].a, inputs[j].b);
 
             // Find min for given set of inputs
             uint64_t min = UINT64_MAX;
-            for (int j = 0; j < ITERATIONS; j++)
-                min = MIN(min, measurements[j][i]);
+            for (int k = 0; k < ITERATIONS; k++)
+                min = MIN(min, measurements[k][j]);
             fprintf(fs, ",%lu", min);
             fprintf(fs, "\n");
         }

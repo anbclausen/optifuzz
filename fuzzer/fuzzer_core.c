@@ -290,7 +290,7 @@ int run_single(analysis_st *analysis, distribution_et *dists, size_t dists_size)
 int initialize_analysis(analysis_st *analysis, size_t count)
 {
     // Allocate memory for input and measurements
-    input_st *inputs = calloc(count, sizeof(input_st));
+    input_st *inputs = calloc(count, sizeof(*inputs));
     if (inputs == NULL)
         return 1;
     uint64_t *(*measurements)[ITERATIONS] = calloc(ITERATIONS, sizeof(uint64_t *));
