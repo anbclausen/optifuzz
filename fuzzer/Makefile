@@ -13,5 +13,8 @@ fuzz: clean build-fuzzer
 clean-objects:
 	$(RM) *.o
 
+clean-csv:
+	$(RM) *.csv
+
 .PHONY : clean
-clean: clean-objects
+clean: clean-objects clean-csv
