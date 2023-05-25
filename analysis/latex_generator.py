@@ -392,11 +392,12 @@ def trim_assembly(asm: str) -> str:
     """
     asm = asm.split("\n")
     LFE0 = next(i for i, s in enumerate(asm) if s.startswith(".LFE0"))
+    LFB0 = next(i for i, s in enumerate(asm) if s.startswith(".LFB0"))
 
     # Trim at start and end, and return the string
-    asm[4] = "..."
+    asm[LFB0] = "..."
     asm[LFE0] = "..."
-    asm = asm[4 : LFE0 + 1]
+    asm = asm[LFB0 : LFE0 + 1]
 
     asm = [line for line in asm if ".cfi" not in line]
     asm = "\n".join(asm)
