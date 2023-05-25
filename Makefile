@@ -1,33 +1,33 @@
 generate: 
 	./util/clean_results.py generated_programs_dir \
-	&& ./util/prepare_results.py generated_programs_dir
-	$(MAKE) -C generator generate
+	&& ./util/prepare_results.py generated_programs_dir \
+	&& $(MAKE) -C generator generate
 
 generate-seeded:
 	./util/clean_results.py generated_programs_dir \
-	&& ./util/prepare_results.py generated_programs_dir
-	$(MAKE) -C generator generate-seeded
+	&& ./util/prepare_results.py generated_programs_dir \
+	&& $(MAKE) -C generator generate-seeded
 
 inspect: 
 	./util/prepare_results.py generated_programs_dir \
 	&& ./util/clean_results.py flagged_programs_dir \
-	&& ./util/prepare_results.py flagged_programs_dir
-	$(MAKE) -C analysis inspect
+	&& ./util/prepare_results.py flagged_programs_dir \
+	&& $(MAKE) -C analysis inspect
 
 fuzz:
 	./util/prepare_results.py flagged_programs_dir \
 	&& ./util/clean_results.py fuzzer_results_dir \
-	&& ./util/prepare_results.py fuzzer_results_dir
-	$(MAKE) -C fuzzer fuzz
+	&& ./util/prepare_results.py fuzzer_results_dir \
+	&& $(MAKE) -C fuzzer fuzz
 
 latexgen: 
-	./util/prepare_results.py fuzzer_results_dir
-	$(MAKE) -C analysis latexgen
+	./util/prepare_results.py fuzzer_results_dir \
+	&& $(MAKE) -C analysis latexgen
 
 latexcompile:
 	./util/clean_results.py report_dir \
-	&& ./util/prepare_results.py report_dir
-	$(MAKE) -C analysis latexcompile
+	&& ./util/prepare_results.py report_dir \
+	&& $(MAKE) -C analysis latexcompile
 
 generate-inspect: generate inspect
 
