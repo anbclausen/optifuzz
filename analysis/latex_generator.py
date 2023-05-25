@@ -27,8 +27,6 @@ DO_T_TEST = {"fixed", "uniform"}.issubset(set(config["fuzzing_classes"]))
 LATEX_FOLDER = "latex"
 LATEX_OUTPUT_FOLDER = f"{LATEX_FOLDER}/generated_latex"
 FLAGGED_FOLDER = f"{config_dir}{os.sep}{config['flagged_programs_dir']}"
-ITERATION_PREFIX = "it"
-NO_OF_ITERATIONS = 5
 
 # Output constants
 NO_OF_BINS = 100
@@ -53,6 +51,8 @@ X_LABEL = "CPU Clocks"
 Y_LABEL = "Frequency"
 X_MARGIN = 1.03  # Controls margin to both sides of x-axis
 Y_MARGIN = 1.05  # Controls margin to top of y-axis
+
+T_TEST_THRESHOLD = 0.01
 
 # Match all jcc instructions that is not jmp, and all loop instructions
 # https://cdrdv2.intel.com/v1/dl/getContent/671200
@@ -264,8 +264,8 @@ def run(args: list[str]) -> str:
     return subprocess.run(args, capture_output=True, text=True).stdout
 
 class ParsedCSV:
+    min_clocks_aggregated: pd.Series
     min_clocks: pd.Series
-    all_clocks: pd.Series
     compile_flag: str
     fuzz_class: str
     file: str
@@ -325,12 +325,9 @@ class ParsedCSV:
         min_clocks = pd.cut(
             df[MIN_CLOCKS_COLUMN], bins=bins_count, labels=labels
         ).value_counts(sort=False)
-        all_clocks = pd.concat(
-            [df[f"it{i}"] for i in range(1, NO_OF_ITERATIONS + 1)], axis=0
-        )
 
-        self.min_clocks = min_clocks
-        self.all_clocks = all_clocks
+        self.min_clocks_aggregated = min_clocks
+        self.min_clocks = df[MIN_CLOCKS_COLUMN]
 
         return self
 
@@ -352,12 +349,11 @@ def gen_header(prog_id: str, prog_seed: str) -> str:
     compiler = config["compiler"]
     compiler_flags = config["compiler_flags"]
     fuzzing_classes = config["fuzzing_classes"]
-    kernel_mode = config["kernel_mode"]
 
     compiled_with = compiler + " " + " ".join(compiler_flags)
     fuzzclasses = "Classes: " + " ".join(fuzzing_classes)
     newline = "\\\\"
-    return f"\\textbf{{Program {prog_id}}} -- \\texttt{{Seed {prog_seed}}} -- Kernel Mode: {kernel_mode} -- \\texttt{{{compiled_with}}}{newline}\small\\texttt{{{fuzzclasses}}}\n"
+    return f"\\textbf{{Program {prog_id}}} -- \\texttt{{Seed {prog_seed}}} -- \\texttt{{{compiled_with}}}{newline}\small\\texttt{{{fuzzclasses}}}\n"
 
 
 def get_program_source(seed: str) -> str:
@@ -399,11 +395,12 @@ def trim_assembly(asm: str) -> str:
     """
     asm = asm.split("\n")
     LFE0 = next(i for i, s in enumerate(asm) if s.startswith(".LFE0"))
+    LFB0 = next(i for i, s in enumerate(asm) if s.startswith(".LFB0"))
 
     # Trim at start and end, and return the string
-    asm[4] = "..."
+    asm[LFB0] = "..."
     asm[LFE0] = "..."
-    asm = asm[4 : LFE0 + 1]
+    asm = asm[LFB0 : LFE0 + 1]
 
     asm = [line for line in asm if ".cfi" not in line]
     asm = "\n".join(asm)
@@ -498,20 +495,20 @@ def gen_plot_asm_fig(
                 "\n".join(
                     f"{bin} {count}"
                     for bin, count in zip(
-                        fuzz_csv.min_clocks.index.tolist(), fuzz_csv.min_clocks.tolist()
+                        fuzz_csv.min_clocks_aggregated.index.tolist(), fuzz_csv.min_clocks_aggregated.tolist()
                     )
                 )
             )
-            xmin_list.append(round(fuzz_csv.min_clocks.index.min() * 1 / X_MARGIN))
-            xmax_list.append(round(fuzz_csv.min_clocks.index.max() * X_MARGIN))
-            ymax_list.append(round(fuzz_csv.min_clocks.max() * Y_MARGIN))
+            xmin_list.append(round(fuzz_csv.min_clocks_aggregated.index.min() * 1 / X_MARGIN))
+            xmax_list.append(round(fuzz_csv.min_clocks_aggregated.index.max() * X_MARGIN))
+            ymax_list.append(round(fuzz_csv.min_clocks_aggregated.max() * Y_MARGIN))
 
             # Compute the mean of CPU-clocks by dividing the
             # frequency measured by the total amount of fuzzes.
-            fuzzing_sum = fuzz_csv.min_clocks.sum()
+            fuzzing_sum = fuzz_csv.min_clocks_aggregated.sum()
             mean = sum(
-                np.array(list(fuzz_csv.min_clocks.index))
-                * (np.array(list(fuzz_csv.min_clocks)) / fuzzing_sum)
+                np.array(list(fuzz_csv.min_clocks_aggregated.index))
+                * (np.array(list(fuzz_csv.min_clocks_aggregated)) / fuzzing_sum)
             )
             means[fuzz_csv.fuzz_class] = round(mean, 0).astype(int)
 
@@ -571,14 +568,15 @@ def gen_plot_asm_fig(
         if DO_T_TEST:
             fixed_csv = next(csv for csv in parsed_csv[compiler_flags[i - 1]] if csv.fuzz_class == "fixed")
             uniform_csv = next(csv for csv in parsed_csv[compiler_flags[i - 1]] if csv.fuzz_class == "uniform")
-            tstatistic, pval = stats.ttest_ind(fixed_csv.min_clocks, uniform_csv.min_clocks, equal_var = False)
+            _, pval = stats.ttest_ind(fixed_csv.min_clocks, uniform_csv.min_clocks, equal_var = False)
+
             t_test_result = (
-                "\\vspace*{2mm}\\tiny {\color{green}$H_0$ ACCEPTED!" + " p=" + str("{:.3f}".format(pval)) + " }\ \n"
-                if tstatistic > 10
+                "\\vspace*{2mm}\\tiny {\color{red}$H_0$ REJECTED!}"
+                if pval <= T_TEST_THRESHOLD
                 else
-                "\\vspace*{2mm}\\tiny {\color{red}$H_0$ REJECTED!" + " p=" + str("{:.3f}".format(pval)) + " }\ \n"
+                ""
             )
-            if tstatistic <= 10:
+            if pval <= T_TEST_THRESHOLD:
                 vulnerable_programs[compiler_flags[i - 1]] += 1
 
         lstlisting = TexLstlisting(
@@ -678,8 +676,7 @@ if __name__ == "__main__":
         # Free up some memory
         for csvs in grouped_CSV_files.values():
             for csv in csvs:
-                csv.all_clocks = []
-                csv.min_clocks = []
+                csv.min_clocks_aggregated = []
         gc.collect()
         f = open(f"{LATEX_OUTPUT_FOLDER}/prog{id}.tex", "w")
         f.write(latex)

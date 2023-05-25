@@ -4,22 +4,10 @@ extern int program(int64_t, int64_t);
 
 #define FORMAT_BUF_SIZE 50
 
-#ifdef KERNEL_MODE
-#include <linux/random.h>
-#include <linux/slab.h>
-#include <linux/irqflags.h>
-#include <linux/preempt.h>
-#define RANDOM_BUF get_random_bytes
-#define RANDOM_U32 get_random_u32
-#define malloc(size) kmalloc(size, GFP_KERNEL)
-#define calloc(nmamb, size) kcalloc(nmamb, size, GFP_KERNEL)
-#define free(ptr) kfree(ptr)
-#else
 #include <bsd/stdlib.h>
 #include <string.h>
 #define RANDOM_BUF arc4random_buf
 #define RANDOM_U32 arc4random
-#endif
 
 #define RAND64(x) RANDOM_BUF(x, sizeof(int64_t))
 #define RAND8(x) RANDOM_BUF(x, sizeof(int8_t))
@@ -166,14 +154,6 @@ static inline uint64_t get_time(int64_t a, int64_t b)
         cycles_low_after, cycles_high_after;
     uint64_t start, end;
 
-#ifdef KERNEL_MODE
-    unsigned long flags;
-    // Disables hard interrupts on the local CPU
-    local_irq_save(flags);
-    // Disables preemption (essentially context switches)
-    preempt_disable();
-#endif
-
     asm volatile( // Force prev instructions to complete before RDTSC bellow
                   // is executed (Serializing instruction execution)
         "CPUID\n\t"
@@ -186,8 +166,8 @@ static inline uint64_t get_time(int64_t a, int64_t b)
         // Restore clobbered registers
         : "=r"(cycles_high_before), "=r"(cycles_low_before)::"%rax", "%rbx", "%rcx", "%rdx");
 
-    for (size_t i = 0; i < REPEATS; i++)
-        program(a, b);
+    
+    program(a, b);
 
     asm volatile( // Force to wait for all prev instructions before reading
                   // counter. (subsequent instructions may begin execution
@@ -201,13 +181,6 @@ static inline uint64_t get_time(int64_t a, int64_t b)
         "CPUID\n\t"
         // Restore clobbered registers
         : "=r"(cycles_high_after), "=r"(cycles_low_after)::"%rax", "%rbx", "%rcx", "%rdx");
-
-#ifdef KERNEL_MODE
-    // Reenables preemption
-    preempt_enable();
-    // Reenables interupts
-    raw_local_irq_restore(flags);
-#endif
 
     start = (((uint64_t)cycles_high_before << 32) | cycles_low_before);
     end = (((uint64_t)cycles_high_after << 32) | cycles_low_after);

@@ -5,7 +5,7 @@ LATEX_REPORT_OUTPUT_DIR = $(shell python3 -c "import os; import json; print(f'..
 inspect:
 	@./assembly_inspection.py
 
-latexgen:
+latexgen: clean
 	@./latex_generator.py
 
 latexcompile:
