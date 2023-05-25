@@ -52,6 +52,8 @@ Y_LABEL = "Frequency"
 X_MARGIN = 1.03  # Controls margin to both sides of x-axis
 Y_MARGIN = 1.05  # Controls margin to top of y-axis
 
+T_TEST_THRESHOLD = 0.01
+
 # Match all jcc instructions that is not jmp, and all loop instructions
 # https://cdrdv2.intel.com/v1/dl/getContent/671200
 # Table 7-4
@@ -567,19 +569,15 @@ def gen_plot_asm_fig(
         if DO_T_TEST:
             fixed_csv = next(csv for csv in parsed_csv[compiler_flags[i - 1]] if csv.fuzz_class == "fixed")
             uniform_csv = next(csv for csv in parsed_csv[compiler_flags[i - 1]] if csv.fuzz_class == "uniform")
-            tstatistic, pval = stats.ttest_ind(fixed_csv.min_clocks, uniform_csv.min_clocks, equal_var = False)
+            _, pval = stats.ttest_ind(fixed_csv.min_clocks, uniform_csv.min_clocks, equal_var = False)
 
-            # scipy is trying to be fancy and returns a negative t-statistic
-            # however, the signification is the same:
-            # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ttest_ind.html
-            welch_tstatistic = abs(tstatistic)
             t_test_result = (
-                ""
-                if welch_tstatistic < 10
+                "\\vspace*{2mm}\\tiny {\color{red}$H_0$ REJECTED!" + " p=" + str("{:.3f}".format(pval)) + " }"
+                if pval <= T_TEST_THRESHOLD
                 else
-                "\\vspace*{2mm}\\tiny {\color{red}$H_0$ REJECTED!" + " p=" + str("{:.3f}".format(pval)) + " }\ "
+                ""
             )
-            if welch_tstatistic >= 10:
+            if pval <= T_TEST_THRESHOLD:
                 vulnerable_programs[compiler_flags[i - 1]] += 1
 
         lstlisting = TexLstlisting(
