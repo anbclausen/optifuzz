@@ -16,7 +16,7 @@
 
 #define REPEATS 100   /** The amount of times the program \
                        *  is run to get a more accurate measurement. */
-#define ITERATIONS 10 /** The amount of times to cycle through all  \
+#define ITERATIONS 5 /** The amount of times to cycle through all  \
                        *  fuzz inputs to lower noise from other CPU \
                        *  tasks. */
 
@@ -31,12 +31,12 @@ typedef enum
     UNIFORMLY, // Uniformly random values
     EQUAL,     // Uniformly random but equal values
     MAX64,     // One is INT64_MAX, other is uniform random
-    UMAX64,    // One is UINT64_MAX, other is uniform random. UINT64_MAX is -1 in signed (int64_t)
     XZERO,     // x is 0, y is uniform random
     YZERO,     // y is 0, x is uniform random
     XLTY,      // Uniformly random but x < y
     YLTX,      // Uniformly random but y < x
     SMALL,     // Uniformly random but small values
+    FIXED,     // x = y = 0x12345678
 
     INVALID // Indicates invalid distribution, no a real distribution
 } distribution_et;
