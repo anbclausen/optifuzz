@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <limits.h>
 
 #include "fuzzer_core.h"
@@ -8,49 +7,57 @@
 /**
  * @fn          write_data
  * @brief       Write the measurements to a file.
- * @param       filename            The name of the file to write to.
- * @param       measurements        The measurements to write.
- * @param       inputs              The inputs to write.
- * @param       count               The amount of measurements to write.
- * @param       flags               The flags used to compile the program.
- * @param       fuzz_class          The class of fuzzing input.
+ * @param       analysis            The analysis struct containing the measurements.
+ * @param       dists               The distributions used to generate the inputs.
+ * @param       dists_size          The amount of distributions.
+ * @param       flag                The flag used to compile the program.
  */
-static void write_data(const char *filename, const char *flags, const char *fuzz_class, const analysis_st *analysis)
+static void write_data(const analysis_st *analysis, distribution_et *dists, size_t dists_size, const char *flag)
 {
     uint64_t **measurements = *(analysis->measurements);
     const input_st *inputs = analysis->inputs;
     size_t count = analysis->count;
 
-    FILE *fs = fopen(filename, "w");
-    if (fs == NULL)
+    for (int i = 0; i < dists_size; i++)
     {
-        print_error("Error when opening file\n");
-        exit(EXIT_FAILURE);
-    }
+        const char *dist_str, *filename;
+        dist_str = dist_to_string(dists[i]);
+        filename = construct_filename(dist_str);
 
-    fprintf(fs, "# compile flags: [%s], fuzz class: [%s]\n", flags, fuzz_class);
-    fprintf(fs, "input_a,input_b,min_clock_measured");
-    fprintf(fs, "\n");
+        FILE *fs = fopen(filename, "w");
+        if (fs == NULL)
+        {
+            print_error("Error when opening file\n");
+            exit(EXIT_FAILURE);
+        }
 
-    for (size_t i = 0; i < count; i++)
-    {
-        fprintf(fs, "%ld,%ld", inputs[i].a, inputs[i].b);
-
-        // Find min for given set of inputs
-        uint64_t min = UINT64_MAX;
-        for (int j = 0; j < ITERATIONS; j++)
-            min = MIN(min, measurements[j][i]);
-        fprintf(fs, ",%lu", min);
+        fprintf(fs, "# compile flags: [%s], fuzz class: [%s]\n", flag, dist_str);
+        fprintf(fs, "input_a,input_b,min_clock_measured");
         fprintf(fs, "\n");
-    }
 
-    fclose(fs);
+        for (size_t i = 0; i < count; i++)
+        {
+            if (inputs[i].dist != dists[i])
+                continue;
+
+            fprintf(fs, "%ld,%ld", inputs[i].a, inputs[i].b);
+
+            // Find min for given set of inputs
+            uint64_t min = UINT64_MAX;
+            for (int j = 0; j < ITERATIONS; j++)
+                min = MIN(min, measurements[j][i]);
+            fprintf(fs, ",%lu", min);
+            fprintf(fs, "\n");
+        }
+
+        fclose(fs);
+    }
 }
 
 int main(int argc, char const *argv[])
 {
     analysis_st analysis;
-    const char *dist_str, *flag, *classes, *filename;
+    const char *flag, *classes_string;
     size_t count;
 
     if (argc != 4)
@@ -61,13 +68,7 @@ int main(int argc, char const *argv[])
 
     count = atoi(argv[1]);
     flag = argv[2];
-    classes = argv[3];
-
-    if (parse_and_enqueue_classes(classes))
-    {
-        print_error("Could not parse fuzz classes!\n");
-        exit(EXIT_FAILURE);
-    }
+    classes_string = argv[3];
 
     if (initialize_analysis(&analysis, count))
     {
@@ -75,18 +76,16 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
-    // Fuzz all classes in queue
-    while (!dist_queue_empty())
+    size_t number_of_dists;
+    distribution_et *dists = parse_classes(classes_string, &number_of_dists);
+
+    if (run_single(&analysis, dists, number_of_dists))
     {
-        if (run_next(&analysis))
-        {
-            print_error("Fuzz run failed!\n");
-            exit(EXIT_FAILURE);
-        }
-        dist_str = dist_to_string(analysis.dist);
-        filename = construct_filename(dist_str);
-        write_data(filename, flag, dist_str, &analysis);
+        print_error("Fuzz run failed!\n");
+        exit(EXIT_FAILURE);
     }
+
+    write_data(&analysis, dists, number_of_dists, flag);
 
     destroy_analysis(&analysis);
 

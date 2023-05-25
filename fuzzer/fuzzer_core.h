@@ -5,9 +5,9 @@
 #include <stddef.h>
 #define print_error(...) (fprintf(stderr, __VA_ARGS__))
 
-#define ITERATIONS 5  /** The amount of times to cycle through all  \
-                       *  fuzz inputs to lower noise from other CPU \
-                       *  tasks. */
+#define ITERATIONS 50 /** The amount of times to cycle through all  \
+                        *  fuzz inputs to lower noise from other CPU \
+                        *  tasks. */
 
 #define MIN(x, y) ((x < y) ? (x) : (y))
 
@@ -39,8 +39,9 @@ typedef enum
  */
 typedef struct
 {
-    int64_t a; /** The first input.                         */
-    int64_t b; /** The second input.                        */
+    int64_t a;            /** The first input.                */
+    int64_t b;            /** The second input.               */
+    distribution_et dist; /** The distribution of the inputs. */
 } input_st;
 
 /**
@@ -49,7 +50,6 @@ typedef struct
  */
 typedef struct
 {
-    distribution_et dist;
     input_st *inputs;
     uint64_t *(*measurements)[ITERATIONS];
     size_t count;
@@ -64,8 +64,8 @@ const char *dist_to_string(distribution_et dist);
 
 /**
  * @fn          initialize_analysis
- * @brief       Alocates memory and initializes an analysis_st struct.
- * @param       analysis            The anaylis to be initialized.
+ * @brief       Allocates memory and initializes an analysis_st struct.
+ * @param       analysis            The analysis to be initialized.
  * @param       count               The amount of measurements to get.
  * @return      Returns 0 on success.
  */
@@ -91,26 +91,21 @@ void destroy_analysis(analysis_st *analysis);
 const char *construct_filename(const char *dist_str);
 
 /**
- * @fn          run_next
- * @brief       Run measurements using the next distribution in queue.
- * @param       analysis            The specifications for the measurement. Contains the results.
+ * @fn          run_single
+ * @brief       Run measurements according to analysis parameter and save results.
+ * @param       analysis            The specifications for the measurement.
+ * @param       dists               The distributions to use.
+ * @param       dists_size          The amount of distributions.
  * @return      Returns 0 on success.
  */
-int run_next(analysis_st *analysis);
+int run_single(analysis_st *analysis, distribution_et *dists, size_t dists_size);
 
 /**
- * @fn          parse_and_enqueue_classes
- * @brief       Parses a string of space seperated distribution names and enqueues them for fuzzing.
+ * @fn          parse_classes
+ * @brief       Parses a string of space seperated distribution names.
  * @param       str                 A zero terminated string with space seperated distributions.
- * @return      Returns 0 on success.
+ * @return      Returns an array of all the classes.
  */
-int parse_and_enqueue_classes(const char *str);
-
-/**
- * @fn          dist_queue_empty
- * @brief       Check if the queue is empty.
- * @return      1 if empty and 0 otherwize.
- */
-int dist_queue_empty(void);
+distribution_et *parse_classes(const char *str, size_t *size);
 
 #endif
