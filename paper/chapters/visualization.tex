@@ -1,0 +1,6 @@
+\todo{Should we name this part of the pipeline "Data Analysis" instead? This final stage is not only about visualizing data, but actually data analysis. The data visualization part is just an artifact.}\\
+At the end of the pipeline, we have flagged C-programs, which has been fuzzed and timed at our disposal. Now we have to conclude whether or not these programs indeed are problematic in regards to time leakage.
+
+One statistical approach to go about it, would be to apply statistical tests between classes of fuzzing inputs. Here the null hypothesis would be, that they should generate the same distributions. 
+
+
