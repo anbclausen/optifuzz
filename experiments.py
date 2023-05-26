@@ -278,7 +278,17 @@ small_experiments = [
     {
         "compiler": "gcc",
         "compile_flags": ["O1", "O2", "O3", "Os"],
-        "fuzz_classes": ["uniform", "fixed", "xzero", "yzero", "xlty", "yltx", "small", "equal", "max64"],
+        "fuzz_classes": [
+            "uniform",
+            "fixed",
+            "xzero",
+            "yzero",
+            "xlty",
+            "yltx",
+            "small",
+            "equal",
+            "max64",
+        ],
         "pn": 500,
         "md": 5,
         "in": 10000,
@@ -305,7 +315,7 @@ def run(args: str) -> str:
 for i, experiment in enumerate(experiments):
     print("RUNNING EXPERIMENT", i + 1, "/", number_of_experiments)
     print("  ", "making folder")
-    os.makedirs(f"{TOP_DIR}/experiment{i}", exist_ok=True)
+    os.makedirs(f"{TOP_DIR}/experiment{i+1}", exist_ok=True)
     print("  ", "changing config")
     with open("config.json", "w") as f:
         json.dump(
@@ -326,9 +336,9 @@ for i, experiment in enumerate(experiments):
         if os.getuid() != 0:
             os.system("sudo -v")
 
-        run("sudo taskset --cpu-list 1 nice -n -20 make inspect") # makes this go brr
+        run("sudo taskset --cpu-list 1 nice -n -20 make inspect")  # makes this go brr
         run(f"sudo taskset --cpu-list 2 nice -n -20 make fuzz in={experiment['in']}")
-        if experiment['md'] < 7:
+        if experiment["md"] < 7:
             run("make latexgen")
             run("make latexcompile")
     except:
@@ -336,27 +346,30 @@ for i, experiment in enumerate(experiments):
 
     print("  ", "copying results")
     shutil.copytree(
-        "results/flagged_programs", f"{TOP_DIR}/experiment{i}/flagged_programs"
+        "results/flagged_programs", f"{TOP_DIR}/experiment{i+1}/flagged_programs"
     )
-    if experiment['md'] < 7:
-        shutil.copyfile("results/report.pdf", f"{TOP_DIR}/experiment{i}/report.pdf")
+    if experiment["md"] < 7:
+        shutil.copyfile("results/report.pdf", f"{TOP_DIR}/experiment{i+1}/report.pdf")
         shutil.copytree(
-            "analysis/latex/generated_latex", f"{TOP_DIR}/experiment{i}/generated_latex"
+            "analysis/latex/generated_latex",
+            f"{TOP_DIR}/experiment{i+1}/generated_latex",
         )
-    else: 
+    else:
         print("  ", f"skipping report and latex since md={experiment['md']}")
 
     meta = experiment.copy()
 
-    number_of_flagged = len(os.listdir('results/flagged_programs/'))
+    number_of_flagged = len(os.listdir("results/flagged_programs/"))
     meta[
         "number_of_flagged_files"
     ] = f"{number_of_flagged}/{experiment['pn']}: {100 * number_of_flagged / experiment['pn']:.2f}%"
-    if experiment['md'] < 7:
+    if experiment["md"] < 7:
         latex_meta = json.load(open("analysis/latex/generated_latex/meta.json"))
         for key, value in latex_meta.items():
-            meta[f"H0_dropped_in_{key}"] = f"{value}/{number_of_flagged}: {100 * value / number_of_flagged:.2f}%"
+            meta[
+                f"H0_dropped_in_{key}"
+            ] = f"{value}/{number_of_flagged}: {100 * value / number_of_flagged:.2f}%"
 
     print("  ", "writing meta")
-    with open(f"{TOP_DIR}/experiment{i}/meta.json", "w") as f:
+    with open(f"{TOP_DIR}/experiment{i+1}/meta.json", "w") as f:
         json.dump(meta, f)
