@@ -6,6 +6,7 @@ Security-related issues in programs written in C stem from both the programmer, 
 The problem with security issues introduced by the compiler is especially prevalent in the context of timing attacks on cryptographic algorithms. 
 Developers try to mitigate timing attacks by writing constant-time code -- code where the execution time is independent of the input.
 However, the compiler may introduce timing leaks by optimizing away the constant-time code.
+Developers try to get around the compiler optimizations by obfuscating their code, but the obfuscated code might still be vulnerable to an optimization that introduces a timing vulnerability.
 In a recent study \citep{developer-survey-timing-attacks}, it was shown that the vast majority of developers of cryptographic libraries rely on constant-time code practices that in theory result in constant-time code, but may be vulnerable after compilation.
 
 The issue of timing vulnerabilities introduced by compilers is well-known in the community.
@@ -13,15 +14,14 @@ Several proposals have been made to mitigate the issue \citep{what-you-c, dudect
 However, the problem persists and to the best of our knowledge, no study has quantified the issue of timing vulnerabilities introduced by compilers.
 
 In this paper, we try to quantify the issue of timing vulnerabilities introduced by the two most popular C compilers, gcc\footnote{\url{https://gcc.gnu.org/}.} and clang\footnote{\url{https://clang.llvm.org/}.}.
-We do this by implementing a tool, OptiFuzz, that generates, analyzes and fuzzes random C programs.
+We do this by data-based analysis, implementing a tool, OptiFuzz, that generates, analyzes and fuzzes random C programs.
 For simplicity, the generated programs are limited to only containing non-branching arithmetic, logical and comparison operations.
-Also \texttt{/} and \texttt{\%} are avoided, to mitigate division-by-zero errors.
 We investigate what optimization flags are responsible for introducing timing leaks and compare them.
 Finally, we discuss how the issue of timing vulnerabilities introduced by the compiler can be mitigated by using language-based security techniques.
 
 \subsection{Related Work}
-The issue of timing vulnerabilities introduced by the clang C compiler across different versions has been researched by Simon et. al. \citep{what-you-c}. 
-Several studies have investigated potential solutions to the issue, including using constant-time branching instructions \citep{what-you-c}, using black-box testing software \citep{dudect}, domain-specific languages \citep{fact}, and notably a verified constant-time C compiler has been developed \citep{verified-constant-time-c-comiler}.
+The issue of timing vulnerabilities introduced by the clang C compiler across different versions has been researched \citep{what-you-c}. 
+Several studies have investigated potential solutions to the issue, including using constant-time branching instructions \citep{what-you-c}, using black-box testing software \citep{dudect}, using domain-specific languages \citep{fact}, and notably a verified constant-time C compiler has been developed \citep{verified-constant-time-c-comiler}.
 
 \subsection{Contributions}
 We provide a quantitative analysis of timing vulnerabilities introduced by gcc and clang, focusing on specific troublesome optimization flags.
