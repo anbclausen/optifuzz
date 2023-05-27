@@ -5,9 +5,9 @@
   \node (Code Generation) [box] {Code Generation};
   \node (Assembly Inspection) [box, right of=Code Generation, xshift=3cm] {Assembly Inspection};
   \node (Fuzzing) [box, right of=Assembly Inspection, xshift=3cm] {Fuzzing};
-  \node (Visualization) [box, right of=Fuzzing, xshift=3cm] {Visualization};
+  \node (Statistical Analysis) [box, right of=Fuzzing, xshift=3cm] {Statistical Analysis};
 
   \draw [arrow] (Code Generation) -- (Assembly Inspection);
   \draw [arrow] (Assembly Inspection) -- (Fuzzing);
-  \draw [arrow] (Fuzzing) -- (Visualization);
+  \draw [arrow] (Fuzzing) -- (Statistical Analysis);
 \end{tikzpicture}
