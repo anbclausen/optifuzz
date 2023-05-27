@@ -108,8 +108,6 @@
         "md": 12,
         "in": 1000,
     },
-"""
-experiments = [
     {
         "compiler": "gcc",
         "compile_flags": ["O1"],
@@ -182,6 +180,8 @@ experiments = [
         "md": 12,
         "in": 1000,
     },
+"""
+experiments = [
     {
         "compiler": "clang",
         "compile_flags": ["O0"],
@@ -338,7 +338,8 @@ for i, experiment in enumerate(experiments):
 
         run("sudo taskset --cpu-list 1 nice -n -20 make inspect")  # makes this go brr
         run(f"sudo taskset --cpu-list 2 nice -n -20 make fuzz in={experiment['in']}")
-        if experiment["md"] < 7:
+        number_of_flagged = len(os.listdir("results/flagged_programs/"))
+        if experiment["md"] < 7 and number_of_flagged > 0:
             run("make latexgen")
             run("make latexcompile")
     except:
@@ -363,7 +364,7 @@ for i, experiment in enumerate(experiments):
     meta[
         "number_of_flagged_files"
     ] = f"{number_of_flagged}/{experiment['pn']}: {100 * number_of_flagged / experiment['pn']:.2f}%"
-    if experiment["md"] < 7:
+    if experiment["md"] < 7 and number_of_flagged > 0:
         latex_meta = json.load(open("analysis/latex/generated_latex/meta.json"))
         for key, value in latex_meta.items():
             meta[
