@@ -7,7 +7,7 @@ The problem with security issues introduced by the compiler is especially preval
 Developers try to mitigate timing attacks by writing constant-time code -- code where the execution time is independent of the input.
 However, the compiler may introduce timing leaks by optimizing away the constant-time code.
 Developers try to get around the compiler optimizations by obfuscating their code, but the obfuscated code might still be vulnerable to an optimization that introduces a timing vulnerability.
-In a recent study \citep{developer-survey-timing-attacks}, it was shown that the vast majority of developers of cryptographic libraries rely on constant-time code practices that in theory result in constant-time code, but may be vulnerable after compilation.
+In a recent study \citep{developer-survey-timing-attacks}, it was shown that the vast majority of developers of prominent open-source cryptographic libraries rely on constant-time code practices that in theory result in constant-time code, but may be vulnerable after compilation.
 
 The issue of timing vulnerabilities introduced by compilers is well-known in the community.
 Several proposals have been made to mitigate the issue \citep{what-you-c, dudect, fact, verified-constant-time-c-comiler}.
