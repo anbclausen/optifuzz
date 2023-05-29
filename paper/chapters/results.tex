@@ -59,7 +59,7 @@ Our experiment revealed some limitations to our approach to finding timing vulne
 False positives, i.e. constant-time code that was rejected by Welch's t-test, were present in the dataset from the \texttt{O0} experiment. 
 This is likely due to noise in the measurements. 
 Experimentally, we found that Welch's t-test will reject around 4.4\% of programs that are constant-time due to noise.
-Since such a high number of programs compiled with \texttt{O0} contained branching instructions, this noise was enough to cause a significant amount of false positives compared to the amount of programs generated for the experiment.
+Since such a high number of programs compiled with \texttt{O0} contained branching instructions, this noise was enough to cause a significant amount of false positives compared to the number of programs generated for the experiment.
 It is also possible that seemingly constant-time programs are not constant-time due to hardware optimizations, like branch prediction or speculative execution, which are not taken into account in our model and are out-of-scope for this paper.
 However, our results also show that definite timing leaks are present in the \texttt{O0} dataset as seen in Figure \ref{fig:general-optimizations-O0-true-positive}.
 
