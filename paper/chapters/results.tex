@@ -6,7 +6,9 @@ First, we compare \texttt{gcc} and \texttt{clang} generally in terms of the numb
 Second, we present our results for general optimizations flags such as \texttt{O2} and \texttt{Os}.
 Third, we present our results regarding specific optimizations.
 Finally, we present our results regarding what operations are most likely to cause timing vulnerabilities when optimized.
-All experiments were carried out on an Intel Core i7-9750H running Manjaro Linux 22.1.2 with kernel version Linux 5.15.112-1. For compilers, \texttt{clang} version 15.0.7 and \texttt{gcc} version 12.2.1 were used.
+All experiments were carried out on an Intel Core i7-9750H running Manjaro Linux 22.1.2 with kernel version Linux 5.15.112-1. 
+For compilers, \texttt{clang} version 15.0.7 and \texttt{gcc} version 12.2.1 were used.
+All experiments were run on a single core and with \texttt{-20 niceness} to minimize interference from other processes.
 
 \subsection{gcc vs. clang}
 Surprisingly, we were unable to find any timing vulnerabilities introduced by \texttt{clang} under any optimization flags.
@@ -28,6 +30,8 @@ As no timing vulnerabilities were found using \texttt{clang}, all following subs
 \subsection{General Optimizations}
 We ran the OptiFuzz pipeline with the optimization flags \texttt{O0}, \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os}. 
 For each optimization flag, we generated 100,000 programs, which were then fuzzed and analyzed. 
+The ASTs of the generated programs were restricted to have a max depth of 5.
+Each program was fuzzed with 10,000 different inputs.
 The results are shown in Table \ref{tab:general-optimizations} and visualized results for select data points can be seen in Appendix \ref{appendix:general-optimizations-results}.
 
 \begin{table}[H]
@@ -42,10 +46,22 @@ The results are shown in Table \ref{tab:general-optimizations} and visualized re
   \end{tabular}
   \caption{Results for the optimization flags \texttt{O0}, \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os} using \texttt{gcc}. 
   The results are based on 100,000 generated programs for each optimization flag. 
+  Each program is generated from an AST of max depth 5.
   The first and second rows show the number and percentage of programs that contained conditional branching instructions after compilation (potential timing leak).
   The third, fourth and fifth rows show the number and percentage of programs that resulted in $H_0$ getting rejected in Welch's t-test (definite timing leak).}
   \label{tab:general-optimizations}
 \end{table}
+Our results show that the problem is very prevalent in \texttt{gcc} with \texttt{O0}, surprisingly, being the worst offender where over a tenth of the randomly generated programs were rejected by Welch's t-test. 
+
+\todo{Add figure with O0 8}
+
+O0: (8 <- real nice) true positive, (11) true negative, (15) false positive (probably too many), no false negative
+O1: false negative (5) very hard to detect (probably too many), true positive (6), true negative (132) (small amount), no false positive 
+O2: (7) false negative (hard to detect), true positive (42), no false positive, no true negative (all were variable time)
+O3: true positive (5), false negative (15), no false positive, no true negative (all were variable time)
+Os: true positive (1), false negative (5) interestingly - branches if y = 0, but we are not doing the t-test on the yzero class, so it is not detected., true negative (23), no false positive
+\todo{md=12 has the same for O0, and O1, but significantly more for O2, O3 (around 5\%) and Os (around 2\%)}
+\todo{Internal testing shows around 4.4\% of programs will be rejected by Welch's t-test due to noise}
 
 \subsection{Specific Optimizations}
 \todo{Single out specific optimizations}
