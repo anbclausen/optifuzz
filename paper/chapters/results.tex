@@ -13,16 +13,39 @@ Surprisingly, we were unable to find any timing vulnerabilities introduced by \t
 This is in contrast to \texttt{gcc}, where we saw timing vulnerabilities across various optimization flags.
 Specifically, we compiled 50,000 random programs with \texttt{clang} using various optimization flags (\texttt{O0}, \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os}) out of which none contained conditional branching instructions.
 
-The reason for \texttt{clang} not introducing any timing vulnerabilities is the compiler's utilization of \texttt{cmovcc} instructions. \texttt{cmovcc} is a family of constant-time conditional move instructions \citep{cmov-is-constant-time} that was introduced by Intel in 1995 \citep{cmov-from-1995}. 
+The reason for \texttt{clang} not introducing any timing vulnerabilities is the compiler's utilization of \texttt{cmovcc} instructions. 
+\texttt{cmovcc} is a family of constant-time conditional move instructions \citep{cmov-is-constant-time} that was introduced by Intel in 1995 \citep{cmov-from-1995}. 
 
-Even though our results show that \texttt{clang} does not introduce any timing vulnerabilities, our research shows that timing vulnerabilities were identified in fairly recent versions of \texttt{clang} \citep{fact,what-you-c}. Furthermore, we have identified an optimization step in the most recent version of the LLVM backend, which \texttt{clang} uses, that removes \texttt{cmovcc} instructions and substitutes them for conditional branches if an efficiency gain can be obtained with high confidence \citep{llvm-optimizing-away-cmov}.
+Even though our results show that \texttt{clang} does not introduce any timing vulnerabilities, our research shows that timing vulnerabilities were identified in fairly recent versions of \texttt{clang} \citep{fact,what-you-c}. 
+Furthermore, we have identified an optimization step in the most recent version of the LLVM backend, which \texttt{clang} uses, that removes \texttt{cmovcc} instructions and substitutes them for conditional branches if an efficiency gain can be obtained with high confidence \citep{llvm-optimizing-away-cmov}.
 
-Evidently, \texttt{clang} introduces conditional branches, and thus potentially timing vulnerabilities, much more conservatively than \texttt{gcc}. This is favorable in the context of language-based security avoiding timing vulnerabilities, but seemingly, \texttt{clang} is not perfect in preventing timing vulnerabilities even though our results were not able to confirm this. The lack of confirmed results might be ascribed to the simplicity of the generated programs or the sample size.
+Evidently, \texttt{clang} introduces conditional branches, and thus potentially timing vulnerabilities, much more conservatively than \texttt{gcc}. 
+This is favorable in the context of language-based security avoiding timing vulnerabilities, but seemingly, \texttt{clang} is not perfect in preventing timing vulnerabilities even though our results were not able to confirm this. 
+The lack of confirmed results might be ascribed to the simplicity of the generated programs or the sample size.
 
 As no timing vulnerabilities were found using \texttt{clang}, all following subsections will present data obtained only through \texttt{gcc}.
 
-\subsection{Genereal Optimizations}
-\todo{O0, ..., Os}
+\subsection{General Optimizations}
+We ran the OptiFuzz pipeline with the optimization flags \texttt{O0}, \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os}. 
+For each optimization flag, we generated 100,000 programs, which were then fuzzed and analyzed. 
+The results are shown in Table \ref{tab:general-optimizations} and visualized results for select data points can be seen in Appendix \ref{appendix:general-optimizations-results}.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{l|lllll}
+                                           & \textbf{\texttt{O0}} & \textbf{\texttt{O1}} & \textbf{\texttt{O2}} & \textbf{\texttt{O3}} & \textbf{\texttt{Os}} \\ \hline
+  \# of flagged programs                   & 19758                                 & 231                                   & 1005                                  & 999                                   & 366                                   \\
+  \% of flagged programs                   & 19.76\%                               & 0.23\%                                & 1.00\%                                & 1.00\%                                & 0.37\%                                \\
+  \# of programs with rejected $H_0$       & 12627                                 & 147                                   & 624                                   & 640                                   & 199                                   \\
+  \% of rejected programs (out of total)   & 12.63\%                               & 0.15\%                                & 0.62\%                                & 0.64\%                                & 0.20\%                                \\
+  \% of rejected programs (out of flagged) & 63.91\%                               & 63.64\%                               & 62.09\%                               & 64.06\%                               & 54.37\%                              
+  \end{tabular}
+  \caption{Results for the optimization flags \texttt{O0}, \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os} using \texttt{gcc}. 
+  The results are based on 100,000 generated programs for each optimization flag. 
+  The first and second rows show the number and percentage of programs that contained conditional branching instructions after compilation (potential timing leak).
+  The third, fourth and fifth rows show the number and percentage of programs that resulted in $H_0$ getting rejected in Welch's t-test (definite timing leak).}
+  \label{tab:general-optimizations}
+\end{table}
 
 \subsection{Specific Optimizations}
 \todo{Single out specific optimizations}
