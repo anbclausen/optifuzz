@@ -1,5 +1,15 @@
-\todo{Note: \url{https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8077809} says clang had issues with not compiling to cmov back in the day (2017)}
+We have run OptiFuzz to generate around 600,000 programs, which have been fuzzed and analyzed under different compilers and optimization flags.
+In this section, we present our results.
+
+We have divided this section into four sections.
+First, we compare \texttt{gcc} and \texttt{clang} generally in terms of the number of timing vulnerabilities introduced.
+Second, we present our results for general optimizations flags such as \texttt{O2} and \texttt{Os}.
+Third, we present our results regarding specific optimizations.
+Finally, we present our results regarding what operations are most likely to cause timing vulnerabilities when optimized.
 All experiments were carried out on an Intel Core i7-9750H running Manjaro Linux 22.1.2 with kernel version Linux 5.15.112-1.
+
+\subsection{gcc vs. clang}
+\todo{Note: \url{https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8077809} says clang had issues with not compiling to cmov back in the day (2017)}
 
 \subsection{Genereal Optimizations}
 \todo{O0, ..., Os}
