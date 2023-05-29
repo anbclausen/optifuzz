@@ -13,7 +13,7 @@ The issue of timing vulnerabilities introduced by compilers is well-known in the
 Several proposals have been made to mitigate the issue \citep{what-you-c, dudect, fact, verified-constant-time-c-comiler}.
 However, the problem persists and to the best of our knowledge, no study has quantified the issue of timing vulnerabilities introduced by compilers.
 
-In this paper, we try to quantify the issue of timing vulnerabilities introduced by the two most popular C compilers, gcc\footnote{\url{https://gcc.gnu.org/}.} and clang\footnote{\url{https://clang.llvm.org/}.}.
+In this paper, we try to quantify the issue of timing vulnerabilities introduced by the two most popular C compilers, gcc\footnote{\url{https://gcc.gnu.org/}.} and clang\footnote{\url{https://clang.llvm.org/}.} on the x86-64 architecture.
 We take a data-based approach, implementing a tool, OptiFuzz, that generates, fuzzes and analyzes random C programs.
 OptiFuzz features automatic state-of-the-art statistical analysis of the data to detect timing leaks.
 For simplicity, the generated programs are limited to only containing non-branching arithmetic, logical and comparison operations.

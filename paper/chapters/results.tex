@@ -1,15 +1,25 @@
 We have run OptiFuzz to generate around 600,000 programs, which have been fuzzed and analyzed under different compilers and optimization flags.
 In this section, we present our results.
 
-We have divided this section into four sections.
+We have divided this section into four subsections.
 First, we compare \texttt{gcc} and \texttt{clang} generally in terms of the number of timing vulnerabilities introduced.
 Second, we present our results for general optimizations flags such as \texttt{O2} and \texttt{Os}.
 Third, we present our results regarding specific optimizations.
 Finally, we present our results regarding what operations are most likely to cause timing vulnerabilities when optimized.
-All experiments were carried out on an Intel Core i7-9750H running Manjaro Linux 22.1.2 with kernel version Linux 5.15.112-1.
+All experiments were carried out on an Intel Core i7-9750H running Manjaro Linux 22.1.2 with kernel version Linux 5.15.112-1. For compilers, \texttt{clang} version 15.0.7 and \texttt{gcc} version 12.2.1 were used.
 
 \subsection{gcc vs. clang}
-\todo{Note: \url{https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8077809} says clang had issues with not compiling to cmov back in the day (2017)}
+Surprisingly, we were unable to find any timing vulnerabilities introduced by \texttt{clang} under any optimization flags.
+This is in contrast to \texttt{gcc}, where we saw timing vulnerabilities across various optimization flags.
+Specifically, we compiled 50,000 random programs with \texttt{clang} using various optimization flags (\texttt{O0}, \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os}) out of which none contained conditional branching instructions.
+
+The reason for \texttt{clang} not introducing any timing vulnerabilities is the compiler's utilization of \texttt{cmovcc} instructions. \texttt{cmovcc} is a family of constant-time conditional move instructions \citep{cmov-is-constant-time} that was introduced by Intel in 1995 \citep{cmov-from-1995}. 
+
+Even though our results show that \texttt{clang} does not introduce any timing vulnerabilities, our research shows that timing vulnerabilities were identified in fairly recent versions of \texttt{clang} \citep{fact,what-you-c}. Furthermore, we have identified an optimization step in the most recent version of the LLVM backend, which \texttt{clang} uses, that removes \texttt{cmovcc} instructions and substitutes them for conditional branches if an efficiency gain can be obtained with high confidence \citep{llvm-optimizing-away-cmov}.
+
+Evidently, \texttt{clang} introduces conditional branches, and thus potentially timing vulnerabilities, much more conservatively than \texttt{gcc}. This is favorable in the context of language-based security avoiding timing vulnerabilities, but seemingly, \texttt{clang} is not perfect in preventing timing vulnerabilities even though our results were not able to confirm this. The lack of confirmed results might be ascribed to the simplicity of the generated programs or the sample size.
+
+As no timing vulnerabilities were found using \texttt{clang}, all following subsections will present data obtained only through \texttt{gcc}.
 
 \subsection{Genereal Optimizations}
 \todo{O0, ..., Os}
