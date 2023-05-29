@@ -1,0 +1,220 @@
+\textbf{O0 False Positive} -- \texttt{Seed 1000716339} -- \texttt{gcc O0}\\\small\texttt{Classes: uniform equal max64 fixed xzero yzero xlty yltx small}
+\begin{lstlisting}[style=defstyle,language=C]
+...
+int program(long long int x, long long int y) { return (~false & ((((~25 >> (y >= x)) - (~true - -(29))) * 59) - true)); }
+\end{lstlisting}
+\begin{figure}[H]
+\begin{subfigure}[T]{0.30333333333333334\textwidth}
+\caption*{O0}
+\begin{lrbox}{\mybox}%
+\begin{tikzpicture}[>=latex]
+            \begin{axis}[
+                axis x line=center,
+                axis y line=center,
+                name=ax,
+                scaled y ticks=base 10:-3,
+                ytick scale label code/.code={},
+                yticklabel={\pgfmathprintnumber{\tick} k},
+                xlabel={CPU Clocks},
+                ylabel={Frequency},
+                x label style={at={(axis description cs:0.5,-0.1)},anchor=north},
+                y label style={at={(axis description cs:-0.1,.5)},rotate=90,anchor=south,yshift=4mm},
+                area style,
+                ymin=0,
+                xmin=19,
+                xmax=36,
+                ymax=1206
+                ]
+                \addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                    20 1127
+21 8
+                };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                    20 1149
+21 10
+                };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                    20 375
+21 474
+22 28
+23 0
+24 0
+25 0
+26 1
+27 0
+28 0
+29 12
+30 201
+31 3
+32 0
+33 1
+34 0
+35 1
+                };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                    20 368
+21 465
+22 32
+23 4
+24 0
+25 0
+26 1
+27 0
+28 18
+29 222
+30 0
+31 2
+32 0
+33 0
+34 1
+35 2
+                };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                    20 843
+21 25
+22 2
+23 1
+24 0
+25 14
+26 220
+27 5
+28 1
+29 0
+30 2
+31 0
+32 0
+33 0
+34 0
+35 1
+                };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                    20 1047
+21 5
+                };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                    20 857
+21 238
+22 3
+23 0
+24 0
+25 0
+26 0
+27 0
+28 0
+29 0
+30 0
+31 0
+32 0
+33 0
+34 0
+35 2
+                };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                    20 574
+21 60
+22 3
+23 0
+24 0
+25 495
+26 3
+27 0
+28 1
+29 1
+30 1
+31 0
+32 1
+33 1
+34 0
+35 1
+                };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                    20 330
+21 447
+22 29
+23 1
+24 0
+25 1
+26 0
+27 17
+28 0
+29 251
+30 4
+31 2
+32 2
+33 2
+34 1
+35 1
+                };
+                                    \draw[color=black, line width=0.2mm, dashed] 
+                    (axis cs:20, -60.300000000000004) -- (axis cs:20, 1206);
+                    \draw[color=black, line width=0.2mm, dashed] 
+                    (axis cs:20, -60.300000000000004) -- (axis cs:20, 1206);
+                    \draw[color=black, line width=0.2mm, dashed] 
+                    (axis cs:22, -60.300000000000004) -- (axis cs:22, 1206);
+                    \draw[color=black, line width=0.2mm, dashed] 
+                    (axis cs:22, -60.300000000000004) -- (axis cs:22, 1206);
+                    \draw[color=black, line width=0.2mm, dashed] 
+                    (axis cs:21, -60.300000000000004) -- (axis cs:21, 1206);
+                    \draw[color=black, line width=0.2mm, dashed] 
+                    (axis cs:20, -60.300000000000004) -- (axis cs:20, 1206);
+                    \draw[color=black, line width=0.2mm, dashed] 
+                    (axis cs:20, -60.300000000000004) -- (axis cs:20, 1206);
+                    \draw[color=black, line width=0.2mm, dashed] 
+                    (axis cs:22, -60.300000000000004) -- (axis cs:22, 1206);
+                    \draw[color=black, line width=0.2mm, dashed] 
+                    (axis cs:23, -60.300000000000004) -- (axis cs:23, 1206);
+            \end{axis} 
+            \node[below=15mm of ax] (1) {
+                $\begin{aligned}
+                    \texttt{equal}_\mu: & \,20\\
+                    \texttt{fixed}_\mu: & \,20\\
+                    \texttt{max64}_\mu: & \,22
+                \end{aligned}$
+            };
+            \node[left=4mm of 1] (2) {
+                $\begin{aligned}
+                    \texttt{small}_\mu: & \,22\\
+                    \texttt{uniform}_\mu: & \,21\\
+                    \texttt{xlty}_\mu: & \,20
+                \end{aligned}$
+            };
+            \node[right=4mm of 1] (3) {
+                $\begin{aligned}
+                    \texttt{xzero}_\mu: & \,20\\
+                    \texttt{yltx}_\mu: & \,22\\
+                    \texttt{yzero}_\mu: & \,23
+                \end{aligned}$
+            };
+            \node[fit=(1)(2)(3),draw]{};
+            \end{tikzpicture}%
+        \end{lrbox}\resizebox{\textwidth}{!}{\usebox{\mybox}}
+\end{subfigure}
+\begin{subfigure}[T]{0.30333333333333334\textwidth}
+\caption*{}
+\end{subfigure}
+\begin{subfigure}[T]{0.30333333333333334\textwidth}
+\caption*{}
+\end{subfigure}
+\hspace*{6mm}
+\begin{subfigure}[T]{0.2733333333333333\textwidth}
+\vspace*{2mm}\tiny {\color{red}$H_0$ REJECTED!}\ \vspace*{2mm}\tiny jl [8]
+\begin{lstlisting}[style=defstyle,language={[x86masm]Assembler},basicstyle=\tiny\ttfamily,breaklines=true]
+...
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -8(%rbp)
+	movq	%rsi, -16(%rbp)
+	movq	-16(%rbp), %rax
+	cmpq	-8(%rbp), %rax
+	jl	.L2
+	movl	$-2361, %eax
+	jmp	.L4
+.L2:
+	movl	$-3128, %eax
+.L4:
+	popq	%rbp
+	ret
+...\end{lstlisting}
+\end{subfigure}
+\end{figure}
+\newpage\noindent
