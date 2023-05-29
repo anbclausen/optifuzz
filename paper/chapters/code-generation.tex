@@ -32,9 +32,10 @@ int program(long long int x, long long int y) { return !(y * (43 * (x != true)))
 \end{figure}
 
 The code generation module works by generating a random distribution that selects different symbols in the grammar with a certain probability.
-This ensures that not all generated programs will be uniformly random.
+This ensures that not all generated programs will be uniformly random. 
+Non-uniformly random programs, particularly shorter ones, increase the likelihood of encountering certain prevalent operator(s).
+If the program happens to be variable in time, it may highlight a specific scenario where the operator could pose timing leakage issues.
 For example, if a generated distribution heavily favors the left-shift operator, then the generated programs will contain a lot of left-shift operations.
-This is useful for detecting whether certain types of programs are more likely to be constant-time than others.
 
 The code generation module generates programs with integer literals in different ranges. 
 Booleans represent the first range.
@@ -43,7 +44,7 @@ Integers from this range are included since the constants 0 and 1 are interestin
 The second range we consider is $[0, 64]$ as numbers in this range are lower than the size of 64-bit integers.
 Hence numbers in this range are interesting in bit-shifting operations.
 The third range is the range of signed 64-bit integers.
-Generally, we have included these smaller ranges of integers since they are interesting and it is very unlikely that a uniformly random 64-bit integer would be in these ranges.
+Generally, we have included these smaller ranges of integers since they are interesting in computation and it is very unlikely that a uniformly random 64-bit integer would fall into one of these ranges.
 
 The grammar in Figure \ref{fig:grammar} generates programs with undefined behavior.
 For example, bit-shifting with a negative number, or a number larger than the size of the type, is undefined behavior in C \citep{c-standard}.

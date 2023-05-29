@@ -1,23 +1,14 @@
 #include "fuzzer_core.h"
+#include <string.h>
+
+extern int program(int64_t, int64_t);
 
 #define FORMAT_BUF_SIZE 50
 
-#ifdef KERNEL_MODE
-#include <linux/random.h>
-#include <linux/slab.h>
-#include <linux/irqflags.h>
-#include <linux/preempt.h>
-#define RANDOM_BUF get_random_bytes
-#define RANDOM_U32 get_random_u32
-#define malloc(size) kmalloc(size, GFP_KERNEL)
-#define calloc(nmamb, size) kcalloc(nmamb, size, GFP_KERNEL)
-#define free(ptr) kfree(ptr)
-#else
 #include <bsd/stdlib.h>
 #include <string.h>
 #define RANDOM_BUF arc4random_buf
 #define RANDOM_U32 arc4random
-#endif
 
 #define RAND64(x) RANDOM_BUF(x, sizeof(int64_t))
 #define RAND8(x) RANDOM_BUF(x, sizeof(int8_t))
@@ -37,14 +28,9 @@
     }
 
 // Array of all diststibutions and their string names
-static const distribution_et dists[DIST_COUNT] = {UNIFORMLY, EQUAL, MAX64, UMAX64, ZERO, XLTY, YLTX, SMALL};
+static const distribution_et dists[DIST_COUNT] = {UNIFORMLY, EQUAL, MAX64, XZERO, YZERO, XLTY, YLTX, SMALL, FIXED};
 #define MAX_DIST_STR_LEN 10
-static const char dists_strings[DIST_COUNT][MAX_DIST_STR_LEN] = {"uniform", "equal", "max64", "umax64", "zero", "xlty", "yltx", "small"};
-
-// FILO queue (stack) for distributions to fuzz
-#define MAX_DIST_QUEUE_SIZE 20
-static distribution_et dist_queue[MAX_DIST_QUEUE_SIZE];
-static distribution_et *dist_queue_head = dist_queue;
+static const char dists_strings[DIST_COUNT][MAX_DIST_STR_LEN] = {"uniform", "equal", "max64", "xzero", "yzero", "xlty", "yltx", "small", "fixed"};
 
 /**
  * @fn          set_values
@@ -73,19 +59,13 @@ static int set_values(distribution_et dist, int64_t *x, int64_t *y)
         else
             RAND64(y);
         break;
-    case UMAX64:
-        *x = *y = -1;
-        if (RANDOM)
-            RAND64(x);
-        else
-            RAND64(y);
+    case XZERO:
+        *x = 0;
+        RAND64(y);
         break;
-    case ZERO:
-        *x = *y = 0;
-        if (RANDOM)
-            RAND64(x);
-        else
-            RAND64(y);
+    case YZERO:
+        *y = 0;
+        RAND64(x);
         break;
     case XLTY:
         RANDXLTY(x, y);
@@ -100,6 +80,9 @@ static int set_values(distribution_et dist, int64_t *x, int64_t *y)
         *x &= 255;
         *y &= 255;
         break;
+    case FIXED:
+        *x = *y = 0x12345678;
+        break;
     default:
         print_error("Distribution not yet supported!\n");
         return 1;
@@ -110,16 +93,22 @@ static int set_values(distribution_et dist, int64_t *x, int64_t *y)
 /**
  * @fn          generate_inputs
  * @brief       Generate and set all input values.
- * @param       dist                The distribution to draw the inputs from.
+ * @param       dists               The distributions to draw the inputs from.
+ * @param       dists_size          The amount of distributions.
  * @param       inputs              the list to write them to.
  * @param       count               The amount of measurements to write.
  * @return      Returns 0 on success.
  */
-static int generate_inputs(distribution_et dist, input_st *inputs, size_t count)
+static int generate_inputs(distribution_et *dists, size_t dists_size, input_st *inputs, size_t count)
 {
     int ret = 0;
     for (size_t i = 0; i < count; i++)
-        ret |= set_values(dist, &inputs[i].a, &inputs[i].b);
+    {
+        distribution_et random_dist = dists[RANDOM_U32() % dists_size];
+
+        inputs[i].dist = random_dist;
+        ret |= set_values(random_dist, &inputs[i].a, &inputs[i].b);
+    }
     return ret;
 }
 
@@ -143,9 +132,6 @@ static void initialize_measurements(uint64_t *measurements[ITERATIONS], size_t c
  *              It uses CPUID (and RDTSCP) to serialize instructions to avoid out
  *              of order execution for encreased precision.
  *
- *              The code is run multiple times to for a more accurate measurement.
- *              The amount of repeats is determined by REPEATS.
- *
  *              Note: On older machines this returns the actual amount of clock
  *              cycles spent. On newer machines this register is increased at a
  *              fixed rate. Even on newer machines the behavior might differ
@@ -167,14 +153,6 @@ static inline uint64_t get_time(int64_t a, int64_t b)
         cycles_low_after, cycles_high_after;
     uint64_t start, end;
 
-#ifdef KERNEL_MODE
-    unsigned long flags;
-    // Disables hard interrupts on the local CPU
-    local_irq_save(flags);
-    // Disables preemption (essentially context switches)
-    preempt_disable();
-#endif
-
     asm volatile( // Force prev instructions to complete before RDTSC bellow
                   // is executed (Serializing instruction execution)
         "CPUID\n\t"
@@ -187,8 +165,7 @@ static inline uint64_t get_time(int64_t a, int64_t b)
         // Restore clobbered registers
         : "=r"(cycles_high_before), "=r"(cycles_low_before)::"%rax", "%rbx", "%rcx", "%rdx");
 
-    for (size_t i = 0; i < REPEATS; i++)
-        program(a, b);
+    program(a, b);
 
     asm volatile( // Force to wait for all prev instructions before reading
                   // counter. (subsequent instructions may begin execution
@@ -202,13 +179,6 @@ static inline uint64_t get_time(int64_t a, int64_t b)
         "CPUID\n\t"
         // Restore clobbered registers
         : "=r"(cycles_high_after), "=r"(cycles_low_after)::"%rax", "%rbx", "%rcx", "%rdx");
-
-#ifdef KERNEL_MODE
-    // Reenables preemption
-    preempt_enable();
-    // Reenables interupts
-    raw_local_irq_restore(flags);
-#endif
 
     start = (((uint64_t)cycles_high_before << 32) | cycles_low_before);
     end = (((uint64_t)cycles_high_after << 32) | cycles_low_after);
@@ -270,152 +240,57 @@ static distribution_et string_to_dist(const char *str)
     return INVALID;
 }
 
-/**
- * @fn          dist_queue_full
- * @brief       Check if the queue is full.
- * @return      1 if full and 0 otherwize.
- */
-static int dist_queue_full(void)
+distribution_et *parse_classes(const char *str, size_t *size)
 {
-    return dist_queue_head == dist_queue + MAX_DIST_QUEUE_SIZE;
-}
-
-/**
- * @fn          dist_queue_empty
- * @brief       Check if the queue is empty.
- * @return      1 if empty and 0 otherwize.
- */
-int dist_queue_empty(void)
-{
-    return dist_queue_head == dist_queue;
-}
-
-static int dist_enqueue(distribution_et dist)
-{
-    // Check if full
-    if (dist_queue_full())
-        return 1;
-
-    *dist_queue_head = dist;
-    dist_queue_head++;
-    return 0;
-}
-
-/**
- * @fn          dist_dequeue
- * @brief       Dequeues (pop) next element from queue.
- * @return      Next distribution in queue or INVALID when queue is empty.
- */
-static distribution_et dist_dequeue(void)
-{
-    if (dist_queue_empty())
-        return INVALID;
-
-    dist_queue_head--;
-    return *dist_queue_head;
-}
-
-/**
- * @fn          parse_and_enqueue_classes
- * @brief       Parses a string of space seperated distribution names and enqueues them for fuzzing.
- * @param       str                 A zero terminated string with space seperated distributions.
- * @return      Returns 0 on success.
- */
-int parse_and_enqueue_classes(const char *str)
-{
-    char class[MAX_DIST_STR_LEN];
-    char *class_ptr;
-    const char *str_ptr;
-    distribution_et dist;
-
-    str_ptr = str;
-    class_ptr = class;
-
-    // Empty string
-    if (*str == '\0')
-        return 1;
-
-    do
+    int number_of_words = 0;
+    char *str_copy = strdup(str);
+    char *token = strtok(str_copy, " ");
+    while (token != NULL)
     {
-        // Fast forward to first non-space char
-        while (*str_ptr == ' ')
-            str_ptr++;
+        number_of_words++;
+        token = strtok(NULL, " ");
+    }
 
-        // Copy next word
-        while (*str_ptr != ' ' && *str_ptr != '\0')
-        {
-            *class_ptr = *str_ptr;
-            class_ptr++;
-            str_ptr++;
-        }
+    *size = number_of_words;
 
-        // If anything was copied
-        if (class_ptr != class)
-        {
-            *class_ptr = '\0';
+    distribution_et *dists = malloc(sizeof(distribution_et) * number_of_words);
+    if (dists == NULL)
+    {
+        print_error("Memory allocation failed!\n");
+        return NULL;
+    }
 
-            // Convert to distribution
-            dist = string_to_dist(class);
-            if (dist == INVALID)
-                return 1;
-            // Enqueue distribution
-            if (dist_enqueue(dist))
-                return 1;
+    str_copy = strdup(str);
+    token = strtok(str_copy, " ");
+    int i = 0;
+    while (token != NULL)
+    {
+        char *token_copy = strdup(token);
+        dists[i] = string_to_dist(token_copy);
+        free(token_copy);
 
-            class_ptr = class;
-        }
-    } while (*str_ptr != '\0');
+        token = strtok(NULL, " ");
+        i++;
+    }
 
-    return 0;
+    free(str_copy);
+
+    return dists;
 }
 
-/**
- * @fn          run_single
- * @brief       Run measurements according to analysis parameter and save results.
- * @param       analysis            The specifications for the measurement.
- * @return      Returns 0 on success.
- */
-static int run_single(analysis_st *analysis)
+int run_single(analysis_st *analysis, distribution_et *dists, size_t dists_size)
 {
-    if (generate_inputs(analysis->dist, analysis->inputs, analysis->count))
+    if (generate_inputs(dists, dists_size, analysis->inputs, analysis->count))
         return 1;
     initialize_measurements(*(analysis->measurements), analysis->count);
     measure(*(analysis->measurements), analysis->inputs, analysis->count);
     return 0;
 }
 
-/**
- * @fn          run_next
- * @brief       Run measurements using the next distribution in queue.
- * @param       analysis            The specifications for the measurement. Contains the results.
- * @return      Returns 0 on success.
- */
-int run_next(analysis_st *analysis)
-{
-    if (dist_queue_empty())
-        return 1;
-
-    analysis->dist = dist_dequeue();
-    if (analysis->dist == INVALID)
-        return 1;
-
-    if (run_single(analysis))
-        return 1;
-
-    return 0;
-}
-
-/**
- * @fn          initialize_analysis
- * @brief       Alocates memory and initializes an analysis_st struct.
- * @param       analysis            The anaylis to be initialized.
- * @param       count               The amount of measurements to get.
- * @return      Returns 0 on success.
- */
 int initialize_analysis(analysis_st *analysis, size_t count)
 {
     // Allocate memory for input and measurements
-    input_st *inputs = calloc(count, sizeof(input_st));
+    input_st *inputs = calloc(count, sizeof(*inputs));
     if (inputs == NULL)
         return 1;
     uint64_t *(*measurements)[ITERATIONS] = calloc(ITERATIONS, sizeof(uint64_t *));
@@ -428,8 +303,6 @@ int initialize_analysis(analysis_st *analysis, size_t count)
             return 1;
     }
 
-    // Default dist to UNIFORMLY
-    analysis->dist = UNIFORMLY;
     analysis->inputs = inputs;
     analysis->measurements = (uint64_t * (*)[ITERATIONS]) measurements;
     analysis->count = count;
@@ -453,13 +326,6 @@ void destroy_analysis(analysis_st *analysis)
     free(*(analysis->measurements));
 }
 
-/**
- * @fn          construct_filename
- * @brief       Creates a filename for the given distribution string.
- * @details     Aditional calls to this function will overwrite the last
- *              returned string.
- * @param       dist_str            String represenation of the distribution.
- */
 const char *construct_filename(const char *dist_str)
 {
     static char format_buf[FORMAT_BUF_SIZE];

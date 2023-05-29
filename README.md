@@ -11,10 +11,6 @@ OptiFuzz depends on a few languages and libraries:
 ```
 $ pip install -r python_requirements.txt
 ```
-- The fuzzer can optionally be run as a kernel module to remove noise from preempting and interrupts. **Note** that this is not the intended use of a kernel module, but it ensures more consistent timing. To use this feature, make sure you have the Linux kernel headers matching your kernel version installed. You will need root privileges to insert/remove the module (sudo is sufficient). The module has been tested on kernel version 6.3.2. To see messages from the kernel module run
-```
-# dmesg -w
-```
 
 
 ## Paper
@@ -28,12 +24,20 @@ You can configure the OptiFuzz in the `config.json` file. Here you can
   - `uniform`: Inputs are 64-bit uniformly random numbers.
   - `equal`: Inputs are 64-bit uniformly random numbers, but equal.
   - `max64`: One input is `INT64_MAX` while the other is uniformly random.
-  - `umax64`: One input is `UINT64_MAX` while the other is uniformly random.
-  - `zero`: One input is 0 while the other is uniformly random.
+  - `xzero`: `x` is 0 while `y` is uniformly random.
+  - `yzero`: `y` is 0 while `x` is uniformly random.
   - `xlty`: Inputs are 64-bit uniformly random numbers, but the first input is smaller than the second.
   - `yltx`: Inputs are 64-bit uniformly random numbers, but the second input is smaller than the first.
   - `small`: Inputs are 8-bit uniformly random numbers.
-- Configure if you would like to run the fuzzing in "kernel mode" where context switching and many CPU optimizations are disabled. This will decrease the noise of your results, however, the outcome depends on your specific system.
+  - `fixed`: Both inputs are fixed to `0x12345678`. This fuzzing class is required for statistical analysis purposes (Welch's T-test) that automatically flags programs with timing vulnerabilities based on fuzzing. Additionally, the fuzzing class `uniform` should also be enabled for automatic statistical analysis.
+
+###
+To make the measurement more accurate (less noise), consider running fuzzing on a single thread and with decreased niceness.
+In Linux this can be done like so:
+```
+$ sudo taskset --cpu-list {cpu index} nice -n -20 make fuzz in={number of fuzzing inputs}
+```
+Note that -20 niceness is the lower cap, and will drastically decrease the number of context switches and interrupts when fuzzing.
 
 ## Documentation
 `make` targets have been added for the whole pipeline. To run the whole pipeline, do `make all pn={# of random programs to generate} md={max depth of the generated ASTs} in={# of inputs the programs should be fuzzed with}`. At the end you will have a generated pdf report visualizing the results, the code, the assembly and some analysis in `analysis/latex/master.pdf`.
@@ -70,25 +74,24 @@ make all pn=? md=? in=?             # runs the whole pipeline: generates,
 
 make clean                          # cleans all generated files in all steps of
                                     # the process
+
+make experiments                    # a collection of relevant experiments to 
+                                    # run. WARNING: takes multiple hours and
+                                    # is set up for Linux, and uses sudo
 ```
 
 ## Sources
 - [C operators](https://devdocs.io/c/language/operator_arithmetic): List of all arithmetic operators in C. Used as a basis for defining should-be-constant-time ASTs.
 
-## TODO
-- LaTeX
-  - Note which compiler version was used and (if kernel mode) the kernel version.
-  - Write jumps: jle, je, ...
-  - Ensure documentation and refactor if necessary
-  - For each result page, write all the meta data (what compiler, what flags were tested, what fuzz classes were used, ...)
+## Improvements
 - Fuzzer
   - Option to set higher priority (lower niceness) to avoid too many context switches. At least when running in userland. Requires root (use setpriority).
 - General
   - Compile object (.o) files once doing assembly inspection and use these for fuzzing and latex generation. No need to compile do i multiple times.
-  - Make whole pipeline consistent with config.json
-  - Add all folders used in the pipeline to config.json, and move them to the root folder of the project.
 
 ## Notes
 - It seems like `expr << expr` and `y op (x == const)` are causing branching. Would be awesome to find some real-life examples of tricks like these being used in crypto libraries.
 - OptiFuzz might be used in a CI pipeline to detect timing vulnerabilities automatically.
 - We should only have a few analysis results in the appendix since including all would be overwhelming.
+- We can analyze md=12 for example, but not show it in the report.
+- We can probably add "what compile flags are dangerous" to contributions.

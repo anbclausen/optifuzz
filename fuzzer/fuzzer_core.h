@@ -1,26 +1,13 @@
 #ifndef FUZZER_CORE_H
 #define FUZZER_CORE_H
 
-#ifdef KERNEL_MODE
-#include <linux/types.h>
-// Definitions from libc that are not available in kernel module
-#define INT64_MAX 9223372036854775807LL
-#define UINT64_MAX 0xffffffffffffffffULL
-#define UINT32_MAX 0xffffffffU
-#define print_error(...) (printk(KERN_ERR __VA_ARGS__))
-#else
 #include <stdint.h>
 #include <stddef.h>
 #define print_error(...) (fprintf(stderr, __VA_ARGS__))
-#endif
 
-#define REPEATS 100   /** The amount of times the program \
-                       *  is run to get a more accurate measurement. */
-#define ITERATIONS 10 /** The amount of times to cycle through all  \
-                       *  fuzz inputs to lower noise from other CPU \
-                       *  tasks. */
-
-extern int program(int64_t, int64_t);
+#define ITERATIONS 50 /** The amount of times to cycle through all  \
+                        *  fuzz inputs to lower noise from other CPU \
+                        *  tasks. */
 
 #define MIN(x, y) ((x < y) ? (x) : (y))
 
@@ -33,26 +20,28 @@ typedef enum
     UNIFORMLY, // Uniformly random values
     EQUAL,     // Uniformly random but equal values
     MAX64,     // One is INT64_MAX, other is uniform random
-    UMAX64,    // One is UINT64_MAX, other is uniform random. UINT64_MAX is -1 in signed (int64_t)
-    ZERO,      // One is 0, other is uniform random
+    XZERO,     // x is 0, y is uniform random
+    YZERO,     // y is 0, x is uniform random
     XLTY,      // Uniformly random but x < y
     YLTX,      // Uniformly random but y < x
     SMALL,     // Uniformly random but small values
+    FIXED,     // x = y = 0x12345678
 
     INVALID // Indicates invalid distribution, no a real distribution
 } distribution_et;
 
 // This needs to match the amount of elements in distribution_et
-#define DIST_COUNT 8
+#define DIST_COUNT 9
 
 /**
  * @struct      input_st
- * @brief       A tuple (a,b) defining an input to the program
+ * @brief       A tuple (a, b, dist) defining an input to the program
  */
 typedef struct
 {
-    int64_t a; /** The first input.                         */
-    int64_t b; /** The second input.                        */
+    int64_t a;            /** The first input.                */
+    int64_t b;            /** The second input.               */
+    distribution_et dist; /** The distribution of the inputs. */
 } input_st;
 
 /**
@@ -61,7 +50,6 @@ typedef struct
  */
 typedef struct
 {
-    distribution_et dist;
     input_st *inputs;
     uint64_t *(*measurements)[ITERATIONS];
     size_t count;
@@ -76,8 +64,8 @@ const char *dist_to_string(distribution_et dist);
 
 /**
  * @fn          initialize_analysis
- * @brief       Alocates memory and initializes an analysis_st struct.
- * @param       analysis            The anaylis to be initialized.
+ * @brief       Allocates memory and initializes an analysis_st struct.
+ * @param       analysis            The analysis to be initialized.
  * @param       count               The amount of measurements to get.
  * @return      Returns 0 on success.
  */
@@ -103,26 +91,21 @@ void destroy_analysis(analysis_st *analysis);
 const char *construct_filename(const char *dist_str);
 
 /**
- * @fn          run_next
- * @brief       Run measurements using the next distribution in queue.
- * @param       analysis            The specifications for the measurement. Contains the results.
+ * @fn          run_single
+ * @brief       Run measurements according to analysis parameter and save results.
+ * @param       analysis            The specifications for the measurement.
+ * @param       dists               The distributions to use.
+ * @param       dists_size          The amount of distributions.
  * @return      Returns 0 on success.
  */
-int run_next(analysis_st *analysis);
+int run_single(analysis_st *analysis, distribution_et *dists, size_t dists_size);
 
 /**
- * @fn          parse_and_enqueue_classes
- * @brief       Parses a string of space seperated distribution names and enqueues them for fuzzing.
+ * @fn          parse_classes
+ * @brief       Parses a string of space seperated distribution names.
  * @param       str                 A zero terminated string with space seperated distributions.
- * @return      Returns 0 on success.
+ * @return      Returns an array of all the classes.
  */
-int parse_and_enqueue_classes(const char *str);
-
-/**
- * @fn          dist_queue_empty
- * @brief       Check if the queue is empty.
- * @return      1 if empty and 0 otherwize.
- */
-int dist_queue_empty(void);
+distribution_et *parse_classes(const char *str, size_t *size);
 
 #endif

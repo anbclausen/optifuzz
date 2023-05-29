@@ -46,11 +46,6 @@ analysis/latex/*
 !analysis/latex/*.tex
 !analysis/latex/generated_latex/
 
-fuzzer/km_fuzzer/program.c
-fuzzer/km_fuzzer/optifuzz*
-fuzzer/km_fuzzer/Module*
-fuzzer/km_fuzzer/modules*
-fuzzer/km_fuzzer/.*
 fuzzer/.*
 
 fuzzer/result-*.csv
@@ -371,3 +366,6 @@ TSWLatexianTemp*
 *.glstex
 
 # End of https://www.toptal.com/developers/gitignore/api/latex
+
+results/
+experiments/

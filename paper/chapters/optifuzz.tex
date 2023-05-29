@@ -1,4 +1,4 @@
-We created a tool, OptiFuzz, that can be used to generate, analyze and fuzz random C programs.
+We created a tool, OptiFuzz, that can be used to generate, fuzz and analyze random C programs.
 The source code for OptiFuzz is available on GitHub\footnote{\url{https://github.com/anbclausen/optifuzz}.}.
 The goal of OptiFuzz is to quantify the issue of timing attacks introduced by C compilers with different optimization flags enabled.
 The tool works as follows:
@@ -7,7 +7,8 @@ The tool works as follows:
   \item OptiFuzz then compiles the generated C programs with different specified optimization flags enabled and inspects the generated assembly for conditional branching instructions introduced by the compiler.
         If branching is found, the program is flagged.
   \item OptiFuzz then fuzzes the flagged programs with various random inputs to test whether the branching instructions can be exploited to leak information about the input.
-  \item At last, OptiFuzz reports the results of the fuzzing in the form of a PDF report.
+  \item At last, OptiFuzz applies Welch's t-test on the fuzzing data to detect whether a timing vulnerability is present.
+        Furthermore, OptiFuzz reports the results of the fuzzing in the form of a PDF report.
 \end{itemize}
 The OptiFuzz pipeline is illustrated in Figure \ref{fig:optifuzz-pipeline}. 
 Each of the steps in the pipeline is described in detail in the following sections.
