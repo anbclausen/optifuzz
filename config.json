@@ -1,1 +1,21 @@
-{"compiler": "gcc", "compiler_flags": ["O1"], "fuzzing_classes": ["uniform", "fixed", "xzero", "yzero", "xlty", "yltx", "small", "equal", "max64"], "generated_programs_dir": "results/generated_programs/", "flagged_programs_dir": "results/flagged_programs/", "fuzzer_results_dir": "results/fuzzer_results/", "report_dir": "results/"}
+{
+  "compiler": "gcc",
+  "compiler_flags": [
+    "O0"
+  ],
+  "fuzzing_classes": [
+    "uniform",
+    "fixed",
+    "xzero",
+    "yzero",
+    "xlty",
+    "yltx",
+    "small",
+    "equal",
+    "max64"
+  ],
+  "generated_programs_dir": "results/generated_programs/",
+  "flagged_programs_dir": "results/flagged_programs/",
+  "fuzzer_results_dir": "results/fuzzer_results/",
+  "report_dir": "results/"
+}
