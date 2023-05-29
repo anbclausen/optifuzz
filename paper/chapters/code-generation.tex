@@ -44,7 +44,7 @@ Integers from this range are included since the constants 0 and 1 are interestin
 The second range we consider is $[0, 64]$ as numbers in this range are lower than the size of 64-bit integers.
 Hence numbers in this range are interesting in bit-shifting operations.
 The third range is the range of signed 64-bit integers.
-Generally, we have included these smaller ranges of integers since they are interesting and it is very unlikely that a uniformly random 64-bit integer would be in these ranges.
+Generally, we have included these smaller ranges of integers since they are interesting in computation and it is very unlikely that a uniformly random 64-bit integer would fall into one of these ranges.
 
 The grammar in Figure \ref{fig:grammar} generates programs with undefined behavior.
 For example, bit-shifting with a negative number, or a number larger than the size of the type, is undefined behavior in C \citep{c-standard}.

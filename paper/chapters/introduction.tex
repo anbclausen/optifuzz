@@ -14,9 +14,10 @@ Several proposals have been made to mitigate the issue \citep{what-you-c, dudect
 However, the problem persists and to the best of our knowledge, no study has quantified the issue of timing vulnerabilities introduced by compilers.
 
 In this paper, we try to quantify the issue of timing vulnerabilities introduced by the two most popular C compilers, gcc\footnote{\url{https://gcc.gnu.org/}.} and clang\footnote{\url{https://clang.llvm.org/}.}.
-We do this by data-based analysis, implementing a tool, OptiFuzz, that generates, analyzes and fuzzes random C programs.
+We take a data-based approach, implementing a tool, OptiFuzz, that generates, fuzzes and analyzes random C programs.
+OptiFuzz features automatic state-of-the-art statistical analysis of the data to detect timing leaks.
 For simplicity, the generated programs are limited to only containing non-branching arithmetic, logical and comparison operations.
-We investigate what optimization flags are responsible for introducing timing leaks and compare them.
+We investigate what optimization flags are responsible for introducing timing leaks and quantify the extent of the problem.
 Finally, we discuss how the issue of timing vulnerabilities introduced by the compiler can be mitigated by using language-based security techniques.
 
 \subsection{Related Work}
@@ -25,7 +26,7 @@ Several studies have investigated potential solutions to the issue, including us
 
 \subsection{Contributions}
 We provide a quantitative analysis of timing vulnerabilities introduced by gcc and clang, focusing on specific troublesome optimization flags.
-Additionally, we provide a tool, OptiFuzz, that can be used to generate, analyze and fuzz random C programs for further investigation of the issue.
+Additionally, we provide a tool, OptiFuzz, that can be used to generate, fuzz and analyze random C programs for further investigation of the issue.
 \todo{Might be more when we finish the paper}
 \subsection{Overview}
 This paper is organized as follows: $\ldots$ 
