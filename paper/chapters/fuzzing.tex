@@ -44,13 +44,13 @@ These classes have been made based on observations of values commonly used in co
 
 Precise measurements of a program's execution time are not trivial to perform. 
 Measurements can be influenced by a number of things including context switches, interrupts, out-of-order execution, varying CPU clock speed, and congestion. 
-After researching our options, we ended up using the Time Stamp Counter (TSC) which is a high-resolution counter that (on newer machines) increases at a fixed rate independent of processor frequency. 
+After researching our options, we ended up using the Time Stamp Counter (\texttt{TSC}) which is a high-resolution counter that (on newer machines) increases at a fixed rate independent of processor frequency. 
 This method is heavily inspired by the suggestions and results from an Intel white paper \citep{intel-benchmark-code-execution}.
 Using the \texttt{TSC} as a reference for time is the most efficient way of fetching wall time and with respect to the efficiency the best approach.
 This method is the one suggested by \citep{intel-benchmark-code-execution} and is the one used in the DudeCT black-box testing tool by \citep{dudect}.
 Alternatives like \texttt{HPET} with higher resolutions exist but which reads the time from a platform resource instead of a register, making it much slower \citep[b]{intel-reference}.
 This approach also allowed us to avoid the timings being skewed by the CPU performing out-of-order execution.
-Out-of-order executions could lead to the instructions being reordered resulting in not reading the TSC (with the RDTSC(P) instruction) at the exact time we want to. 
+Out-of-order executions could lead to the instructions being reordered resulting in not reading the \texttt{TSC} (with the \texttt{RDTSC}(\texttt{P}) instruction) at the exact time we want to. 
 This is done by utilizing the non-privileged \texttt{CPUID} instructions serializing capabilities that ensure that memory transactions for previous instructions are completed before the next instruction is executed \citep[a]{intel-reference}.
 
 Later, when using these results in the analysis, we use the minimum time for all executions with the same input.
@@ -67,6 +67,6 @@ Since the fuzzer is conservative, it under-approximates what programs are vulner
 Hence, a limitation is that the fuzzing classes used are not necessarily able to capture an event causing variable-time behavior of a program. 
 
 Furthermore, even with the actions taken to get as precise timings as possible, the analysis is still prone to some noise. 
-Specifically, it is worth noting that when running this in userland the fuzzer could be influenced by interrupts and preemption. 
+Specifically, it is worth noting that when running this in user-land the fuzzer could be influenced by interrupts and preemption. 
 To disable interrupts and preemption, one is required to run the code in kernel space, which is a possible future extension of the fuzzer. 
 However, as a compromise, the fuzzer can be run with higher priority to reduce some noise. 
