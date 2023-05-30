@@ -20,7 +20,7 @@ We made a paper describing the tool and our findings with it. It can be found in
 You can configure the OptiFuzz in the `config.json` file. Here you can
 - Configure what C compiler you want to use.
 - Configure what optimization flags you would like to test on.
-- Configure what kind of type of inputs you would like to fuzz with. We have defined a selection of "fuzzing classes":
+- Configure what kind of type of inputs you would like to fuzz with. We have defined a selection of "input classes":
   - `uniform`: Inputs are 64-bit uniformly random numbers.
   - `equal`: Inputs are 64-bit uniformly random numbers, but equal.
   - `max64`: One input is `INT64_MAX` while the other is uniformly random.
@@ -91,7 +91,3 @@ make experiments                    # a collection of relevant experiments to
 
 ## Notes
 - It seems like `expr << expr` and `y op (x == const)` are causing branching. Would be awesome to find some real-life examples of tricks like these being used in crypto libraries.
-- OptiFuzz might be used in a CI pipeline to detect timing vulnerabilities automatically.
-- We should only have a few analysis results in the appendix since including all would be overwhelming.
-- We can analyze md=12 for example, but not show it in the report.
-- We can probably add "what compile flags are dangerous" to contributions.
