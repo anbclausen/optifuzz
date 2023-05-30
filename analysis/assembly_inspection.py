@@ -10,9 +10,11 @@ folder = os.path.dirname(os.path.realpath(__file__))
 config_dir = parent_directory = os.path.dirname(folder)
 config = json.load(open(f"{config_dir}{os.sep}{CONFIG_FILENAME}"))
 
-flagged_folder = f"{folder}{os.sep}flagged{os.sep}" # FIXME
+flagged_folder = f"{config_dir}{os.sep}{config['flagged_programs_dir']}"
 
 # Match all jcc instructions that is not jmp, and all loop instructions
+# https://cdrdv2.intel.com/v1/dl/getContent/671200
+# Table 7-4
 jmp_regex = re.compile(r"\t(j(?!mp)[a-z][a-z]*)|(loop[a-z]*) ")
 
 optimization_flags = config["compiler_flags"]
@@ -130,7 +132,7 @@ def analyze(file: str) -> bool:
 
 print("Analyzing assembly instructions...")
 print(f"COMPILER: {compiler}")
-programs_folder = f"{folder}{os.sep}..{os.sep}generator{os.sep}generated" # FIXME
+programs_folder = f"{config_dir}{os.sep}{config['generated_programs_dir']}"
 file_amount = len(os.listdir(programs_folder))
 count = 1
 for dirpath, dnames, fnames in os.walk(programs_folder):

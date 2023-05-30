@@ -10,12 +10,11 @@ build-fuzzer: build-fuzzer-core fuzzer.c fuzzer_core.h
 fuzz: clean build-fuzzer
 	@./fuzz.py $(in)
 
-clean-results:
-	$(RM) results/*
-
 clean-objects:
 	$(RM) *.o
 
+clean-csv:
+	$(RM) *.csv
+
 .PHONY : clean
-clean: clean-results clean-objects
-	$(MAKE) -C km_fuzzer clean
+clean: clean-objects clean-csv

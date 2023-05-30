@@ -1,7 +1,7 @@
 open Ast
 open Distribution
 
-let max_depth = Sys.argv.(3) |> int_of_string
+let max_depth = Sys.argv.(4) |> int_of_string
 
 (** Generates a random seed from a state *)
 let random_seed state = 

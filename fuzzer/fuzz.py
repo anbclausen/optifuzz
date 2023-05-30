@@ -6,17 +6,13 @@ import json
 
 CONFIG_FILENAME = "config.json"
 
-# Kernel Module files
-KM_STATUS = '/proc/optifuzz_status'
-KM_OUTPUT = '/proc/optifuzz_output'
-
 folder = os.path.dirname(os.path.realpath(__file__))
 config_dir = parent_directory = os.path.dirname(folder)
 config = json.load(open(f"{config_dir}{os.sep}{CONFIG_FILENAME}"))
 
 
 def absolute_path(path: str) -> str:
-    """ Converts a path from config_dir to absolute 
+    """Converts a path from config_dir to absolute
 
     Parameters
     ----------
@@ -31,7 +27,7 @@ def absolute_path(path: str) -> str:
 
 
 def get_config_path(entry: str) -> str:
-    """ Get absolute path from path entry in config 
+    """Get absolute path from path entry in config
 
     Parameters
     ----------
@@ -46,7 +42,7 @@ def get_config_path(entry: str) -> str:
 
 
 def remove_file_if_exists(path: str) -> None:
-    """ Silently tries to delete a file if it exists
+    """Silently tries to delete a file if it exists
 
     Parameters
     ----------
@@ -58,7 +54,7 @@ def remove_file_if_exists(path: str) -> None:
 
 
 def compile_user(prog_path: str, compiler: str, flag: str) -> None:
-    """ Compile program and link with user runtime 
+    """Compile program and link with user runtime
 
     Parameters
     ----------
@@ -69,57 +65,15 @@ def compile_user(prog_path: str, compiler: str, flag: str) -> None:
     flag : str
         Optimization flag (eg. "O3") to compile program
     """
-    os.system(f"{compiler} -{flag} -c -w -o template.o {prog_path}")
+    os.system(f"{compiler} -{flag} -c -w -o template.o '{prog_path}'")
 
     # Use gcc to link (no compilation happens)
     os.system("gcc -o out fuzzer.o fuzzer_core.o template.o -lbsd")
     remove_file_if_exists("template.o")
 
 
-def compile_kernel(prog_path: str, compiler: str, flag: str) -> None:
-    """ Compile program and link with kernel module 
-
-    Parameters
-    ----------
-    prog_path : str
-        Path to the program to compile and link
-    compiler : str
-        Compiler used for compilation of program
-    flag : str
-        Optimization flag (eg. "O3") to compile program
-    """
-    os.system(f"cp {prog_path} km_fuzzer/program.c")
-    os.system(
-        f"cd km_fuzzer && make comp={compiler} flag={flag}>/dev/null 2>&1")
-
-
-def extract_kernel_output() -> None:
-    """ Extracts the results from the kernel module and saves them in 
-        the default result file for each fuzzing class
-    """
-    with open(KM_OUTPUT, 'r') as f:
-        section = []
-        filename = None
-
-        for line in f:
-            if line.startswith('# FILE:'):
-
-                if filename != None and section != []:
-                    with open(filename, 'w') as outfile:
-                        outfile.writelines(section)
-
-                filename = line.strip().split()[-1][1:-1]
-                section = []
-            else:
-                section.append(line)
-
-        if filename != None and section != []:
-            with open(filename, 'w') as outfile:
-                outfile.writelines(section)
-
-
 def fuzz_class_lst_to_argument(fuzzing_classes: list) -> str:
-    """ Convert list of fuzzing classes to a space seperated string
+    """Convert list of fuzzing classes to a space seperated string
 
     Parameters
     ----------
@@ -133,8 +87,10 @@ def fuzz_class_lst_to_argument(fuzzing_classes: list) -> str:
     return " ".join(fuzzing_classes)
 
 
-def fuzz_program_user(prog_path: str, compiler: str, flag: str, fuzzing_classes: list, datapoints: str) -> None:
-    """ Compile and fuzz specified program in user mode 
+def fuzz_program_user(
+    prog_path: str, compiler: str, flag: str, fuzzing_classes: list
+) -> None:
+    """Compile and fuzz specified program in user mode
 
     Parameters
     ----------
@@ -146,50 +102,14 @@ def fuzz_program_user(prog_path: str, compiler: str, flag: str, fuzzing_classes:
         Optimization flag to compile program
     fuzzing_classes : list
         List of classes to fuzz
-    datapoints : str
-        The amount of data points to create for each fuzzing class
     """
     compile_user(prog_path, compiler, flag)
     class_arg = fuzz_class_lst_to_argument(fuzzing_classes)
-    os.system(f"./out {datapoints} {flag} '{class_arg}'")
-
-
-def fuzz_program_kernel(prog_path: str, compiler: str, flag: str, fuzzing_classes: list, datapoints: str) -> None:
-    """ Compile and fuzz specified program in kernel module mode 
-
-    Parameters
-    ----------
-    prog_path : str
-        Path to the program to fuzz
-    compiler : str
-        Compiler used for compilation of program
-    flag : str
-        Optimization flag to compile program
-    fuzzing_classes : list
-        String of classes to fuzz
-    datapoints : str
-        The amount of data points to create for each fuzzing class
-    """
-    compile_kernel(prog_path, compiler, flag)
-
-    # We need root permissions to load and unload a kernel module
-    sudo_prefix = ""
-    if not os.getuid() == 0:
-        os.system("sudo -v")
-        sudo_prefix = "sudo"
-
-    class_arg = fuzz_class_lst_to_argument(fuzzing_classes)
-    # Load module (yes, all those quotations around class_arg are necessary)
-    os.system(
-        f"{sudo_prefix} insmod km_fuzzer/optifuzz.ko count={datapoints} flag={flag} classes='\"{class_arg}\"'")
-    # Process results
-    extract_kernel_output()
-    # Unoad module
-    os.system(f"{sudo_prefix} rmmod optifuzz")
+    os.system(f"./out {number_of_fuzzing_runs} {flag} '{class_arg}'")
 
 
 def save_results(seed: str, fuzzing_classes: list, flag: str, result_dir: str) -> None:
-    """ Copy results to results folder and rename to reflect class and flag 
+    """Copy results to results folder and rename to reflect class and flag
 
     Parameters
     ----------
@@ -203,12 +123,20 @@ def save_results(seed: str, fuzzing_classes: list, flag: str, result_dir: str) -
         The directory to save the results in
     """
     for fuzzing_class in fuzzing_classes:
-        shutil.copyfile(f"result-{fuzzing_class}.csv",
-                        f"{result_dir}{os.sep}{seed}-{fuzzing_class}_{flag}.csv")
+        shutil.copyfile(
+            f"result-{fuzzing_class}.csv",
+            f"{result_dir}{os.sep}{seed}-{fuzzing_class}_{flag}.csv",
+        )
 
 
-def fuzz(prog_dir: str, fuzzing_classes: list, optimization_flags: list, compiler: str, kernel_mode: bool, result_dir: str, datapoints: str) -> None:
-    """ Fuzz all programs for each optimization flag and fuzzing class in inspecified mode
+def fuzz(
+    prog_dir: str,
+    fuzzing_classes: list,
+    optimization_flags: list,
+    compiler: str,
+    result_dir: str,
+) -> None:
+    """Fuzz all programs for each optimization flag and fuzzing class in inspecified mode
 
     Parameters
     ----------
@@ -220,12 +148,8 @@ def fuzz(prog_dir: str, fuzzing_classes: list, optimization_flags: list, compile
         Optimization flags to compile the programs with
     compiler : str
         The compiler used to compile the programs
-    kernel_mode : bool
-        Specify whether or not the programs should be run as kernel modules
     result_dir : str
         The directory to save the results in
-    datapoints : str
-        The amount of data points to create for each fuzzing class
     """
     amount_of_programs = len(os.listdir(prog_dir))
     if amount_of_programs == 0:
@@ -240,16 +164,12 @@ def fuzz(prog_dir: str, fuzzing_classes: list, optimization_flags: list, compile
             seed = name[:-2]
             seen_so_far += 1
             print(
-                f"Progress: {seen_so_far}/{amount_of_programs} [{seed}]\t flags: ", end="")
+                f"Progress: {seen_so_far}/{amount_of_programs} [{seed}]\t flags: ",
+                end="",
+            )
 
             for flag in optimization_flags:
-
-                if kernel_mode:
-                    fuzz_program_kernel(prog_path, compiler,
-                                        flag, fuzzing_classes, datapoints)
-                else:
-                    fuzz_program_user(prog_path, compiler,
-                                      flag, fuzzing_classes, datapoints)
+                fuzz_program_user(prog_path, compiler, flag, fuzzing_classes)
                 print(f"  {flag}", end="", flush=True)
 
                 save_results(seed, fuzzing_classes, flag, result_dir)
@@ -258,21 +178,24 @@ def fuzz(prog_dir: str, fuzzing_classes: list, optimization_flags: list, compile
 
 
 def clean(fuzzing_classes: list) -> None:
-    """ Remove all temporary result files and program
+    """Remove all temporary result files and program
 
     Parameters
     ----------
     fuzzing_classes : list
-        All classes that has emitted result files 
+        All classes that has emitted result files
     """
     remove_file_if_exists("out")
     for fuzzing_class in fuzzing_classes:
         remove_file_if_exists(f"result-{fuzzing_class}.csv")
 
 
-if __name__ == '__main__':
-    prog_dir = get_config_path('fuzzer_source')
-    result_dir = get_config_path('fuzzer_results')
+if __name__ == "__main__":
+    prog_dir = get_config_path("flagged_programs_dir")
+    result_dir = get_config_path("fuzzer_results_dir")
+
+    os.makedirs(prog_dir, exist_ok=True)
+    os.makedirs(result_dir, exist_ok=True)
 
     if len(sys.argv) < 2:
         print("Usage: python3 fuzz.py <number of fuzzing runs>")
@@ -283,12 +206,12 @@ if __name__ == '__main__':
     fuzzing_classes = config["fuzzing_classes"]
 
     compiler = config["compiler"]
-    kernel_mode = config["kernel_mode"]
 
     # Ensure that we have a place to save our results
     os.makedirs(result_dir, exist_ok=True)
 
-    fuzz(prog_dir, fuzzing_classes, optimization_flags,
-         compiler, kernel_mode, result_dir)
+    fuzz(
+        prog_dir, fuzzing_classes, optimization_flags, compiler, result_dir
+    )
 
     clean(fuzzing_classes)

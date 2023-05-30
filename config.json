@@ -1,8 +1,1 @@
-{
-  "compiler": "gcc",
-  "compiler_flags": ["O0", "O1", "O2", "O3", "Os"],
-  "fuzzing_classes": ["uniform", "equal", "max64", "umax64", "zero", "xlty", "yltx", "small"],
-  "kernel_mode": false,
-  "fuzzer_source": "analysis/flagged/",
-  "fuzzer_results": "fuzzer/results/"
-}
+{"compiler": "clang", "compiler_flags": ["Os"], "fuzzing_classes": ["uniform", "equal", "max64", "fixed", "xzero", "yzero", "xlty", "yltx", "small"], "generated_programs_dir": "results/generated_programs/", "flagged_programs_dir": "results/flagged_programs/", "fuzzer_results_dir": "results/fuzzer_results/", "report_dir": "results/"}
