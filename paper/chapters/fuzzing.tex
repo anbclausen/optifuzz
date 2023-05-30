@@ -1,13 +1,37 @@
-After the assembly inspection has performed the static analysis and flagged programs with potential timing vulnerabilities, the next step is to run a dynamic analysis on them to try and confirm their presence. For this, we have created a fuzzer that runs the programs compiled with the specified compiler and optimization levels fuzzing the arguments the program takes as inputs and measuring its execution time. 
+After the assembly inspection has performed the static analysis and flagged programs with potential timing vulnerabilities, OptiFuzz tries and confirm their presence. 
+For this, we have created a fuzzer. 
+First, the fuzzer compiles the program with the specified compiler and optimization level flags.
+Then, the fuzzer runs the program with random inputs and measures the execution time.
 
-The process goes as follows. First, the fuzzer itself is compiled into object files which are not yet linked. This compilation only needs to happen once. Each of the programs flagged by the static assembly analysis is then compiled one at a time with the specified compiler for each of the supplied optimization flags and linked with the pre-compiled fuzzer. This includes the flags for which the assembly inspector did not detect any branches. This creates a complete fuzzer including the program to fuzz.
+The process goes as follows: 
+First, the fuzzer itself is compiled into object files that are not yet linked. 
+This compilation only needs to happen once. 
+Then, each of the programs flagged by the static assembly analysis is compiled with the specified compiler and linked with the pre-compiled fuzzer. 
+This step is carried out for each of the supplied optimization flags such that the program is fuzzed on all supplied optimization levels.
 
-The fuzzer generates inputs according to fuzzing classes. For each input it chooses a uniformly random class among the supplied ones. This way there is no biased order in which the inputs from different classes are used, and thus potential noise is likely to effect all classes equally. This is important when comparing timing distributions in the following analysis. After generating the inputs it runs through them and calls the internally linked program with each of them. The programs' execution time is measured every time it is run. The fuzzer repeats the run-through multiple times (50) to allow for detection of outliers and get as precise results as possible. Note that an input is only repeated after each of the others and not multiple times in a row. In addition to having a random class input order, this ensures that any noise that results in longer execution times are not concentrated on a few inputs but distributed over all (or many) of them. This way we minimize the chance of falsely identifying an input or class of inputs as the course of a longer execution time.
+Then, for each linked program, the fuzzer generates inputs according to 'fuzzing classes' which are explained later in this section. 
+For each input, the fuzzer chooses a uniformly random class among the supplied ones. 
+This way there is no biased order in which the inputs from different classes are used, and thus potential noise is likely to affect all classes equally. 
+This is important when comparing timing distributions in the following statistical analysis. 
 
-As mentioned we use different classes for the inputs to the fuzzer, instead of always generating completely random numbers. This is done to try and capture variable execution time that only takes place a small sample of the values. This could as an example be if there is a check for if one of the inputs are zero. If we only used uniformly random 64-bit numbers it would be unlikely to observe it happen. Even if it did, it would probably just be filtered out as an outlier. Hence, the need for fuzzing classes. For each input there are an $x$ and a $y$ value. The classes the following generates inputs with respect to $x$ and $y$ as seen in the following list.
+The fuzzer then runs through all the generated inputs and calls the internally linked program with each of them. 
+The program's execution time is measured every time it is run. 
+The fuzzer repeats the run-through multiple times (50) to allow for the detection of outliers and get as precise results as possible. 
+Note that a run-through consists of fuzzing with all randomly generated inputs.
+Hence, some specific input is not repeated before all other inputs have been run again. 
+This ensures that any noise that results in longer execution times is spread out over all (or many) of the inputs. 
+This minimizes the chance of falsely identifying an input or fuzzing class as the cause of longer execution times.
+
+We use different fuzzing classes for the inputs to the fuzzer, instead of always generating completely random numbers. 
+This is done to try and capture variable execution time that only takes place in a small sample of the values. 
+As an example, a program might have a timing leak only if one of the inputs is zero. 
+If we only used uniformly random 64-bit numbers it would be unlikely that we would identify a vulnerability like that. 
+Hence, the need for fuzzing classes. 
+As mentioned in Section \ref{sec:code-generation}, for each program, there are an $x$ and a $y$ value. 
+All fuzzing classes generate inputs with respect to $x$ and $y$ and can be seen in the following list.
 \begin{itemize}
-    \item UNIFORM: They are uniformly random 64-bit numbers.
-    \item EQUAL:   They have the same uniformly random 64-bit number.
+    \item \texttt{UNIFORM}: $x$ and $y$ are uniformly random 64-bit numbers.
+    \item \texttt{EQUAL}:  $x$ and $y$ are the same uniformly random 64-bit number.
     \item MAX64:   A random one is a random 64-bit number, the other is uniformly random.
     \item XZERO:   $x$ is 0, $y$ is a uniformly random number.
     \item YZERO:   $y$ is 0, $x$ is a uniformly random number.
@@ -18,16 +42,30 @@ As mentioned we use different classes for the inputs to the fuzzer, instead of a
 \end{itemize}
 These classes have been made based on observations of values commonly used in comparison in the assembly.
 
-Precise measurements of a program's execution time is not trivial. It can be influenced by a number of things including context switches, interrupts, out-of-order execution, varying CPU clock speed and congestion. Furthermore, since we are dealing with quite small programs that are quick to run, our options for timing them are reduced. The most obvious way to time a program is using the system clock. But when testing it, it became clear that its resolution was too low. We ended up using the Time Stamp Counter (TSC) which is a high resolution counter that (on newer machines) increase at a fixed rate independent of processor frequency. This method is heavily inspired by the suggestions and results from an Intel white paper \citep{intel-benchmark-code-execution}.
+Precise measurements of a program's execution time are not trivial to perform. 
+Measurements can be influenced by a number of things including context switches, interrupts, out-of-order execution, varying CPU clock speed, and congestion. 
+After researching our options, we ended up using the Time Stamp Counter (TSC) which is a high-resolution counter that (on newer machines) increases at a fixed rate independent of processor frequency. 
+This method is heavily inspired by the suggestions and results from an Intel white paper \citep{intel-benchmark-code-execution}.
 Using the TSC as a reference for time is the best we can do on our x86-64 architecture machine.
-This approach also allowed us to avoid the timings being skewed by the CPU performing out-of-order execution. Out-of-order could lead to the instructions being reordered resulting in not reading the TSC (with the RDTSC(P) instruction) at the exact time we want to. This is done by utilizing the non-privileged CPUID instructions serializing capabilities that ensure that memory transactions for previous instructions are completed before the next instruction is executed \citep[a]{intel-reference}.
+This approach also allowed us to avoid the timings being skewed by the CPU performing out-of-order execution.
+Out-of-order executions could lead to the instructions being reordered resulting in not reading the TSC (with the RDTSC(P) instruction) at the exact time we want to. 
+This is done by utilizing the non-privileged \texttt{CPUID} instructions serializing capabilities that ensure that memory transactions for previous instructions are completed before the next instruction is executed \citep[a]{intel-reference}.
 
-When later using these results in the analysis, we use the minimum time for all executions with the same input. Using the minimum time as the true execution time instead of the mean filters out the noise from outliers that are the results of i.e. context-switches or congestion, as argued in \citep{robust-benchmarking}. In comparison to the DudeCT black-box testing program from \citep{dudect}, which just removes top 5\% of the longest measured execution times to reduce such noise, our approach is not prone to accidentally removing measurements of large execution times that are correct and not the result of noise.
+Later, when using these results in the analysis, we use the minimum time for all executions with the same input.
+Using the minimum time as the true execution time instead of the mean filters out the noise from outliers that are the results of i.e. context-switches or congestion \citep{robust-benchmarking}. 
+In comparison to the DudeCT black-box testing program from \citep{dudect}, which just removes the top 5\% of the longest measured execution times to reduce such noise, our approach is not prone to accidentally removing measurements of large execution times that are correct and not the result of noise.
 
 \subsubsection{Limitations}
 As mentioned in the assembly inspection section, the inspector over approximates and might flag programs which are in fact constant time. Furthermore, we run the fuzzer for all flags if just one of them was flagged by the inspector.
-Considering this, we consider the fuzzer successful when it is able to consistently measure clear differences in execution time of a program with respect to its inputs. Such time difference makes it possible to make an educated guess on what the given inputs look like, and hence opens up for a potential timing based side channel attack. This does indeed indicate that the program is vulnerable.
+We consider the fuzzer successful when it is able to consistently measure clear differences in the execution time of a program with respect to its inputs. 
+The time difference makes it possible to make an educated guess on what the given inputs look like and hence opens up a potential timing-based side-channel attack. 
+This does indeed indicate that the program is vulnerable.
 
-If, on the other hand, the results of this analysis fails to indicate obvious timing differences, then it is not safe to assume that it is then constant time. This of course could be the case since the assembly inspection over approximates. Since fuzzer is conservative and under approximates, it could be that the input classes used in fuzzing where not able to capture the event coursing the variable time. Considering it could also be constant time, we have to settle with not knowing for sure.
+If, on the other hand, the results of this analysis fail to indicate obvious timing differences, then it is not safe to assume that it is then constant time. 
+Since the fuzzer is conservative, it under-approximates what programs are vulnerable to timing attacks.
+Hence, a limitation is that the fuzzing classes used are not necessarily able to capture an event causing variable-time behavior of a program. 
 
-Even with the actions taken to get as precise timings as possible the analysis is still prone to some noise. Specifically, it is worth noting that when running this in userland the fuzzer could be influenzed by interupts and preemtion. Both of these requires the code to run in kernel space to disable, which is a possible future extension of the fuzzer. As a compromise making it this less of a source of noise the fuzzer can be run with higher priority, as is the case for our results. 
+Furthermore, even with the actions taken to get as precise timings as possible, the analysis is still prone to some noise. 
+Specifically, it is worth noting that when running this in userland the fuzzer could be influenced by interrupts and preemption. 
+To disable interrupts and preemption, one is required to run the code in kernel space, which is a possible future extension of the fuzzer. 
+However, as a compromise, the fuzzer can be run with higher priority to reduce some noise. 
