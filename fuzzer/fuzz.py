@@ -88,7 +88,7 @@ def fuzz_class_lst_to_argument(input_classes: list) -> str:
 
 
 def fuzz_program_user(
-    prog_path: str, compiler: str, flag: str, input_classes: list
+    prog_path: str, compiler: str, flag: str, input_classes: list, number_of_fuzzing_runs: str
 ) -> None:
     """Compile and fuzz specified program in user mode
 
@@ -102,6 +102,8 @@ def fuzz_program_user(
         Optimization flag to compile program
     input_classes : list
         List of classes to fuzz
+    number_of_fuzzing_runs : str
+        The amount of run-throughs the fuzzer should do
     """
     compile_user(prog_path, compiler, flag)
     class_arg = fuzz_class_lst_to_argument(input_classes)
@@ -135,6 +137,7 @@ def fuzz(
     optimization_flags: list,
     compiler: str,
     result_dir: str,
+    number_of_fuzzing_runs: str
 ) -> None:
     """Fuzz all programs for each optimization flag and fuzzing class in inspecified mode
 
@@ -150,6 +153,8 @@ def fuzz(
         The compiler used to compile the programs
     result_dir : str
         The directory to save the results in
+    number_of_fuzzing_runs : str
+        The amount of run-throughs the fuzzer should do
     """
     amount_of_programs = len(os.listdir(prog_dir))
     if amount_of_programs == 0:
@@ -169,7 +174,8 @@ def fuzz(
             )
 
             for flag in optimization_flags:
-                fuzz_program_user(prog_path, compiler, flag, input_classes)
+                fuzz_program_user(prog_path, compiler, flag,
+                                  input_classes, number_of_fuzzing_runs)
                 print(f"  {flag}", end="", flush=True)
 
                 save_results(seed, input_classes, flag, result_dir)
@@ -211,7 +217,7 @@ if __name__ == "__main__":
     os.makedirs(result_dir, exist_ok=True)
 
     fuzz(
-        prog_dir, input_classes, optimization_flags, compiler, result_dir
+        prog_dir, input_classes, optimization_flags, compiler, result_dir, number_of_fuzzing_runs
     )
 
     clean(input_classes)
