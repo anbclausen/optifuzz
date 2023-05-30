@@ -1,11 +1,402 @@
-\todo{Note: \url{https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8077809} says clang had issues with not compiling to cmov back in the day (2017)}
-All experiments were carried out on an Intel Core i7-9750H running Manjaro Linux 22.1.2 with kernel version Linux 5.15.112-1.
+We have run OptiFuzz to generate around 600,000 programs, which have been fuzzed and analyzed using different compilers and optimization flags.
+In this section, we present our results.
 
-\subsection{Genereal Optimizations}
-\todo{O0, ..., Os}
+We have divided this section into four subsections.
+First, we compare \texttt{gcc} and \texttt{clang} generally in terms of the number of timing vulnerabilities introduced.
+Second, we present our results for general optimizations flags such as \texttt{O2} and \texttt{Os}.
+Third, we present our results regarding specific optimizations.
+Finally, we present our results regarding what operations are most likely to cause timing vulnerabilities when optimized.
+All experiments were carried out on an Intel Core i7-9750H running Manjaro Linux 22.1.2 with kernel version Linux 5.15.112-1. 
+For compilers, \texttt{clang} version 15.0.7 and \texttt{gcc} version 12.2.1 were used.
+All experiments were run on a single core and with \texttt{-20 niceness} to minimize interference from other processes.
+
+\subsection{gcc vs. clang}
+Surprisingly, we were unable to find any timing vulnerabilities introduced by \texttt{clang} under any optimization flags.
+This is in contrast to \texttt{gcc}, where we saw timing vulnerabilities across various optimization flags.
+Specifically, we compiled 50,000 random programs with \texttt{clang} using various optimization flags (\texttt{O0}, \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os}) out of which none contained conditional branching instructions.
+
+The reason for \texttt{clang} not introducing any timing vulnerabilities is the compiler's utilization of \texttt{cmovcc} instructions. 
+\texttt{cmovcc} is a family of constant-time conditional move instructions \citep{cmov-is-constant-time} that was introduced by Intel in 1995 \citep{cmov-from-1995}. 
+
+Even though our results show that \texttt{clang} does not introduce any timing vulnerabilities, our research shows that timing vulnerabilities were identified in fairly recent versions of \texttt{clang} \citep{fact,what-you-c}. 
+Furthermore, we have identified an optimization step in the most recent version of the LLVM backend, which \texttt{clang} uses, that removes \texttt{cmovcc} instructions and substitutes them for conditional branches if an efficiency gain can be obtained with high confidence \citep{llvm-optimizing-away-cmov}.
+
+Evidently, \texttt{clang} introduces conditional branches, and thus potentially timing vulnerabilities, much more conservatively than \texttt{gcc}. 
+This is favorable in the context of language-based security avoiding timing vulnerabilities, but seemingly, \texttt{clang} is not perfect in preventing timing vulnerabilities even though our results were not able to confirm this. 
+The lack of confirmed results might be ascribed to the simplicity of the generated programs or the sample size.
+
+As no timing vulnerabilities were found using \texttt{clang}, all following subsections will present data obtained only through \texttt{gcc}.
+
+\subsection{General Optimizations}
+\label{sec:general-optimizations}
+We ran the OptiFuzz pipeline with the optimization flags \texttt{O0}, \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os}. 
+For each optimization flag, we generated 100,000 programs, which were then fuzzed and analyzed. 
+The ASTs of the generated programs were restricted to have a max depth of 5.
+Each program was fuzzed with 10,000 different inputs.
+The results are shown in Table \ref{tab:general-optimizations} and visualized results for selected data points can be seen in Appendix \ref{appendix:general-optimizations-results}.
+
+\begin{table}[H]
+  \centering
+  \begin{tabular}{l|lllll}
+                                           & \textbf{\texttt{O0}} & \textbf{\texttt{O1}} & \textbf{\texttt{O2}} & \textbf{\texttt{O3}} & \textbf{\texttt{Os}} \\ \hline
+  \# of flagged programs                   & 19758                                 & 231                                   & 1005                                  & 999                                   & 366                                   \\
+  \% of flagged programs                   & 19.76\%                               & 0.23\%                                & 1.00\%                                & 1.00\%                                & 0.37\%                                \\
+  \# of programs with rejected $H_0$       & 12627                                 & 147                                   & 624                                   & 640                                   & 199                                   \\
+  \% of rejected programs (out of total)   & 12.63\%                               & 0.15\%                                & 0.62\%                                & 0.64\%                                & 0.20\%                                \\
+  \% of rejected programs (out of flagged) & 63.91\%                               & 63.64\%                               & 62.09\%                               & 64.06\%                               & 54.37\%                              
+  \end{tabular}
+  \caption{Results for the optimization flags \texttt{O0}, \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os} using \texttt{gcc}. 
+  The results are based on 100,000 generated programs for each optimization flag. 
+  Each program is generated from an AST of max depth 5.
+  The first and second rows show the number and percentage of programs that contained conditional branching instructions after compilation (potential timing leak).
+  The third, fourth and fifth rows show the number and percentage of programs that resulted in $H_0$ getting rejected in Welch's t-test (definite timing leak).}
+  \label{tab:general-optimizations}
+\end{table}
+Our results show that the problem is very prevalent in \texttt{gcc} with \texttt{O0}, surprisingly, being the worst offender where over a tenth of the randomly generated programs were rejected by Welch's t-test. 
+The fact that \texttt{O0} introduces timing vulnerabilities with such a high probability is concerning since \texttt{O0} has most configurable optimizations turned off \citep{gcc-manual}.
+This points to the fact that it is not easy for the developer to mitigate problematic optimizations in \texttt{gcc}.
+
+Our experiment revealed some limitations to our approach to finding timing vulnerabilities. 
+False positives, i.e. constant-time code that was rejected by Welch's t-test, were present in the dataset from the \texttt{O0} experiment. 
+This is likely due to noise in the measurements. 
+Experimentally, we found that Welch's t-test will reject around 4.4\% of programs that are constant-time due to noise.
+Since such a high number of programs compiled with \texttt{O0} contained branching instructions, this noise was enough to cause a significant amount of false positives compared to the number of programs generated for the experiment.
+It is also possible that seemingly constant-time programs are not constant-time due to hardware optimizations, like branch prediction or speculative execution, which are not taken into account in our model and are out-of-scope for this paper.
+However, our results also show that definite timing leaks are present in the \texttt{O0} dataset as seen in Figure \ref{fig:general-optimizations-O0-true-positive}.
+
+\begin{figure}[H]
+  \centering
+     \begin{subfigure}[b]{0.55\textwidth}
+      \begin{tikzpicture}[>=latex]
+        \begin{axis}[
+            axis x line=center,
+            axis y line=center,
+            name=ax,
+            scaled y ticks=base 10:-3,
+            ytick scale label code/.code={},
+            yticklabel={\pgfmathprintnumber{\tick} k},
+            xlabel={CPU Clocks},
+            ylabel={Frequency},
+            x label style={at={(axis description cs:0.5,-0.1)},anchor=north},
+            y label style={at={(axis description cs:-0.1,.5)},rotate=90,anchor=south,yshift=4mm},
+            area style,
+            ymin=0,
+            xmin=19,
+            xmax=38,
+            ymax=1205
+            ]
+            \addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                20 78
+21 496
+22 35
+23 1
+24 0
+25 0
+26 1
+27 0
+28 0
+29 0
+30 141
+31 309
+32 0
+33 0
+34 1
+35 0
+36 1
+37 1
+            };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                20 1119
+21 8
+            };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                20 861
+21 17
+22 3
+23 0
+24 0
+25 0
+26 0
+27 69
+28 137
+29 0
+30 1
+31 0
+32 0
+33 0
+34 0
+35 0
+36 0
+37 1
+            };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                20 1148
+21 10
+            };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                20 659
+21 29
+22 3
+23 0
+24 1
+25 0
+26 122
+27 314
+28 1
+29 1
+30 3
+31 0
+32 0
+33 0
+34 0
+35 0
+36 0
+37 2
+            };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                20 413
+21 39
+22 1
+23 0
+24 3
+25 0
+26 205
+27 445
+28 2
+29 1
+30 0
+31 0
+32 0
+33 0
+34 0
+35 1
+36 0
+37 1
+            };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                20 1094
+21 11
+            };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                20 128
+21 743
+22 0
+23 13
+24 3
+25 0
+26 0
+27 0
+28 1
+29 2
+30 0
+31 0
+32 0
+33 75
+34 169
+35 0
+36 0
+37 2
+            };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                20 600
+21 32
+22 1
+23 1
+24 1
+25 0
+26 120
+27 315
+28 1
+29 0
+30 1
+31 1
+32 0
+33 0
+34 0
+35 0
+36 0
+37 2
+            };
+                                \draw[color=black, line width=0.2mm, dashed] 
+                (axis cs:25, -60.25) -- (axis cs:25, 1205);
+                \draw[color=black, line width=0.2mm, dashed] 
+                (axis cs:20, -60.25) -- (axis cs:20, 1205);
+                \draw[color=black, line width=0.2mm, dashed] 
+                (axis cs:21, -60.25) -- (axis cs:21, 1205);
+                \draw[color=black, line width=0.2mm, dashed] 
+                (axis cs:20, -60.25) -- (axis cs:20, 1205);
+                \draw[color=black, line width=0.2mm, dashed] 
+                (axis cs:23, -60.25) -- (axis cs:23, 1205);
+                \draw[color=black, line width=0.2mm, dashed] 
+                (axis cs:24, -60.25) -- (axis cs:24, 1205);
+                \draw[color=black, line width=0.2mm, dashed] 
+                (axis cs:20, -60.25) -- (axis cs:20, 1205);
+                \draw[color=black, line width=0.2mm, dashed] 
+                (axis cs:24, -60.25) -- (axis cs:24, 1205);
+                \draw[color=black, line width=0.2mm, dashed] 
+                (axis cs:23, -60.25) -- (axis cs:23, 1205);
+        \end{axis} 
+        \node[below=15mm of ax] (1) {
+            $\begin{aligned}
+                \texttt{equal}_\mu: & \,25\\
+                \texttt{fixed}_\mu: & \,20\\
+                \texttt{max64}_\mu: & \,21
+            \end{aligned}$
+        };
+        \node[left=4mm of 1] (2) {
+            $\begin{aligned}
+                \texttt{small}_\mu: & \,20\\
+                \texttt{uniform}_\mu: & \,23\\
+                \texttt{xlty}_\mu: & \,24
+            \end{aligned}$
+        };
+        \node[right=4mm of 1] (3) {
+            $\begin{aligned}
+                \texttt{xzero}_\mu: & \,20\\
+                \texttt{yltx}_\mu: & \,24\\
+                \texttt{yzero}_\mu: & \,23
+            \end{aligned}$
+        };
+        \node[fit=(1)(2)(3),draw]{};
+        \end{tikzpicture}%
+      \caption{Fuzzing results visualized. The means of each fuzz class are shown as vertical lines.}
+    \end{subfigure}
+    \hspace{1cm}
+    \begin{subfigure}[b]{0.35\textwidth}
+      \begin{lstlisting}[style=defstyle,language={[x86masm]Assembler},basicstyle=\small\ttfamily,breaklines=true]
+...
+  pushq	%rbp
+  movq	%rsp, %rbp
+  movq	%rdi, -8(%rbp)
+  movq	%rsi, -16(%rbp)
+  cmpq	$0, -8(%rbp)
+  js	.L2
+  movl	$-29, %eax
+  movl	$-37, %edx
+  movl	%eax, %ecx
+  sarl	%cl, %edx
+  movl	%edx, %eax
+  cmpl	$1, %eax
+  jle	.L3
+.L2:
+  movl	$1, %eax
+  jmp	.L5
+.L3:
+  movl	$0, %eax
+.L5:
+  popq	%rbp
+  ret
+...\end{lstlisting} 
+       \caption{Fuzzed assembly code.}
+  \end{subfigure}
+  \caption{An example of a true positive, i.e. a variable time program that was rejected by Welch's t-test, from the \texttt{O0} dataset. 
+  The source code of the program is shown in Appendix \ref{appendix:general-optimizations-results}. 
+  Notice that inputs from the fuzz classes \texttt{small}, \texttt{xzero}, \texttt{fixed} and \texttt{max64} are significantly faster than the rest.
+  That is because the program branches on whether $x$ is signed or not (\texttt{js} instruction in line 7), which it never is in these 4 classes.}
+  \label{fig:general-optimizations-O0-true-positive}
+\end{figure}
+
+Findings from the other datasets also deserve mentioning.
+The \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os} datasets had several false negatives, i.e. programs that were not rejected by Welch's t-test, but were variable time.
+Concretely, we saw examples where the assembled code branched on a \textit{very} specific scenario, e.g. if $x = 8129346172934691$, which is near-impossible to detect by fuzzing since the probability of hitting that specific value is very low.
+We did not find any false positives in any other dataset than \texttt{O0}.
+This is because the vast majority of programs in the \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os} datasets were variable time.
+This points to the fact that more aggressive optimizations with conditional branching are more likely to produce detectably variable-time code.
+The reason that Welch's t-test did not detect vulnerabilities in all programs in the datasets is likely due to the above-mentioned false negatives, but also because the t-test has some inherent limitations as mentioned in Section \ref{sec:statistical-analysis}.
+Concrete examples of true and false positives and negatives can be found in Appendix \ref{appendix:general-optimizations-results}.
+
+Finally, we want to address the fact that the general optimizations datasets were generated with programs that had ASTs of max depth 5.
+This was done to reduce the length of the programs to make them more manageable for analysis.
+However, we also generated datasets with ASTs of max depth 12 and found that the results were similar in the \texttt{O0} and \texttt{O1} datasets, while the \texttt{O2}, \texttt{O3} and \texttt{Os} datasets had significantly more programs with conditional branching -- around 5\%, 5\% and 2\% respectively.
+We deem the choice of max depth 5 to be a good compromise between the length of the programs and the number of conditional branches for our results to underline the problem we are trying to address.
 
 \subsection{Specific Optimizations}
-\todo{Single out specific optimizations}
+\label{sec:specific-optimizations}
+The results in Table \ref{tab:general-optimizations} show that the percentage of vulnerable programs is the highest for the \texttt{O0} dataset, then it decreases significantly for the \texttt{O1} dataset, and then it increases significantly for the \texttt{O2} and \texttt{O3} datasets.
+The significant decrease from \texttt{O0} to \texttt{O1} points to the fact that some optimizations in \texttt{gcc} decrease the number of conditional branches. 
+Despite running several hundred experiments testing each possible configurable optimization flag \citep{gcc-manual} individually, we were not able to identify which optimizations were responsible for this decrease.
+Furthermore, applying all configurable optimizations from \texttt{O1} to \texttt{O0} at once did not result in a decrease in the number of conditional branches.
+This points to the fact that the responsible optimizations are non-configurable, i.e. they are always enabled for \texttt{O1}.
+This also underlines the fact that all the \texttt{O*} flags enable optimizations that are non-configurable \citep{gcc-manual}, which in turn gives the developer less control over disabling problematic optimizations to increase the security of the code.
 
-\subsection{Vulnerable operations}
-\todo{Try to identify what operations are vulnerable}
+The significant increase from \texttt{O1} to \texttt{O2} and \texttt{O3} points to the fact that some optimizations in \texttt{gcc} can introduce conditional branches and therefore timing vulnerabilities. 
+We identified a configurable compiler optimization that was responsible for introducing conditional branches in our datasets: \texttt{ftree-pre}.
+This optimization performs partial redundancy elimination \citep{gcc-manual}.
+\texttt{ftree-pre} is enabled by default for \texttt{O2} and \texttt{O3}, but not for \texttt{O1}.
+
+Partial redundancy elimination (PRE) is a form of common subexpression elimination (CSE) that tries to eliminate redundant computations. 
+We discussed how CSE works and how it can introduce conditional branches in Section \ref{sec:cse}.
+Specifically, PRE tries to eliminate computations that are redundant in some, but not all, control flow paths.
+This is done by moving the computation to a point in the program where it is guaranteed to be executed only once.
+This results in different control flow paths with different amounts of instructions, which in turn result in timing vulnerabilities.
+
+\subsection{Vulnerable Expressions}
+We identified various types of expressions that were compiled into conditional branches.
+We identified expressions on the form $c$ \texttt{op} $x$ \texttt{comp} $y$, where $c$ is a constant, \texttt{op} is a bitwise operator, \texttt{comp} is a comparison operator, and $x$ and $y$ are variables.
+Expressions of this form result in constant-time code containing conditional branches, much like the example in Figure \ref{fig:assembly-inspection-example}.
+
+A more severe type of expression that we identified was expressions on the form $undefined$ \texttt{op} $(x$ \texttt{comp} $y)$, where $undefined$ contains undefined behavior, \texttt{op} is a bitwise operator, \texttt{comp} is a comparison operator, and $x$ and $y$ are variables. 
+Expressions of this form sometimes result in variable-time code when compiled with \texttt{O0}.
+However, when compiled with \texttt{O1}, \texttt{O2}, \texttt{O3} or \texttt{Os}, the entire program is optimized away and replaced with \texttt{return 0;}.
+This is because the compiler can deduce that the expression contains undefined behavior, and, according to the C standard, the compiler is allowed to replace undefined behavior with anything \citep{c-standard}.
+An example of this type of expression and its corresponding assembly, when compiled with \texttt{O0}, is shown in Figure \ref{fig:vulnerable-expression}.
+
+\begin{figure}[H]
+  \centering
+     \begin{subfigure}[b]{0.41\textwidth}
+        \begin{lstlisting}[style=defstyle,language={C},basicstyle=\ttfamily,breaklines=true]
+int program(long long int x, long long int y) { 
+  return (42 >> -1) & (x == y); 
+}\end{lstlisting} 
+      \vspace{10em}
+      \caption{An example of a program containing an expression of the form $undefined$ \texttt{op} $(x$ \texttt{comp} $y)$.}
+    \end{subfigure}
+    \hspace{1cm}
+    \begin{subfigure}[b]{0.35\textwidth}
+      \begin{lstlisting}[style=defstyle,language={[x86masm]Assembler},basicstyle=\ttfamily,breaklines=true]
+...
+  pushq   %rbp
+  movq    %rsp, %rbp
+  movq    %rdi, -8(%rbp)
+  movq    %rsi, -16(%rbp)
+  movq    -8(%rbp), %rax
+  cmpq    -16(%rbp), %rax
+  jne     .L2
+  movl    $-1, %eax
+  movl    $42, %edx
+  movl    %eax, %ecx
+  sarl    %cl, %edx
+  movl    %edx, %eax
+  andl    $1, %eax
+  jmp     .L4
+.L2:
+  movl    $0, %eax
+.L4:
+  popq    %rbp
+  ret
+...\end{lstlisting} 
+       \caption{Corresponding assembly code when compiled with \texttt{O0} in \texttt{gcc}.}
+  \end{subfigure}
+  \caption{An example of a small program that causes \texttt{gcc} to generate variable-time code when compiled with \texttt{O0}. Specifically, one can obtain whether $x$ is equal to $y$ by timing the program.}
+  \label{fig:vulnerable-expression}
+\end{figure}
+
+Finally, and perhaps most importantly, we identified expressions that will result in variable-time code when compiled with \texttt{O2}, \texttt{O3} and \texttt{Os}.
+As mentioned in Section \ref{sec:specific-optimizations}, partial redundancy elimination (PRE) can introduce conditional branches.
+PRE is enabled for \texttt{O2}, \texttt{O3} and \texttt{Os} \citep{gcc-manual}.
+In some expressions of the form $e$ \texttt{comp} $e'$, where $e$ and $e'$ contain subexpressions that are not common between $e$ and $e'$, PRE will introduce conditional branches. An example of this is shown in Figure \ref{fig:pre-example}.
+
+\begin{figure}[H]
+  \centering
+  \begin{lstlisting}[style=defstyle,language={C},basicstyle=\ttfamily,breaklines=true, xleftmargin=3cm, xrightmargin=3cm]
+int program(long long int x, long long int y) { 
+  return 42 * (x == 42) == (y == 42); 
+}\end{lstlisting} 
+    \caption{An example of a program that will be variable-time when compiled with \texttt{O2}, \texttt{O3} or \texttt{Os}, specifically because of PRE.
+    PRE will identify two control flow paths in this expression: one where $x=42$ and one where $x \neq 42$.
+    If $x=42$, the expression will always evaluate to $0$ since \texttt{42 * (42 == 42) == (y == 42)} will evaluate to $42 \stackrel{?}{=} 0$ or $42 \stackrel{?}{=} 1$ which is false in both cases.
+    If $x \neq 42$, the expression depends on whether $y=42$.
+    Hence \texttt{(y == 42)} is redundant in the first control flow path, but not in the second.
+    As a result, PRE will insert a conditional branch that branches on $x = 42$ and only considers $y$ if that is \textit{not} the case.}
+    \label{fig:pre-example}
+\end{figure}
