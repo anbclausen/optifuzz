@@ -102,12 +102,10 @@ def fuzz_program_user(
         Optimization flag to compile program
     fuzzing_classes : list
         List of classes to fuzz
-    datapoints : str
-        The amount of data points to create for each fuzzing class
     """
     compile_user(prog_path, compiler, flag)
     class_arg = fuzz_class_lst_to_argument(fuzzing_classes)
-    os.system(f"./out {datapoints} {flag} '{class_arg}'")
+    os.system(f"./out {number_of_fuzzing_runs} {flag} '{class_arg}'")
 
 
 def save_results(seed: str, fuzzing_classes: list, flag: str, result_dir: str) -> None:
@@ -152,8 +150,6 @@ def fuzz(
         The compiler used to compile the programs
     result_dir : str
         The directory to save the results in
-    datapoints : str
-        The amount of data points to create for each fuzzing class
     """
     amount_of_programs = len(os.listdir(prog_dir))
     if amount_of_programs == 0:
