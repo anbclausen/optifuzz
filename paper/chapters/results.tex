@@ -385,7 +385,7 @@ In some expressions of the form $e$ \texttt{comp} $e'$, where $e$ and $e'$ conta
 
 \texttt{42 * (x == 42) == (y == 42)} is an example of an expression that will be variable-time when compiling with \texttt{O2}, \texttt{O3} or \texttt{Os}, specifically because of PRE.
 PRE will identify two control flow paths in this expression: one where $x=42$ and one where $x \neq 42$.
-If $x=42$, the expression will always evaluate to $0$.
+If $x=42$, the expression will always evaluate to $0$ since \texttt{42 * (42 == 42) == (y == 42)} will evaluate to $42 \stackrel{?}{=} 0$ or $42 \stackrel{?}{=} 1$ which is false in both cases.
 If $x \neq 42$, the expression depends on whether $y=42$.
 Hence \texttt{(y == 42)} is redundant in the first control flow path, but not in the second.
 As a result, PRE will insert a conditional branch that branches on $x = 42$ and only considers $y$ if that is \textit{not} the case.
