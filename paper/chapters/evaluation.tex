@@ -14,7 +14,7 @@ Furthermore, we have identified the use of this paradigm in the wild, for exampl
 Hence quantifying the problem of timing vulnerabilities in the generated programs is indicative of the real-world problem.
 
 The inspection of the generated programs is exact since it finds all problematic instructions in the generated assembly code as argued in Section \ref{sec:inspection}.
-Furthermore, our results show that between 54.37\% and 64.06\% of the programs that are flagged by inspection are eventually rejected by the statistical analysis (see Section \ref{sec:statistical-analysis}). 
+Furthermore, our results show that between 54.37\% and 64.06\% of the programs that are flagged by inspection are eventually rejected by the statistical analysis (see Section \ref{sec:statistical-analysis}), confirming they are variable-time. 
 This means that, even though inspection serves as an overapproximation of the problem, it does not cause too big of an overhead in the OptiFuzz pipeline.
 
 \subsection{Fuzzing and Statistical Analysis}
