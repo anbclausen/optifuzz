@@ -34,6 +34,7 @@ Some common optimization techniques like common subexpression elimination and st
 To illustrate this point, we look at how common subexpression elimination can introduce timing vulnerabilities.
 
 \subsubsection{Timing Vulnerabilities Through Common Subexpression Elimination}
+\label{sec:cse}
 Common Subexpression Elimination is an optimization technique that extracts subexpressions that are common across multiple expressions and replaces them with a single variable.
 This optimization technique can introduce timing vulnerabilities since it can decrease the number of instructions executed for a specific branch of the code as illustrated in Figure \ref{fig:common-subexpression-elimination}.
 Here the common subexpression \texttt{2 * 3 + 5} is extracted and assigned to the variable \texttt{common}, making the \texttt{else} branch execute faster than the \texttt{if} branch.

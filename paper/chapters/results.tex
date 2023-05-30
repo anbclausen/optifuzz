@@ -1,4 +1,4 @@
-We have run OptiFuzz to generate around 600,000 programs, which have been fuzzed and analyzed under different compilers and optimization flags.
+We have run OptiFuzz to generate around 600,000 programs, which have been fuzzed and analyzed using different compilers and optimization flags.
 In this section, we present our results.
 
 We have divided this section into four subsections.
@@ -52,7 +52,7 @@ The results are shown in Table \ref{tab:general-optimizations} and visualized re
   \label{tab:general-optimizations}
 \end{table}
 Our results show that the problem is very prevalent in \texttt{gcc} with \texttt{O0}, surprisingly, being the worst offender where over a tenth of the randomly generated programs were rejected by Welch's t-test. 
-The fact that \texttt{O0} introduces timing vulnerabilities with such a high probability is concerning since \texttt{O0} has most configurable optimizations turned off \citep{O0-has-most-opts-turned-off}.
+The fact that \texttt{O0} introduces timing vulnerabilities with such a high probability is concerning since \texttt{O0} has most configurable optimizations turned off \citep{gcc-manual}.
 This points to the fact that it is not easy for the developer to mitigate problematic optimizations in \texttt{gcc}.
 
 Our experiment revealed some limitations to our approach to finding timing vulnerabilities. 
@@ -307,7 +307,23 @@ However, we also generated datasets with ASTs of max depth 12 and found that the
 We deem the choice of max depth 5 to be a good compromise between the length of the programs and the number of conditional branches, and our results underline the problem we are trying to address.
 
 \subsection{Specific Optimizations}
-\todo{Single out specific optimizations}
+The results in Table \ref{tab:general-optimizations} show that the percentage of vulnerable programs is the highest for the \texttt{O0} dataset, then it decreases significantly for the \texttt{O1} dataset, and then it increases significantly for the \texttt{O2} and \texttt{O3} datasets.
+The significant decrease from \texttt{O0} to \texttt{O1} points to the fact that some optimizations in \texttt{gcc} decrease the number of conditional branches. 
+Despite running several hundred experiments testing each possible configurable optimization flag \citep{gcc-manual} individually, we were not able to identify which optimizations were responsible for this decrease.
+Furthermore, applying all configurable optimizations from \texttt{O1} to \texttt{O0} at once did not result in a decrease in the number of conditional branches.
+This points to the fact that the responsible optimizations are non-configurable, i.e. they are always enabled for \texttt{O1}.
+This also underlines the fact that all the \texttt{O*} flags enable optimizations that are non-configurable \citep{gcc-manual}, which in turn gives the developer less control over disabling problematic optimizations to increase the security of the code.
+
+The significant increase from \texttt{O1} to \texttt{O2} and \texttt{O3} points to the fact that some optimizations in \texttt{gcc} can introduce conditional branches and therefore timing vulnerabilities. 
+We identified a configurable compiler optimization that was responsible for introducing conditional branches in our datasets: \texttt{ftree-pre}.
+This optimization performs partial redundancy elimination \citep{gcc-manual}.
+\texttt{ftree-pre} is enabled by default for \texttt{O2} and \texttt{O3}, but not for \texttt{O1}.
+
+Partial redundancy elimination (PRE) is a form of common subexpression elimination (CSE) that tries to eliminate redundant computations. 
+We discussed how CSE works and how it can introduce conditional branches in Section \ref{sec:cse}.
+Specifically, PRE tries to eliminate computations that are redundant in some, but not all, control flow paths.
+This is done by moving the computation to a point in the program where it is guaranteed to be executed only once.
+This results in different control flow paths with different amounts of instructions, which in turn result in timing vulnerabilities.
 
 \subsection{Vulnerable operations}
 \todo{Try to identify what operations are vulnerable}
