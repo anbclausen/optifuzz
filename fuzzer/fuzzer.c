@@ -62,7 +62,7 @@ int main(int argc, char const *argv[])
 
     if (argc != 4)
     {
-        print_error(stderr, "usage: %s #data-points flag \"class1 class2 ...\"", argv[0]);
+        print_error("usage: %s #data-points flag \"class1 class2 ...\"", argv[0]);
         exit(EXIT_FAILURE);
     }
 
