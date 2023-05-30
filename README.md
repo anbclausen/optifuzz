@@ -20,7 +20,7 @@ We made a paper describing the tool and our findings with it. It can be found in
 You can configure the OptiFuzz in the `config.json` file. Here you can
 - Configure what C compiler you want to use.
 - Configure what optimization flags you would like to test on.
-- Configure what kind of type of inputs you would like to fuzz with. We have defined a selection of "fuzzing classes":
+- Configure what kind of type of inputs you would like to fuzz with. We have defined a selection of "input classes":
   - `uniform`: Inputs are 64-bit uniformly random numbers.
   - `equal`: Inputs are 64-bit uniformly random numbers, but equal.
   - `max64`: One input is `INT64_MAX` while the other is uniformly random.

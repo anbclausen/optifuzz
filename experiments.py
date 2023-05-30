@@ -3,7 +3,7 @@ small_experiments = [
     {
         "compiler": "gcc",
         "compile_flags": ["O0", "O1", "O2", "O3", "Os"],
-        "fuzz_classes": [
+        "input_classes": [
             "uniform",
             "fixed",
             "xzero",
@@ -47,7 +47,7 @@ for i, experiment in enumerate(small_experiments):
             {
                 "compiler": experiment["compiler"],
                 "compiler_flags": experiment["compile_flags"],
-                "fuzzing_classes": experiment["fuzz_classes"],
+                "input_classes": experiment["input_classes"],
                 "generated_programs_dir": "results/generated_programs/",
                 "flagged_programs_dir": "results/flagged_programs/",
                 "fuzzer_results_dir": "results/fuzzer_results/",

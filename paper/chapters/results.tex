@@ -291,7 +291,7 @@ However, our results also show that definite timing leaks are present in the \te
   \end{subfigure}
   \caption{An example of a true positive, i.e. a variable time program that was rejected by Welch's t-test, from the \texttt{O0} dataset. 
   The source code of the program is shown in Appendix \ref{appendix:general-optimizations-results}. 
-  Notice that inputs from the fuzz classes \texttt{small}, \texttt{xzero}, \texttt{fixed} and \texttt{max64} are significantly faster than the rest.
+  Notice that inputs from the input classes \texttt{small}, \texttt{xzero}, \texttt{fixed} and \texttt{max64} are significantly faster than the rest.
   That is because the program branches on whether $x$ is signed or not (\texttt{js} instruction in line 7), which it never is in these 4 classes.}
   \label{fig:general-optimizations-O0-true-positive}
 \end{figure}

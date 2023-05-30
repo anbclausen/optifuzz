@@ -50,7 +50,7 @@
     "ftree-ter",
     "funit-at-a-time"
   ],
-  "fuzzing_classes": [
+  "input_classes": [
     "uniform",
     "fixed",
     "xzero",

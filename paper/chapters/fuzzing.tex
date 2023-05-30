@@ -9,7 +9,7 @@ This compilation only needs to happen once.
 Then, each of the programs flagged by the static assembly analysis is compiled with the specified compiler and linked with the pre-compiled fuzzer. 
 This step is carried out for each of the supplied optimization flags such that the program is fuzzed on all supplied optimization levels.
 
-Then, for each linked program, the fuzzer generates inputs according to 'fuzzing classes' which are explained later in this section. 
+Then, for each linked program, the fuzzer generates inputs according to 'input classes' which are explained later in this section. 
 For each input, the fuzzer chooses a uniformly random class among the supplied ones. 
 This way there is no biased order in which the inputs from different classes are used, and thus potential noise is likely to affect all classes equally. 
 This is important when comparing timing distributions in the following statistical analysis. 
@@ -22,13 +22,13 @@ Hence, some specific input is not repeated before all other inputs have been run
 This ensures that any noise that results in longer execution times is spread out over all (or many) of the inputs. 
 This minimizes the chance of falsely identifying an input or fuzzing class as the cause of longer execution times.
 
-We use different fuzzing classes for the inputs to the fuzzer, instead of always generating completely random numbers. 
+We use different input classes for the inputs to the fuzzer, instead of always generating completely random numbers. 
 This is done to try and capture variable execution time that only takes place in a small sample of the values. 
 As an example, a program might have a timing leak only if one of the inputs is zero. 
 If we only used uniformly random 64-bit numbers it would be unlikely that we would identify a vulnerability like that. 
-Hence, the need for fuzzing classes. 
+Hence, the need for input classes. 
 As mentioned in Section \ref{sec:code-generation}, for each program, there are an $x$ and a $y$ value. 
-All fuzzing classes generate inputs with respect to the these inputs can be seen in the following list.
+All input classes generate inputs with respect to the these inputs can be seen in the following list.
 \begin{itemize}
     \item \texttt{UNIFORM}: $x$ and $y$ are uniformly random 64-bit numbers.
     \item \texttt{EQUAL}:  $x$ and $y$ are the same uniformly random 64-bit number.
@@ -64,7 +64,7 @@ This does indeed indicate that the program is vulnerable.
 
 If, on the other hand, the results of this analysis fail to indicate obvious timing differences, then it is not safe to assume that it is then constant time. 
 Since the fuzzer is conservative, it under-approximates what programs are vulnerable to timing attacks.
-Hence, a limitation is that the fuzzing classes used are not necessarily able to capture an event causing variable-time behavior of a program. 
+Hence, a limitation is that the input classes used are not necessarily able to capture an event causing variable-time behavior of a program. 
 
 Furthermore, even with the actions taken to get as precise timings as possible, the analysis is still prone to some noise. 
 Specifically, it is worth noting that when running this in user-land the fuzzer could be influenced by interrupts and preemption. 
