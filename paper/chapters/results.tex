@@ -33,7 +33,7 @@ We ran the OptiFuzz pipeline with the optimization flags \texttt{O0}, \texttt{O1
 For each optimization flag, we generated 100,000 programs, which were then fuzzed and analyzed. 
 The ASTs of the generated programs were restricted to have a max depth of 5.
 Each program was fuzzed with 10,000 different inputs.
-The results are shown in Table \ref{tab:general-optimizations} and visualized results for select data points can be seen in Appendix \ref{appendix:general-optimizations-results}.
+The results are shown in Table \ref{tab:general-optimizations} and visualized results for selected data points can be seen in Appendix \ref{appendix:general-optimizations-results}.
 
 \begin{table}[H]
   \centering
@@ -83,178 +83,178 @@ However, our results also show that definite timing leaks are present in the \te
             ymin=0,
             xmin=19,
             xmax=38,
-            ymax=1213
+            ymax=1205
             ]
             \addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
-                20 1050
-21 21
-            };
-\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
-                20 1145
-21 16
-            };
-\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
-                20 765
-21 13
-22 308
+                20 78
+21 496
+22 35
 23 1
 24 0
-25 1
-26 0
+25 0
+26 1
 27 0
 28 0
 29 0
+30 141
+31 309
+32 0
+33 0
+34 1
+35 0
+36 1
+37 1
+            };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                20 1119
+21 8
+            };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                20 861
+21 17
+22 3
+23 0
+24 0
+25 0
+26 0
+27 69
+28 137
+29 0
+30 1
+31 0
+32 0
+33 0
+34 0
+35 0
+36 0
+37 1
+            };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                20 1148
+21 10
+            };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                20 659
+21 29
+22 3
+23 0
+24 1
+25 0
+26 122
+27 314
+28 1
+29 1
+30 3
+31 0
+32 0
+33 0
+34 0
+35 0
+36 0
+37 2
+            };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                20 413
+21 39
+22 1
+23 0
+24 3
+25 0
+26 205
+27 445
+28 2
+29 1
 30 0
 31 0
 32 0
 33 0
 34 0
-35 0
+35 1
 36 0
 37 1
             };
 \addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
-                20 708
-21 70
-22 10
-23 5
-24 6
-25 1
-26 2
-27 5
-28 299
-29 0
-30 1
-31 0
-32 0
-33 0
-34 0
-35 0
-36 0
-37 2
+                20 1094
+21 11
             };
 \addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
-                20 671
-21 60
-22 14
-23 3
-24 5
-25 3
-26 4
-27 8
-28 282
-29 16
-30 3
-31 1
-32 0
-33 1
-34 0
-35 0
-36 0
-37 1
-            };
-\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
-                20 34
-21 294
-22 127
-23 19
-24 0
-25 13
-26 7
-27 5
-28 5
-29 0
-30 4
-31 605
-32 19
-33 0
-34 0
-35 3
-36 1
-37 2
-            };
-\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
-                20 692
-21 61
-22 9
-23 7
-24 5
-25 4
-26 1
-27 7
-28 287
-29 18
-30 1
-31 0
-32 0
-33 2
-34 0
-35 0
-36 0
-37 2
-            };
-\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
-                20 1155
-21 18
-            };
-\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
-                20 350
-21 367
-22 72
-23 0
-24 8
-25 7
+                20 128
+21 743
+22 0
+23 13
+24 3
+25 0
 26 0
-27 9
+27 0
+28 1
+29 2
+30 0
+31 0
+32 0
+33 75
+34 169
+35 0
+36 0
+37 2
+            };
+\addplot+ [ybar interval,mark=no,color=firstCol,fill=firstCol,fill opacity=0.2] table {
+                20 600
+21 32
+22 1
+23 1
+24 1
+25 0
+26 120
+27 315
 28 1
 29 0
 30 1
-31 6
+31 1
 32 0
-33 261
-34 6
+33 0
+34 0
 35 0
-36 1
+36 0
 37 2
             };
                                 \draw[color=black, line width=0.2mm, dashed] 
-                (axis cs:20, -60.650000000000006) -- (axis cs:20, 1213);
+                (axis cs:25, -60.25) -- (axis cs:25, 1205);
                 \draw[color=black, line width=0.2mm, dashed] 
-                (axis cs:20, -60.650000000000006) -- (axis cs:20, 1213);
+                (axis cs:20, -60.25) -- (axis cs:20, 1205);
                 \draw[color=black, line width=0.2mm, dashed] 
-                (axis cs:21, -60.650000000000006) -- (axis cs:21, 1213);
+                (axis cs:21, -60.25) -- (axis cs:21, 1205);
                 \draw[color=black, line width=0.2mm, dashed] 
-                (axis cs:22, -60.650000000000006) -- (axis cs:22, 1213);
+                (axis cs:20, -60.25) -- (axis cs:20, 1205);
                 \draw[color=black, line width=0.2mm, dashed] 
-                (axis cs:23, -60.650000000000006) -- (axis cs:23, 1213);
+                (axis cs:23, -60.25) -- (axis cs:23, 1205);
                 \draw[color=black, line width=0.2mm, dashed] 
-                (axis cs:27, -60.650000000000006) -- (axis cs:27, 1213);
+                (axis cs:24, -60.25) -- (axis cs:24, 1205);
                 \draw[color=black, line width=0.2mm, dashed] 
-                (axis cs:22, -60.650000000000006) -- (axis cs:22, 1213);
+                (axis cs:20, -60.25) -- (axis cs:20, 1205);
                 \draw[color=black, line width=0.2mm, dashed] 
-                (axis cs:20, -60.650000000000006) -- (axis cs:20, 1213);
+                (axis cs:24, -60.25) -- (axis cs:24, 1205);
                 \draw[color=black, line width=0.2mm, dashed] 
-                (axis cs:24, -60.650000000000006) -- (axis cs:24, 1213);
+                (axis cs:23, -60.25) -- (axis cs:23, 1205);
         \end{axis} 
         \node[below=15mm of ax] (1) {
             $\begin{aligned}
-                \texttt{equal}_\mu: & \,20\\
+                \texttt{equal}_\mu: & \,25\\
                 \texttt{fixed}_\mu: & \,20\\
                 \texttt{max64}_\mu: & \,21
             \end{aligned}$
         };
         \node[left=4mm of 1] (2) {
             $\begin{aligned}
-                \texttt{small}_\mu: & \,22\\
+                \texttt{small}_\mu: & \,20\\
                 \texttt{uniform}_\mu: & \,23\\
-                \texttt{xlty}_\mu: & \,27
+                \texttt{xlty}_\mu: & \,24
             \end{aligned}$
         };
         \node[right=4mm of 1] (3) {
             $\begin{aligned}
-                \texttt{xzero}_\mu: & \,22\\
-                \texttt{yltx}_\mu: & \,20\\
-                \texttt{yzero}_\mu: & \,24
+                \texttt{xzero}_\mu: & \,20\\
+                \texttt{yltx}_\mu: & \,24\\
+                \texttt{yzero}_\mu: & \,23
             \end{aligned}$
         };
         \node[fit=(1)(2)(3),draw]{};
@@ -269,15 +269,15 @@ However, our results also show that definite timing leaks are present in the \te
   movq	%rsp, %rbp
   movq	%rdi, -8(%rbp)
   movq	%rsi, -16(%rbp)
-  movq	-8(%rbp), %rax
-  cmpq	-16(%rbp), %rax
-  jge	.L2
-  movq	$-2, %rdx
-  movabsq	$1153072017525752320, %rax
-  movl	%edx, %ecx
-  sarq	%cl, %rax
-  cmpq	$-1, %rax
-  jl	.L3
+  cmpq	$0, -8(%rbp)
+  js	.L2
+  movl	$-29, %eax
+  movl	$-37, %edx
+  movl	%eax, %ecx
+  sarl	%cl, %edx
+  movl	%edx, %eax
+  cmpl	$1, %eax
+  jle	.L3
 .L2:
   movl	$1, %eax
   jmp	.L5
@@ -289,11 +289,14 @@ However, our results also show that definite timing leaks are present in the \te
 ...\end{lstlisting} 
        \caption{Fuzzed assembly code.}
   \end{subfigure}
-  \caption{An example of a true positive, i.e. a variable time program that was rejected by Welch's t-test, from the \texttt{O0} dataset. The source code of the program is shown in Appendix \ref{appendix:general-optimizations-results}.}
+  \caption{An example of a true positive, i.e. a variable time program that was rejected by Welch's t-test, from the \texttt{O0} dataset. 
+  The source code of the program is shown in Appendix \ref{appendix:general-optimizations-results}. 
+  Notice that inputs from the fuzz classes \texttt{small}, \texttt{xzero}, \texttt{fixed} and \texttt{max64} are significantly faster than the rest.
+  That is because the program branches on whether $x$ is signed or not (\texttt{js} instruction in line 7), which it never is in these 4 classes.}
   \label{fig:general-optimizations-O0-true-positive}
 \end{figure}
 
-Other findings from the other datasets also deserve mentioning.
+Findings from the other datasets also deserve mentioning.
 The \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os} datasets had several false negatives, i.e. programs that were not rejected by Welch's t-test, but were variable time.
 Concretely, we saw examples where the assembled code branched on a \textit{very} specific scenario, e.g. if $x = 8129346172934691$, which is near-impossible to detect by fuzzing since the probability of hitting that specific value is very low.
 We did not find any false positives in any other dataset than \texttt{O0}.
@@ -305,7 +308,7 @@ Concrete examples of true and false positives and negatives can be found in Appe
 Finally, we want to address the fact that the general optimizations datasets were generated with programs that had ASTs of max depth 5.
 This was done to reduce the length of the programs to make them more manageable for analysis.
 However, we also generated datasets with ASTs of max depth 12 and found that the results were similar in the \texttt{O0} and \texttt{O1} datasets, while the \texttt{O2}, \texttt{O3} and \texttt{Os} datasets had significantly more programs with conditional branching -- around 5\%, 5\% and 2\% respectively.
-We deem the choice of max depth 5 to be a good compromise between the length of the programs and the number of conditional branches, and our results underline the problem we are trying to address.
+We deem the choice of max depth 5 to be a good compromise between the length of the programs and the number of conditional branches for our results to underline the problem we are trying to address.
 
 \subsection{Specific Optimizations}
 \label{sec:specific-optimizations}
@@ -386,7 +389,7 @@ In some expressions of the form $e$ \texttt{comp} $e'$, where $e$ and $e'$ conta
 
 \texttt{42 * (x == 42) == (y == 42)} is an example of an expression that will be variable-time when compiling with \texttt{O2}, \texttt{O3} or \texttt{Os}, specifically because of PRE.
 PRE will identify two control flow paths in this expression: one where $x=42$ and one where $x \neq 42$.
-If $x=42$, the expression will always evaluate to $0$.
+If $x=42$, the expression will always evaluate to $0$ since \texttt{42 * (42 == 42) == (y == 42)} will evaluate to $42 \stackrel{?}{=} 0$ or $42 \stackrel{?}{=} 1$ which is false in both cases.
 If $x \neq 42$, the expression depends on whether $y=42$.
 Hence \texttt{(y == 42)} is redundant in the first control flow path, but not in the second.
 As a result, PRE will insert a conditional branch that branches on $x = 42$ and only considers $y$ if that is \textit{not} the case.
