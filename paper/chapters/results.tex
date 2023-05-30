@@ -28,6 +28,7 @@ The lack of confirmed results might be ascribed to the simplicity of the generat
 As no timing vulnerabilities were found using \texttt{clang}, all following subsections will present data obtained only through \texttt{gcc}.
 
 \subsection{General Optimizations}
+\label{sec:general-optimizations}
 We ran the OptiFuzz pipeline with the optimization flags \texttt{O0}, \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os}. 
 For each optimization flag, we generated 100,000 programs, which were then fuzzed and analyzed. 
 The ASTs of the generated programs were restricted to have a max depth of 5.
@@ -307,6 +308,7 @@ However, we also generated datasets with ASTs of max depth 12 and found that the
 We deem the choice of max depth 5 to be a good compromise between the length of the programs and the number of conditional branches, and our results underline the problem we are trying to address.
 
 \subsection{Specific Optimizations}
+\label{sec:specific-optimizations}
 The results in Table \ref{tab:general-optimizations} show that the percentage of vulnerable programs is the highest for the \texttt{O0} dataset, then it decreases significantly for the \texttt{O1} dataset, and then it increases significantly for the \texttt{O2} and \texttt{O3} datasets.
 The significant decrease from \texttt{O0} to \texttt{O1} points to the fact that some optimizations in \texttt{gcc} decrease the number of conditional branches. 
 Despite running several hundred experiments testing each possible configurable optimization flag \citep{gcc-manual} individually, we were not able to identify which optimizations were responsible for this decrease.
@@ -325,5 +327,65 @@ Specifically, PRE tries to eliminate computations that are redundant in some, bu
 This is done by moving the computation to a point in the program where it is guaranteed to be executed only once.
 This results in different control flow paths with different amounts of instructions, which in turn result in timing vulnerabilities.
 
-\subsection{Vulnerable Operations}
-\todo{Try to identify what operations are vulnerable}
+\subsection{Vulnerable Expressions}
+We identified various types of expressions that were compiled into conditional branches.
+We identified expressions on the form $c$ \texttt{op} $x$ \texttt{comp} $y$, where $c$ is a constant, \texttt{op} is a bitwise operator, \texttt{comp} is a comparison operator, and $x$ and $y$ are variables.
+Expressions of this form result in constant-time code containing conditional branches, much like the example in Figure \ref{fig:assembly-inspection-example}.
+
+A more severe type of expression that we identified was expressions on the form $undefined$ \texttt{op} $(x$ \texttt{comp} $y)$, where $undefined$ contains undefined behavior, \texttt{op} is a bitwise operator, \texttt{comp} is a comparison operator, and $x$ and $y$ are variables. 
+Expressions of this form sometimes result in variable-time code when compiled with \texttt{O0}.
+However, when compiled with \texttt{O1}, \texttt{O2}, \texttt{O3} or \texttt{Os}, the entire program is optimized away and replaced with \texttt{return 0;}.
+This is because the compiler can deduce that the expression contains undefined behavior, and, according to the C standard, the compiler is allowed to replace undefined behavior with anything \citep{c-standard}.
+An example of this type of expression and its corresponding assembly, when compiled with \texttt{O0}, is shown in Figure \ref{fig:vulnerable-expression}.
+
+\begin{figure}[H]
+  \centering
+     \begin{subfigure}[b]{0.41\textwidth}
+        \begin{lstlisting}[style=defstyle,language={C},basicstyle=\ttfamily,breaklines=true]
+int program(long long int x, long long int y) { 
+  return (42 >> -1) & (x == y); 
+}\end{lstlisting} 
+      \vspace{10em}
+      \caption{An example of a program containing an expression of the form $undefined$ \texttt{op} $(x$ \texttt{comp} $y)$.}
+    \end{subfigure}
+    \hspace{1cm}
+    \begin{subfigure}[b]{0.35\textwidth}
+      \begin{lstlisting}[style=defstyle,language={[x86masm]Assembler},basicstyle=\ttfamily,breaklines=true]
+...
+  pushq   %rbp
+  movq    %rsp, %rbp
+  movq    %rdi, -8(%rbp)
+  movq    %rsi, -16(%rbp)
+  movq    -8(%rbp), %rax
+  cmpq    -16(%rbp), %rax
+  jne     .L2
+  movl    $-1, %eax
+  movl    $42, %edx
+  movl    %eax, %ecx
+  sarl    %cl, %edx
+  movl    %edx, %eax
+  andl    $1, %eax
+  jmp     .L4
+.L2:
+  movl    $0, %eax
+.L4:
+  popq    %rbp
+  ret
+...\end{lstlisting} 
+       \caption{Corresponding assembly code when compiled with \texttt{O0} in \texttt{gcc}.}
+  \end{subfigure}
+  \caption{An example of a small program that causes \texttt{gcc} to generate variable-time code when compiled with \texttt{O0}. Specifically, one can obtain whether $x$ is equal to $y$ by timing the program.}
+  \label{fig:vulnerable-expression}
+\end{figure}
+
+Finally, and perhaps most importantly, we identified expressions that will result in variable-time code when compiled with \texttt{O2}, \texttt{O3} and \texttt{Os}.
+As mentioned in Section \ref{sec:specific-optimizations}, partial redundancy elimination (PRE) can introduce conditional branches.
+PRE is enabled for \texttt{O2}, \texttt{O3} and \texttt{Os} \citep{gcc-manual}.
+In some expressions of the form $e$ \texttt{comp} $e'$, where $e$ and $e'$ contain subexpressions that are not common between $e$ and $e'$, PRE will introduce conditional branches.
+
+\texttt{42 * (x == 42) == (y == 42)} is an example of an expression that will be variable-time when compiling with \texttt{O2}, \texttt{O3} or \texttt{Os}, specifically because of PRE.
+PRE will identify two control flow paths in this expression: one where $x=42$ and one where $x \neq 42$.
+If $x=42$, the expression will always evaluate to $0$.
+If $x \neq 42$, the expression depends on whether $y=42$.
+Hence \texttt{(y == 42)} is redundant in the first control flow path, but not in the second.
+As a result, PRE will insert a conditional branch that branches on $x = 42$ and only considers $y$ if that is \textit{not} the case.
