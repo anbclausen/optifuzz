@@ -293,7 +293,7 @@ However, our results also show that definite timing leaks are present in the \te
   \label{fig:general-optimizations-O0-true-positive}
 \end{figure}
 
-Other findings from the other datasets also deserve mentioning.
+Findings from the other datasets also deserve mentioning.
 The \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os} datasets had several false negatives, i.e. programs that were not rejected by Welch's t-test, but were variable time.
 Concretely, we saw examples where the assembled code branched on a \textit{very} specific scenario, e.g. if $x = 8129346172934691$, which is near-impossible to detect by fuzzing since the probability of hitting that specific value is very low.
 We did not find any false positives in any other dataset than \texttt{O0}.
