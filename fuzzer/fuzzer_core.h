@@ -104,6 +104,7 @@ int run_single(analysis_st *analysis, distribution_et *dists, size_t dists_size)
  * @fn          parse_classes
  * @brief       Parses a string of space seperated distribution names.
  * @param       str                 A zero terminated string with space seperated distributions.
+ * @param       size                Set to the amount if classes parsed classes.
  * @return      Returns an array of all the classes.
  */
 distribution_et *parse_classes(const char *str, size_t *size);
