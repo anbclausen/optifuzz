@@ -26,10 +26,7 @@ static void write_data(const analysis_st *analysis, distribution_et *dists, size
 
         FILE *fs = fopen(filename, "w");
         if (fs == NULL)
-        {
-            print_error("Error when opening file\n");
-            exit(EXIT_FAILURE);
-        }
+            exit_error("Error when opening file\n");
 
         fprintf(fs, "# compile flags: [%s], fuzz class: [%s]\n", flag, dist_str);
         fprintf(fs, "input_a,input_b,min_clock_measured");
@@ -61,29 +58,20 @@ int main(int argc, char const *argv[])
     size_t count;
 
     if (argc != 4)
-    {
-        print_error("usage: %s #data-points flag \"class1 class2 ...\"", argv[0]);
-        exit(EXIT_FAILURE);
-    }
+        exit_error("usage: %s #data-points flag \"class1 class2 ...\"", argv[0]);
 
     count = atoi(argv[1]);
     flag = argv[2];
     classes_string = argv[3];
 
-    if (initialize_analysis(&analysis, count))
-    {
-        print_error("Could not initialize analysis struct!\n");
-        exit(EXIT_FAILURE);
-    }
+    if (initialize_analysis(&analysis, count) == FAILURE)
+        exit_error("Could not initialize analysis struct!\n");
 
     size_t number_of_dists;
     distribution_et *dists = parse_classes(classes_string, &number_of_dists);
 
-    if (run_single(&analysis, dists, number_of_dists))
-    {
-        print_error("Fuzz run failed!\n");
-        exit(EXIT_FAILURE);
-    }
+    if (run(&analysis, dists, number_of_dists) == FAILURE)
+        exit_error("Fuzz run failed!\n");
 
     write_data(&analysis, dists, number_of_dists, flag);
 
