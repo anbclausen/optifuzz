@@ -13,7 +13,8 @@
 \maketitle
 \thispagestyle{empty}
 
-\section*{Abstract}
+\section*{\centering Abstract}
+{\fontsize{8pt}{1em}\selectfont
 Developers strive to write secure cryptographic code that is resistant to various attacks, including timing attacks.
 It is a well-established fact that C compilers can introduce timing vulnerabilities into programs, even when the source code is seemingly secure.
 However, to our knowledge, the extent of this problem is quantitatively unknown: 
@@ -25,7 +26,7 @@ Using OptiFuzz, we have generated and compiled 600,000 random C programs and sho
 Contrarily, we show that \texttt{clang} introduces timing vulnerabilities much more rarely.
 This has led us to pinpoint specific optimizations within \texttt{gcc} that are responsible for introducing timing vulnerabilities, as well as specific expression patterns that are vulnerable to resulting in timing vulnerabilities when compiled.
 In light of this result, we have discussed how the issue of timing vulnerabilities introduced by compilers can be mitigated by using language-based security techniques from the literature.
-
+}
 \section{Introduction}
 \input{chapters/introduction.tex}
 
@@ -67,7 +68,7 @@ In light of this result, we have discussed how the issue of timing vulnerabiliti
 
 \section{Select General Optimizations Results}
 \label{appendix:general-optimizations-results}
-\input{appendix/general-optimizations-results/master.tex}
+%\input{appendix/general-optimizations-results/master.tex}
 
 \end{appendices}
 
