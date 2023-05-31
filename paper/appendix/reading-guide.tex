@@ -1,0 +1,37 @@
+\section*{Appendix Reading Guide}
+The following is a guide on how to interpret the results produced by OptiFuzz. 
+
+In the top of a page, a program signature line will be shown:
+\begin{center}
+    \textbf{Program 1} -- \texttt{Seed 257634744} -- \texttt{gcc O0 O1 O2 O3}\\\small\texttt{Classes: uniform fixed xzero yzero xlty yltx small equal max64}\\[2mm]
+\end{center}
+The seed used to generate the program is printed, followed by the compiler and compiler flags.
+On a new line, all input classes that the fuzzer used are printed.
+Refer to \ref{sec:fuzzing} for a description of each input class.
+
+Next the program is shown:
+\begin{lstlisting}[style=defstyle,language=C]
+...
+int program(long long int x, long long int y) { return (((44 ^ ((false >> (-874552120269441001 == x)) | ((53 * 29) >= (-5509653365268467218 ^ x)))) * 24) & (false + x)); }
+\end{lstlisting}
+The first two lines of the program have been trimmed. Namely, two define statements
+which define \texttt{false} to 0 and \texttt{true} to 1.
+What follows now is a histogram of the measured times:
+\input{appendix/reading-guide-assets/figure-tikz.tex}
+The histogram caption at the top indicates which compiler flag was used to compile the program.
+The table below the histogram indicates the means for the different input classes.
+These means have been drawn as dashed lines over the histogram.
+
+The histogram plot is not conventional, as the saturation indicates agreement across all input classes.
+That is, if a bucket is close to transparent, then that might indicate, that it only came from one input class.
+If multiple input classes have bins at the same location with the same height, the bin will be very saturated. 
+If we examine the histogram above, we see that some input classes got about a total of about 1000 measurements in the [25, 32] interval.
+As no mean sticks out - other than the \texttt{equal} class - it might be disregarded as noise.
+
+Next is the assembly, hypothesis rejection flag, and jump indicators, which should be directly below the histogram.
+\input{appendix/reading-guide-assets/asm-lst.tex}
+Only if the hypothesis was rejected, it will be marked with red.
+
+The jump indicator \texttt{jg [10]} tells us, that a \texttt{jg} instruction was found on line 10.
+
+\newpage
