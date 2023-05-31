@@ -12,6 +12,7 @@ OptiFuzz depends on a few languages and libraries:
 $ pip install -r python_requirements.txt
 ```
 
+***Note**: This runs on an Intel x86-64 processor. However, we got some bad results when fuzzing on an AMD processor. Our usage of the TSC register for timing is primarily based on how the serializing CPUID and the TSC read instructions work according to Intel's documentation. Thus, it is possible that AMD's implementation differs slightly. Your mileage may vary.*
 
 ## Paper
 We made a paper describing the tool and our findings with it. It can be found in the `paper` folder.
