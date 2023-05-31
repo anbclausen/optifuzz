@@ -19,7 +19,7 @@ int foo(int x) {
 
 \subsection{Optimizing Compilers}
 Cryptographers will avoid code like the example in Figure \ref{fig:timing-attack-example} and write constant-time code instead.
-Constant-time code is code where the execution time is independent of the input.
+Code is constant-time if the execution time of the program is independent of the input.
 However, the compiler may introduce timing vulnerabilities through optimizations by adding variable-time branches to the machine code.
 The issue arises in the analysis and transformation phases of the compiler as illustrated in Figure \ref{fig:optimizing-compiler-pipeline}.
 
@@ -38,7 +38,7 @@ To illustrate this point, we look at how common subexpression elimination can in
 \label{sec:cse}
 Common Subexpression Elimination is an optimization technique that extracts subexpressions that are common across multiple expressions and replaces them with a single variable.
 This optimization technique can introduce timing vulnerabilities since it can decrease the number of instructions executed for a specific branch of the code as illustrated in Figure \ref{fig:common-subexpression-elimination}.
-Here the common subexpression \texttt{2 * 3 + 5} is extracted and assigned to the variable \texttt{common}, making the \texttt{else} branch execute faster than the \texttt{if} branch.
+Here the common subexpression \texttt{2 * 3 + 5} is extracted and assigned to the variable \texttt{common}, making the \texttt{else}-branch execute faster than the \texttt{then}-branch.
 
 \begin{figure}[H]
   \centering
@@ -75,6 +75,6 @@ int foo(int x, int *arr) {
 } \end{lstlisting} 
        \caption{Optimized code.}
   \end{subfigure}
-  \caption{An example of how the common subexpression elimination can introduce timing vulnerabilities in code. (a) shows the original code and (b) shows the optimized code.}
+  \caption{An example of how the common subexpression elimination can introduce timing vulnerabilities in code.}
   \label{fig:common-subexpression-elimination}
 \end{figure}
