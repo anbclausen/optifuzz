@@ -1,7 +1,7 @@
 \label{sec:evaluation}
 In this section, we evaluate the quality of our results and the OptiFuzz tool.
 Generally, we found that the problem of timing vulnerabilities in \texttt{gcc} is prevalent and, according to OptiFuzz, between 0.15\% and 12.63\% of random C programs are vulnerable to timing attacks depending on what optimizations are used when compiling. 
-We argue that these results are predominantly representative of the actual real world problem in the following.
+We argue that these results are predominantly representative of the actual real-world problem in the following.
 
 Our results have surfaced real problems in \texttt{gcc} since they have led us to pinpoint exact problematic optimizations as well as specific code patterns that are vulnerable to timing attacks (see Section \ref{sec:specific-optimizations} and \ref{sec:vulnerable-expressions} respectively).
 However, some uncertainties are present throughout our pipeline.
@@ -29,6 +29,8 @@ Furthermore, from manual analysis, we found that there are quite a lot of false 
 As argued in Section \ref{sec:general-optimizations}, this is due to a large number of programs branching on very specific inputs.
 This means that the programs are not rejected by Welch's t-test since the branch is not taken often enough to cause a significant difference in the execution time.
 This is a problem since the programs are still vulnerable to timing attacks.
+OptiFuzz is still a great tool in this particular case, as our analysis and visualization pipeline aids in the manual
+discovery of timing leaks.
 
 Additionally, we only applied statistical analysis between the input classes \texttt{fixed} and \texttt{uniform}.
 This means that we have missed some vulnerable programs that branch on other input classes.

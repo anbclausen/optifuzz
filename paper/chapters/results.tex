@@ -40,22 +40,20 @@ The results are shown in Table \ref{tab:general-optimizations} and visualized re
 \begin{table}[H]
   \centering
   \begin{tabular}{l|lllll}
-                                           & \textbf{\texttt{O0}} & \textbf{\texttt{O1}} & \textbf{\texttt{O2}} & \textbf{\texttt{O3}} & \textbf{\texttt{Os}} \\ \hline
-  \# of flagged programs                   & 19758                                 & 231                                   & 1005                                  & 999                                   & 366                                   \\
-  \% of flagged programs                   & 19.76\%                               & 0.23\%                                & 1.00\%                                & 1.00\%                                & 0.37\%                                \\
-  \# of programs with rejected $H_0$       & 12627                                 & 147                                   & 624                                   & 640                                   & 199                                   \\
-  \% of rejected programs (out of total)   & 12.63\%                               & 0.15\%                                & 0.62\%                                & 0.64\%                                & 0.20\%                                \\
-  \% of rejected programs (out of flagged) & 63.91\%                               & 63.64\%                               & 62.09\%                               & 64.06\%                               & 54.37\%                              
+                                     & \textbf{\texttt{O0}} & \textbf{\texttt{O1}} & \textbf{\texttt{O2}} & \textbf{\texttt{O3}} & \textbf{\texttt{Os}} \\ \hline
+  flagged programs                   & 19.76\%                               & 0.23\%                                & 1.00\%                                & 1.00\%                                & 0.37\%                                \\
+  $H_0$ rejected programs (out of total)   & 12.63\%                               & 0.15\%                                & 0.62\%                                & 0.64\%                                & 0.20\%                                \\
+  $H_0$ rejected programs (out of flagged) & 63.91\%                               & 63.64\%                               & 62.09\%                               & 64.06\%                               & 54.37\%                              
   \end{tabular}
   \caption{Results for the optimization flags \texttt{O0}, \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os} using \texttt{gcc}. 
   The results are based on 100,000 generated programs for each optimization flag. 
   Each program is generated from an AST of max depth 5.
-  The first and second rows show the number and percentage of programs that contained conditional branching instructions after compilation (potential timing leak).
-  The third, fourth and fifth rows show the number and percentage of programs that resulted in $H_0$ getting rejected in Welch's t-test (definite timing leak).}
+  The first row shows the percentage of programs that contained conditional branching instructions after compilation (potential timing leak).
+  The second and third rows show the percentage of programs that resulted in $H_0$ getting rejected in Welch's t-test (definite timing leak).}
   \label{tab:general-optimizations}
 \end{table}
 Our results show that the problem is very prevalent in \texttt{gcc} with \texttt{O0}, surprisingly, being the worst offender where over a tenth of the randomly generated programs were rejected by Welch's t-test. 
-The fact that \texttt{O0} introduces timing vulnerabilities with such a high probability is concerning since \texttt{O0} has most configurable optimizations turned off \citep{gcc-manual}.
+The fact that \texttt{O0} introduces timing vulnerabilities with such a high probability is concerning since \texttt{O0} has the most configurable optimizations turned off \citep{gcc-manual}.
 This points to the fact that it is not easy for the developer to mitigate problematic optimizations in \texttt{gcc}.
 
 Our experiment revealed some limitations to our approach to finding timing vulnerabilities. 
