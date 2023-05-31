@@ -1,3 +1,4 @@
+
 We have provided a tool, OptiFuzz, that can be used to test compilers for timing vulnerabilities.
 OptiFuzz has been optimized considering the C language specification, the x86-64 architecture, and state-of-the-art statistical analysis.
 This has resulted in a simple tool that is indicative of the real-world issue of timing vulnerabilities introduced by compilers.
@@ -7,4 +8,12 @@ We have also shown that due to better utilization of \texttt{cmovcc} instruction
 In light of this result, we have discussed how the issue of timing vulnerabilities introduced by compilers can be mitigated by using language-based security techniques from the literature.
 Generally, solutions to this problem represent a trade-off between security and performance where very secure solutions are not that performant and vice versa.
 
-In the light of our research, we have identified several areas for future work. $\ldots$
+In the light of our research, we have identified several areas for future work:
+\begin{itemize}
+    \setlength\itemsep{-0.6em}
+    \item Extend OptiFuzz to generate more complicated programs, eg. by reintroducing the division and modulus operators while dealing with division by zero in a meaningful way.
+    \item Implement other relevant input classes. Perhaps a dynamic class containing the hardcoded values from a program. This might be able to catch the very specific but unpredictable values that cause branching.
+    \item Extend the statistical analysis and consider results from all input classes. This could include researching the usability of other t-tests.
+    \item Create a tool that warns developers in real-time about constant C expressions that might be compiled to variable time by comparing it to a database precomputed using OptiFuzz. This tool could furthermore be implemented in a CI/CD environment.
+    \item Extend OptiFuzz to support other processor architecture, especially including ones used by embedded systems.
+\end{itemize}
