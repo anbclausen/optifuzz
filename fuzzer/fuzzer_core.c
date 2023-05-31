@@ -212,12 +212,6 @@ static void measure(uint64_t *measurements[ITERATIONS], input_st *inputs, size_t
     }
 }
 
-/**
- * @fn          dist_to_string
- * @brief       Converts an element of distribution_et type to its string representation.
- * @param       dist                The name of the file to write to.
- * @return      The string representation or NULL if bad distribution.
- */
 const char *dist_to_string(distribution_et dist)
 {
     for (size_t i = 0; i < DIST_COUNT; i++)
@@ -311,14 +305,6 @@ status_et initialize_analysis(analysis_st *analysis, size_t count)
     return SUCCESS;
 }
 
-/**
- * @fn          destroy_analysis
- * @brief       Frees all memory used by analysis_st struct element.
- * @details     This function should only be used on already initialized
- *              analysis_st struct elements.
- * @param       analysis            The anaylis to be initialized.
- * @param       count               The amount of measurements to get.
- */
 void destroy_analysis(analysis_st *analysis)
 {
     // Free input for memory and measurements

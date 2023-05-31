@@ -65,6 +65,7 @@ typedef struct
  * @fn          dist_to_string
  * @brief       Converts an element of distribution_et type to its string representation.
  * @param       dist                The name of the file to write to.
+ * @return      Returns distribution string or NULL on failure.
  */
 const char *dist_to_string(distribution_et dist);
 
@@ -93,6 +94,7 @@ void destroy_analysis(analysis_st *analysis);
  * @details     Aditional calls to this function will overwrite the last
  *              returned string.
  * @param       dist_str            String represenation of the distribution.
+ * @return      Pointer to buffered string.
  */
 const char *construct_filename(const char *dist_str);
 
