@@ -1,11 +1,73 @@
-\todo{How do we solve the issue?}
+From the previous sections, it is clear that modern compilers introduce timing vulnerabilities in constant-time programs.
+This is devastating for security since it means that developers cannot reliably write constant-time code.
+A solution is required.
+In this section, we discuss how the problem can be solved and what the implications different solutions have on security and efficiency.
 
-\todo{CMOV has been around since 1995 \citep{cmov-from-1995}, but GCC is not utilizing it yet. Fix it, GCC!
-However, might be because of CPU specific optimizations where CMOV is actually slower.
-Relevant thread: \url{https://gcc.gnu.org/bugzilla/show_bug.cgi?id=56309}}
+As shown in Section \ref{sec:gcc-vs-clang}, \texttt{clang} is much more conservative when it comes to inserting conditional branches in constant-time programs.
+Instead of inserting variable-time conditional branches, \texttt{clang} uses constant-time conditional moves to implement branching control flow.
+From this observation, it might be tempting to conclude that always substituting conditional branches with conditional moves is the solution to the problem.
+However, there is more to the story.
 
-\todo{Implement secret keyword: \url{https://electricdusk.com/cmov-conversion.html}}
+\texttt{cmov} instructions severely restrict the out-of-order engine on modern CPUs since \texttt{cmov} instructions increase the data dependency between instructions significantly \citep{intel-optimization-reference}. 
+Furthermore, branch predictions are not used for \texttt{cmov} instructions, which can lead to significant performance degradation.
+Hence, we have to address this trade-off between security and efficiency.
 
-\todo{Discuss what you pay for security in the proposed solutions.}
+\subsection{Forcing \texttt{cmov} Instructions When Necessary}
+\label{sec:forcing-cmov}
+This trade-off between security and efficiency has led multiple researchers to propose solutions that only force \texttt{cmov} instructions to be used on critical data \citep{what-you-c,llvm-issues-blog-post}.
+In both studies, the authors propose to add the possibility to specify forced \texttt{cmov} instructions in the source code and restrict the backend of the compiler to not being able to optimize the \texttt{cmov} away for those specific instructions.
+This solution has the advantage that it does not affect the performance of non-critical parts of the program.
+In fact, \citeauthor{what-you-c} show that their solution only introduces a performance penalty of 1\% and sometimes even increases performance.
 
-\todo{Maybe bring in the fact that compilers are not totally configurable like gcc.}
+However, this solution also has its disadvantages.
+First, the solution relies heavily on the developer.
+The developer has to know which parts of the program are critical, and also be able to use the language extension correctly.
+In turn, it means that security relies on human factors, which are error-prone.
+Second, the solution relies on the compiler being configurable to avoid forced \texttt{cmov} instructions being optimized away.
+As we discussed in Section \ref{sec:gcc-vs-clang} and \ref{sec:general-optimizations}, \texttt{clang} seems to be quite configurable while \texttt{gcc} does not.
+Hence, the solution might not be easily applicable to all compilers.
+
+Another solution is to implement vulnerable parts of the program using a domain-specific language that is designed to be constant-time.
+\citeauthor{fact} proposed a domain-specific language, called FaCT, for implementing constant-time cryptographic algorithms \citep{fact}.
+FaCT is designed to be interoperable with C, and the compiler ensures constant-time code by leveraging the \texttt{ct-verif} tool that is based on verification of the LLVM IR \cite{verifying-constant-time-llvm}.
+\texttt{ct-verif} operates on a formalization of constant-time code and verifies based on a theoretically sound and complete methodology.
+However, \citeauthor{verifying-constant-time-llvm} note that the verification process of \texttt{ct-verif} is not guaranteed to identify all timing vulnerabilities due to translation between the LLVM IR and machine code, and due to possible incompleteness of their formalization of constant-time code. 
+Some of these issues were experimentally verified.
+However, generally \texttt{ct-verif} captures significantly more timing vulnerabilities than other verification alternatives \citep{verifying-constant-time-llvm}.
+Additionally, \texttt{ct-verif} is efficient at verifying constant-time code, often being much faster than the compilation step, but occasionally being a few times slower.
+
+\subsection{Bullet-proofing the Compiler}
+A more radical approach is to force the compiler to always produce constant-time code.
+\citeauthor{verified-constant-time-c-comiler} provides a formally verified constant-time C compiler, built on top of the CompCert verified C compiler \citep{verified-constant-time-c-comiler}. 
+The constant-time CompCert compiler guarantees that constant-time source code is compiled into constant-time machine code.
+This is achieved by instrumenting the operational semantics of CompCert's IR to be able to capture cryptographic constant-time and proving that cryptographic constant-time is preserved during compilation. 
+This has immense advantages for security.
+
+However, the security advantages come at the cost of efficiency. 
+The constant-time CompCert compiler is significantly slower than \texttt{gcc}.
+Experimental results show an efficiency penalty of well over 100\% in some cases \citep{verified-constant-time-c-comiler}.
+
+\subsection{Testing Solutions}
+The final category of solutions we identified is black-box testing solutions like DudeCT \citep{dudect} and our tool OptiFuzz.
+Concretely, one can test specific implementations for timing vulnerabilities using these tools.
+These tests can even be automated to run as part of a continuous integration pipeline.
+Solutions in this category have the obvious advantage that they are simple and require no modeling of hardware behavior or language semantics.
+It is arguably the most practical solution since it does not require any changes to the compiler or the language.
+It also does not induce any performance penalty.
+
+The testing solutions, however, come with a significant security disadvantage in that they are noisy and not exact.
+As we showed in Section \ref{sec:general-optimizations}, OptiFuzz will produce false positives and false negatives.
+\citeauthor{dudect} raised similar concerns for DudeCT.
+Fuzzing tools provide more of an indication of the presence of timing vulnerabilities than a guarantee.
+
+Finally, we want to mention the possibility to combine the solutions.
+OptiFuzz differs from other existing solutions in that it operates on the tool level instead of the program level.
+For example, we have used OptiFuzz to conclude that \texttt{gcc} is not suitable for compiling constant-time code, while \texttt{clang} is safer.
+Hence OptiFuzz might be tailored to be used in combination with the solutions mentioned in Section \ref{sec:forcing-cmov} to detect security vulnerabilities in these.
+This would allow tool developers to maximize the security of their tools while keeping a low performance penalty.
+
+In summary, various solutions exist to the problem of timing vulnerabilities in constant-time programs.
+The solutions range from solutions that are very efficient but not very secure to solutions that are very secure but not very efficient.
+The correct solution depends on the use case.
+But importantly, many developers do not make use of these tools even though they are aware of the problem \citep{developer-survey-timing-attacks}.
+Hence, we urge developers to start using these tools since, as we showed, relying on the compiler to produce constant-time code is not a viable solution.
