@@ -1,0 +1,27 @@
+\begin{figure}[H]
+    \centering
+\begin{subfigure}[T]{0.2733333333333333\textwidth}
+\vspace*{2mm}\tiny {\color{red}$H_0$ REJECTED!}\ \vspace*{2mm}\tiny jg [10]
+\begin{lstlisting}[style=defstyle,language={[x86masm]Assembler},basicstyle=\tiny\ttfamily,breaklines=true]
+...
+	endbr64
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -8(%rbp)
+	movq	%rsi, -16(%rbp)
+	movabsq	$-5509653365268467218, %rax
+	xorq	-8(%rbp), %rax
+	cmpq	$1537, %rax
+	jg	.L2
+	movl	$1080, %edx
+	jmp	.L3
+.L2:
+	movl	$1056, %edx
+.L3:
+	movq	-8(%rbp), %rax
+	andl	%edx, %eax
+	popq	%rbp
+	ret
+...\end{lstlisting}
+\end{subfigure}
+\end{figure}
