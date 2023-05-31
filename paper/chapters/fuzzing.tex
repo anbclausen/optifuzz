@@ -30,6 +30,7 @@ Hence, the need for input classes.
 As mentioned in Section \ref{sec:code-generation}, for each program, there are an $x$ and a $y$ value. 
 All input classes generate inputs concerning these inputs can be seen in the following list.
 \begin{itemize}
+    \setlength\itemsep{-0.5em}
     \item \texttt{UNIFORM}: $x$ and $y$ are uniformly random 64-bit numbers.
     \item \texttt{EQUAL}:  $x$ and $y$ are the same uniformly random 64-bit number.
     \item \texttt{MAX64}: Either $x$ or $y$ is a random 64-bit number, the other is uniformly random.
@@ -38,7 +39,7 @@ All input classes generate inputs concerning these inputs can be seen in the fol
     \item \texttt{XLTY}: Two uniformly random numbers are generated, $x$ is set to the smaller, $y$ to the larger.
     \item \texttt{YLTX}: Two uniformly random numbers are generated, $y$ is set to the smaller, $x$ to the larger.
     \item \texttt{SMALL}: $x$ and $y$ are uniformly random 8-bit numbers (the upper 56 bits are set to 0).
-    \item \texttt{FIXED}: $x$ and $y$ have the same fixed number $0x12345678$ (used for the t-test).
+    \item \texttt{FIXED}: $x$ and $y$ have the same fixed number $0x12345678$ (used for Welsh's t-test).
 \end{itemize}
 These classes have been made based on observations of values commonly used in comparisons in emitted assembly code.
 
