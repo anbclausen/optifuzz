@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #define print_error(...) (fprintf(stderr, __VA_ARGS__))
+#define exit_error(...) (fprintf(stderr, __VA_ARGS__), exit(EXIT_FAILURE))
 
 #define ITERATIONS 50 /** The amount of times to cycle through all  \
                         *  fuzz inputs to lower noise from other CPU \
