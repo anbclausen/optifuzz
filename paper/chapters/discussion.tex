@@ -26,8 +26,25 @@ Second, the solution relies on the compiler being configurable to avoid forced \
 As we discussed in Section \ref{sec:gcc-vs-clang} and \ref{sec:general-optimizations}, \texttt{clang} seems to be quite configurable while \texttt{gcc} does not.
 Hence, the solution might not be easily applicable to all compilers.
 
+Another solution is to implement vulnerable parts of the program using a domain-specific language that is designed to be constant-time.
+\citeauthor{fact} proposed a domain-specific language, called FaCT, for implementing constant-time cryptographic algorithms \citep{fact}.
+FaCT is designed to be interoperable with C, and the compiler ensures constant-time code by leveraging the \texttt{ct-verif} tool that is based on verification of the LLVM IR \cite{verifying-constant-time-llvm}.
+\texttt{ct-verif} operates on a formalization of constant-time code and verifies based on a theoretically sound and complete methodology.
+However, \citeauthor{verifying-constant-time-llvm} note that the verification process of \texttt{ct-verif} is not guaranteed to identify all timing vulnerabilities due to translation between the LLVM IR and machine code, and due to possible incompleteness of their formalization of constant-time code. 
+Some of these issues were experimentally verified.
+However, generally \texttt{ct-verif} captures significantly more timing vulnerabilities than other verification alternatives \citep{verifying-constant-time-llvm}.
+Additionally, \texttt{ct-verif} is efficient at verifying constant-time code, often being much faster than the compilation step, but occasionally being a few times slower.
+
 \subsection{Bullet-proofing the Compiler}
-\todo{Language-based solutions - discuss performance penalties}
+A more radical approach is to force the compiler to always produce constant-time code.
+\citeauthor{verified-constant-time-c-comiler} provides a formally verified constant-time C compiler, built on top of the CompCert verified C compiler \citep{verified-constant-time-c-comiler}. 
+The constant-time CompCert compiler guarantees that constant-time source code is compiled into constant-time machine code.
+This is achieved by instrumenting the operational semantics of CompCert's IR to be able to capture cryptographic constant-time and proving that cryptographic constant-time is preserved during compilation. 
+This has immense advantages for security.
+
+However, the security advantages come at the cost of efficiency. 
+The constant-time CompCert compiler is significantly slower than \texttt{gcc}.
+Experimental results show an efficiency penalty of well over 100\% in some cases \citep{verified-constant-time-c-comiler}.
 
 \subsection{Testing Solutions}
 
