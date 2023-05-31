@@ -4,12 +4,19 @@
 #include <stdint.h>
 #include <stddef.h>
 #define print_error(...) (fprintf(stderr, __VA_ARGS__))
+#define exit_error(...) (fprintf(stderr, __VA_ARGS__), exit(EXIT_FAILURE))
 
 #define ITERATIONS 50 /** The amount of times to cycle through all  \
                         *  fuzz inputs to lower noise from other CPU \
                         *  tasks. */
 
 #define MIN(x, y) ((x < y) ? (x) : (y))
+
+typedef enum
+{
+    SUCCESS = 0,
+    FAILURE
+} status_et;
 
 /**
  * @struct      distribution_et
@@ -59,6 +66,7 @@ typedef struct
  * @fn          dist_to_string
  * @brief       Converts an element of distribution_et type to its string representation.
  * @param       dist                The name of the file to write to.
+ * @return      Returns distribution string or NULL on failure.
  */
 const char *dist_to_string(distribution_et dist);
 
@@ -67,9 +75,9 @@ const char *dist_to_string(distribution_et dist);
  * @brief       Allocates memory and initializes an analysis_st struct.
  * @param       analysis            The analysis to be initialized.
  * @param       count               The amount of measurements to get.
- * @return      Returns 0 on success.
+ * @return      Returns SUCCESS or FAILURE.
  */
-int initialize_analysis(analysis_st *analysis, size_t count);
+status_et initialize_analysis(analysis_st *analysis, size_t count);
 
 /**
  * @fn          destroy_analysis
@@ -87,18 +95,19 @@ void destroy_analysis(analysis_st *analysis);
  * @details     Aditional calls to this function will overwrite the last
  *              returned string.
  * @param       dist_str            String represenation of the distribution.
+ * @return      Pointer to buffered string.
  */
 const char *construct_filename(const char *dist_str);
 
 /**
- * @fn          run_single
+ * @fn          run
  * @brief       Run measurements according to analysis parameter and save results.
  * @param       analysis            The specifications for the measurement.
  * @param       dists               The distributions to use.
  * @param       dists_size          The amount of distributions.
- * @return      Returns 0 on success.
+ * @return      Returns SUCCESS or FAILURE.
  */
-int run_single(analysis_st *analysis, distribution_et *dists, size_t dists_size);
+status_et run(analysis_st *analysis, distribution_et *dists, size_t dists_size);
 
 /**
  * @fn          parse_classes
