@@ -13,6 +13,7 @@ Furthermore, branch predictions are not used for \texttt{cmov} instructions, whi
 Hence, we have to address this trade-off between security and efficiency.
 
 \subsection{Forcing \texttt{cmov} Instructions When Necessary}
+\label{sec:forcing-cmov}
 This trade-off between security and efficiency has led multiple researchers to propose solutions that only force \texttt{cmov} instructions to be used on critical data \citep{what-you-c,llvm-issues-blog-post}.
 In both studies, the authors propose to add the possibility to specify forced \texttt{cmov} instructions in the source code and restrict the backend of the compiler to not being able to optimize the \texttt{cmov} away for those specific instructions.
 This solution has the advantage that it does not affect the performance of non-critical parts of the program.
@@ -59,6 +60,14 @@ As we showed in Section \ref{sec:general-optimizations}, OptiFuzz will produce f
 \citeauthor{dudect} raised similar concerns for DudeCT.
 Fuzzing tools provide more of an indication of the presence of timing vulnerabilities than a guarantee.
 
-\todo{Argue that many solutions exist with a mixture of security and efficiency.
-We argue that people should start using them.
-Perhaps OptiFuzz + compromise solutions}
+Finally, we want to mention the possibility to combine the solutions.
+OptiFuzz differs from other existing solutions in that it operates on the tool level instead of the program level.
+For example, we have used OptiFuzz to conclude that \texttt{gcc} is not suitable for compiling constant-time code, while \texttt{clang} is safer.
+Hence OptiFuzz might be tailored to be used in combination with the solutions mentioned in Section \ref{sec:forcing-cmov} to detect security vulnerabilities in these.
+This would allow tool developers to maximize the security of their tools while keeping a low performance penalty.
+
+In summary, various solutions exist to the problem of timing vulnerabilities in constant-time programs.
+The solutions range from solutions that are very efficient but not very secure to solutions that are very secure but not very efficient.
+The correct solution depends on the use case.
+But importantly, many developers do not make use of these tools even though they are aware of the problem \citep{developer-survey-timing-attacks}.
+Hence, we urge developers to start using these tools since, as we showed, relying on the compiler to produce constant-time code is not a viable solution.
