@@ -17,22 +17,12 @@ After a program has been compiled it is linked with the fuzzer and is run.
     \label{fig:fuzzer-pipeline}
 \end{figure}
 
-
-\todo{cut out noise stuff}
 When running the fuzzer, it generates inputs according to 'input classes' dictating the nature of the generated values.
 Each input is independently generated according to a uniformly random class among the supplied ones.
-This way there is no biased order in which the inputs from different classes are used, and thus potential noise is likely to affect all classes equally.
-This is important when comparing timing distributions in the following statistical analysis \ref{sec:statistical-analysis}.
 The fuzzer then executes the linked program for each of the inputs and measures their execution time.
-This is repeated multiple times (we used 50 for our results) to allow for the detection of outliers and get as precise results as possible.
-Note that each repeat consists of fuzzing with each of the randomly generated inputs once.
-Hence, some specific input is not repeated before all other inputs have been used again. 
-This ensures that any noise in the form of longer execution times are spread out over different inputs. 
-This minimizes the chance of falsely identifying an input or fuzzing class as the cause of longer execution times.
-These precautions will be justified and discussed further in the statistical analysis \ref{sec:statistical-analysis}.
 
-We use different input classes for the inputs to the fuzzer, instead of always generating completely random numbers. 
-This is done to try and capture deviating execution time that only takes place for a small sample of the values.
+We use different input classes for generating inputs to the program. 
+This is done to try and capture deviating execution times that only takes place for a small sample of the values.
 If we only used uniformly random 64-bit numbers it would be very unlikely that we would identify such a vulnerability.
 Hence, the need for input classes.
 As mentioned in Section \ref{sec:code-generation}, for each program, there are an $x$ and a $y$ value passed as arguments. 
@@ -60,10 +50,10 @@ This method is the one suggested by \citep{intel-benchmark-code-execution} and i
 This approach also allowed us to avoid the timings being skewed by the CPU performing out-of-order execution.
 Out-of-order executions could lead to the instructions being reordered resulting in not reading the \texttt{TSC} (with the \texttt{RDTSC}(\texttt{P}) instruction) at the correct time. 
 This is mitigated by utilizing the non-privileged \texttt{CPUID} instructions serializing capabilities that ensure that memory transactions for previous instructions are completed before the next instruction is executed \citep[a]{intel-reference}.
-Using \texttt{CPUID} and \texttt{RDTSCP} allows us to enclose the program execution between our time measures as wanted.
+Using \texttt{CPUID} and \texttt{RDTSCP} allows us to enclose the program call between our time measures using \texttt{RDTSC}(\texttt{P}) as wanted.
 
 
-\todo{remove this?}
+\todo{remove this:}
 
 Later, when using these results in the analysis, we use the minimum time for all executions with the same input.
 Using the minimum time as the true execution time instead of the mean filters out the noise from outliers that are the results of i.e. context-switches or congestion \citep{robust-benchmarking}. 
