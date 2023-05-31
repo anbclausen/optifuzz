@@ -1,0 +1,36 @@
+\tikzstyle{box-nb} = [rectangle, minimum width=1.3cm, minimum height=0.3cm, text centered]
+\tikzstyle{box} = [rectangle, minimum width=2.2cm, minimum height=0.8cm, text centered, draw=black]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+\begin{tikzpicture}
+  \node (comp_prog) [box] {\small \begin{tabular}{c} Compile \\ (\textit{compiler}, \textit{flag}) \end{tabular} };
+  \node (programo) [box-nb, below of=comp_prog] {\small \texttt{program.o}};
+  \node (link) [box, below of=programo, yshift=0.1cm] {\small Link};
+  \node (fuzzero) [box-nb, left of=link, xshift=-2.1cm] {\small \texttt{fuzzer.o}};
+  \node (comp_fuzz) [box, left of=fuzzero, xshift=-1.5cm] {\small Compile (\texttt{gcc})};
+  \node (fuzzerc) [box-nb, above of=comp_fuzz] {\small \texttt{fuzzer.c}};
+  \node (fuzzer) [box-nb, right of=link, xshift=1.5cm] {\small \texttt{fuzzer}};
+  \node (run) [box, right of=fuzzer, xshift=1.5cm] {\small Run};
+  \node (classes) [box-nb, above of=run, xshift=-0.7cm] {\small \textit{classes}};
+  \node (inputs) [box-nb, above of=run, xshift=0.7cm] {\small \textit{\#inputs}};
+  \node (results) [box-nb, right of=run, xshift=1.64cm] {\small \texttt{results}};
+  \node (programc) [box-nb, left of=comp_prog, yshift=0.4cm, xshift=-2.34cm] {\small \texttt{program.c}};
+  \node (compiler) [box-nb, left of=comp_prog, xshift=-2.2cm] {\small \textit{compiler}};
+  \node (flag) [box-nb, left of=comp_prog, yshift=-0.4cm, xshift=-2.13cm, yshift=-0.04cm] {\small \textit{\quad\ \ flag}};
+  \node (repeat) [rectangle, draw=black, dashed, minimum height=3.4cm, minimum width=8.4cm, yshift=-0.9cm, xshift=2.3cm] {};
+  \node (repeat-text) [box-nb, above of=repeat, yshift=0.95cm] {\small \textit{Repeated for each optimization flag, compiler, and program }};
+  
+  \draw [arrow] (fuzzerc) -- (comp_fuzz);
+  \draw [arrow] (comp_fuzz) -- (fuzzero);
+  \draw [arrow] (comp_prog) -- (programo);
+  \draw [arrow] (programo) -- (link);
+  \draw [arrow] (fuzzero) -- (link);
+  \draw [arrow] (link) -- (fuzzer);
+  \draw [arrow] (fuzzer) -- (run);
+  \draw [arrow] (run) -- (results);
+  \draw [arrow] (programc)-- (comp_prog);
+  \draw [arrow] (compiler) -- (comp_prog);
+  \draw [arrow] (flag) -- (comp_prog);
+  \draw [arrow] (classes) -- (run);
+  \draw [arrow] (inputs) -- (run);
+\end{tikzpicture}
