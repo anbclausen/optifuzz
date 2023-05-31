@@ -15,7 +15,7 @@ One statistical approach is to apply significance tests between classes of fuzzi
 \resizebox{\linewidth}{!}{
     \input{tikz/gauss-constant.tex}
 }%
-\caption{A constant time program yielding\\a univariate Gaussian with $\mu = 4$}
+\caption{A constant time program yielding\\a univariate Gaussian with $\mu = 4$.}
 \label{fig:univargauss}
 \end{subfigure}
 \begin{subfigure}[t]{0.50\textwidth}
@@ -25,7 +25,7 @@ One statistical approach is to apply significance tests between classes of fuzzi
 \caption{A variable time program, yielding a mixture\\distribution composed of two Gaussian distributions\\having means: $\mu_1 = 4, \mu_2 = 6$ with different variances}
 \label{fig:mixdisgauss}
 \end{subfigure}
-\caption{An example of what we would expect in theory, when we fuzz with different input classes}
+\caption{An example of what we would expect in theory, when we fuzz with different input classes.}
 \label{fig:fuzzclass-statistics-example}
 \end{figure}
 As seen above in Figure \ref{fig:univargauss}, we have an example of what we, in theory, would think the clock-cycles distribution for a constant-time program would look like. Likewise, Figure \ref{fig:mixdisgauss} shows what the distribution could look like for a variable-time program.
@@ -44,7 +44,7 @@ Our methodology extends the above, where we further try to reduce noise, by fuzz
 \begin{figure}[H]
     \centering
     \input{tikz/stat-fuzzing_method.tex}
-    \caption{Noise reduction by picking the minimum measurement of multiple runs}
+    \caption{Noise reduction by picking the minimum measurement of multiple runs.}
     \label{fig:noisered}
 \end{figure}
 For example, if we in our random class sequence \{A, B, B, C\} do two iterations:
@@ -52,10 +52,15 @@ For example, if we in our random class sequence \{A, B, B, C\} do two iterations
     \{A: 2, B: 3, B: 5, C: 2\} \\
     \{A: 4, B: 3, B: 4, C: 3\}
 \end{center}
-where A: 2 corresponds to the program given input from input class A took 2 clock cycles to run, then the final measurements would be: \{A: 2, B: 3, B: 4, C: 2\}. Note that the random class sequence samples once and fixes the input for all iterations.
+where A: 2 corresponds to the program given input from input class A took 2 clock cycles to run, then the final saved measurements would be: \{A: 2, B: 3, B: 4, C: 2\}. Note that the random class sequence samples once and fixes the input for all iterations.
 
 Now we apply a significance test to our measurements. There is a great consensus that Welch's t-test \cite{WELCH1947} works great for the task of leakage detection \cite{cryptoeprint:2015/536}.
-The test tests the null hypothesis that two populations have equal means, which aligns exactly with our described objectives. The strengths of utilizing Welch's t-test are that it is robust to different variances as seen in figure \ref{fig:mixdisgauss}, and that its sampling complexity is low. According to a testing methodology for side channel resistance validation by \citeauthor{Goodwill2011ATM}, comparing only two of our input classes \texttt{FIXED} and \texttt{UNIFORM} is sufficient. This is also what is used in DudeCT \cite{dudect} with a test statistic $t = 10$, and thus what we apply in our methodology.
+The test tests the null hypothesis that two populations have equal means, which aligns exactly with our described objectives. The strengths of utilizing Welch's t-test are that it is robust to different variances as seen in figure \ref{fig:mixdisgauss}, and that its sampling complexity is low. According to a testing methodology for side channel resistance validation by \citeauthor{Goodwill2011ATM}, comparing only two of our input classes \texttt{FIXED} and \texttt{UNIFORM} is sufficient.
+This is also what is used in DudeCT \cite{dudect} with a critical value of $t = 10$. 
+This is a quite high threshold for the test, resulting in constant time programs being flagged as variable time with a very low probability (Type I errors).
+However, the drawback is an increased Type II error, where variable time programs will not show up as variable time.
 
-Finally, the minimal measurements are plotted by generating TikZ with a corresponding program assembly, an indicator showing whether the null hypothesis was rejected, and a list of conditional jump instructions are highlighted. We also plot means for different input classes, aiding in identifying whether or not the program has timing leakages. Note that our plot trims outliers by removing the top 5 percentile; however the t-test works on all measurements.
+Our methodology takes a more conservative approach, where instead of fixing a critical value, we set $p = 0.05$. This significance level will in turn give us an expected Type I error of 5\%; however, the test will perform better when dealing with variable time programs.
+
+Finally, the minimal measurements are plotted by generating TikZ with a corresponding program assembly, an indicator showing whether the null hypothesis was rejected, and a list of conditional jump instructions are highlighted. We also plot means for different input classes, aiding in identifying whether or not the program has timing leakages. Note that our plot trims outliers by removing the top 5 percentile, however, the t-test is applied to all measurements.
 
