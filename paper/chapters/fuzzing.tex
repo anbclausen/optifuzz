@@ -44,7 +44,7 @@ These classes have been chosen based on observations of types of values commonly
 
 Precise measurements of a program's execution time are not trivial to perform. 
 Measurements can be influenced by several things including context switches, interrupts, out-of-order execution, varying CPU clock speed, and congestion. 
-For timing, we use the Time Stamp Counter (\texttt{TSC}) as our source.
+For timing, we use the Time Stamp Counter (\texttt{TSC}) as our source\footnote{The Time Stamp Counter measures time in units of crystal clocks \citep[c]{intel-reference}. We refer to this unit as CPU clocks.}.
 The \texttt{TSC} is a high-resolution counter that (on newer machines) increases at a fixed rate independent of processor frequency and is the most efficient wall clock resource according to \citep[b]{intel-reference}.
 Alternatives like \texttt{HPET} with higher resolutions exist but read the time from a platform resource instead of a register, making it much slower \citep[b]{intel-reference}.
 This method is the one suggested by \citep{intel-benchmark-code-execution} and is the one used in the DudeCT black-box testing tool by \citep{dudect}.

@@ -18,7 +18,7 @@ Furthermore, the programs that are flagged by the assembly inspection module are
 Hence, the assembly inspection module overapproximates the set of programs that are vulnerable to timing attacks.
 For example, the program in Figure \ref{fig:assembly-inspection-example} is flagged by the assembly inspection module, but it is constant-time since both branches take the same amount of time to execute.
 
-\begin{figure}[H]
+\begin{figure}[]
   \centering
   \begin{lstlisting}[style=defstyle, language={[x86masm]Assembler}, basicstyle=\footnotesize\ttfamily,breaklines=true, xleftmargin=4cm, xrightmargin=4cm]
 ...
