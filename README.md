@@ -29,7 +29,7 @@ You can configure the OptiFuzz in the `config.json` file. Here you can
   - `xlty`: Inputs are 64-bit uniformly random numbers, but the first input is smaller than the second.
   - `yltx`: Inputs are 64-bit uniformly random numbers, but the second input is smaller than the first.
   - `small`: Inputs are 8-bit uniformly random numbers.
-  - `fixed`: Both inputs are fixed to `0x12345678`. This fuzzing class is required for statistical analysis purposes (Welch's T-test) that automatically flags programs with timing vulnerabilities based on fuzzing. Additionally, the fuzzing class `uniform` should also be enabled for automatic statistical analysis.
+  - `fixed`: Both inputs are fixed to `0x12345678`. This input class is required for statistical analysis purposes (Welch's T-test) that automatically flags programs with timing vulnerabilities based on fuzzing. Additionally, the input class `uniform` should also be enabled for automatic statistical analysis.
 
 ###
 To make the measurement more accurate (less noise), consider running fuzzing on a single thread and with decreased niceness.
@@ -40,11 +40,15 @@ In Linux this can be done like so:
 Note that -20 niceness is the lower cap, and will drastically decrease the number of context switches and interrupts when fuzzing.
 
 ## Documentation
-`make` targets have been added for the whole pipeline. To run the whole pipeline, do `make all pn={# of random programs to generate} md={max depth of the generated ASTs} in={# of inputs the programs should be fuzzed with}`. At the end you will have a generated pdf report visualizing the results, the code, the assembly and some analysis in `analysis/latex/master.pdf`.
+`make` targets have been added for the whole pipeline. To run the whole pipeline, do 
+```
+make all pn={# of random programs to generate} md={max depth of the generated ASTs} in={# of inputs the programs should be fuzzed with}
+```
+At the end you will have a generated pdf report visualizing the results, the code, the assembly and some analysis in. The saved location is specified in config.json and the default is`results/master.pdf`.
 
-As an example `make all pn=1000 md=5 in=100000` will run the whole pipeline on 1000 random programs with ASTs of maximum depth 5 where each program is fuzzed with 100000 inputs.
+As an example `make all pn=1000 md=5 in=100000` will run the whole pipeline on 1000 random programs with AST's of maximum depth 5 where each program is fuzzed with 100000 inputs.
 
-Note that `in` describes the number of inputs a given program will be fuzzed with for _each_ fuzzing class.
+Note that `in` describes the total number of inputs a given program will be fuzzed with distributed over the input classes.
 
 For a full description of the `make` targets, see:
 ```
