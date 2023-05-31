@@ -32,19 +32,19 @@ Each input classes generate such a pair of inputs according to the following lis
     \setlength\itemsep{-0.6em}
     \item \texttt{UNIFORM}: $x$ and $y$ are uniformly random 64-bit numbers.
     \item \texttt{EQUAL}:  $x$ and $y$ are the same uniformly random 64-bit number.
-    \item \texttt{MAX64}: Either $x$ or $y$ is a random 64-bit number, the other is uniformly random.
+    \item \texttt{MAX64}: Either $x$ or $y$ is the largest positive 64-bit number, the other is uniformly random.
     \item \texttt{XZERO}: $x$ is 0, $y$ is a uniformly random number.
     \item \texttt{YZERO}: $y$ is 0, $x$ is a uniformly random number.
     \item \texttt{XLTY}: Two uniformly random numbers are generated, $x$ is set to the smaller, $y$ to the larger.
     \item \texttt{YLTX}: Two uniformly random numbers are generated, $y$ is set to the smaller, $x$ to the larger.
-    \item \texttt{SMALL}: $x$ and $y$ are uniformly random 8-bit numbers (the upper 56 bits are set to 0).
-    \item \texttt{FIXED}: $x$ and $y$ have the same fixed number $0x12345678$ (used for Welsh's t-test).
+    \item \texttt{SMALL}: $x$ and $y$ are uniformly random positive 8-bit numbers (the upper 56 bits are set to 0).
+    \item \texttt{FIXED}: $x$ and $y$ have the same fixed number $0x12345678$ (used for Welch's t-test).
 \end{itemize}
 These classes have been chosen based on observations of types of values commonly used in conditions in the emitted assembly code.
 
 Precise measurements of a program's execution time are not trivial to perform. 
 Measurements can be influenced by several things including context switches, interrupts, out-of-order execution, varying CPU clock speed, and congestion. 
-For timing, we use the Time Stamp Counter (\texttt{TSC}) as our source.
+For timing, we use the Time Stamp Counter (\texttt{TSC}) as our source\footnote{The Time Stamp Counter measures time in units of crystal clocks \citep[c]{intel-reference}. We refer to this unit as CPU clocks.}.
 The \texttt{TSC} is a high-resolution counter that (on newer machines) increases at a fixed rate independent of processor frequency and is the most efficient wall clock resource according to \citep[b]{intel-reference}.
 Alternatives like \texttt{HPET} with higher resolutions exist but read the time from a platform resource instead of a register, making it much slower \citep[b]{intel-reference}.
 This method is the one suggested by \citep{intel-benchmark-code-execution} and is the one used in the DudeCT black-box testing tool by \citep{dudect}.
@@ -54,12 +54,7 @@ This is mitigated by utilizing the non-privileged \texttt{CPUID} instructions se
 Using \texttt{CPUID} and \texttt{RDTSCP} allows us to enclose the program call between our time measures using \texttt{RDTSC}(\texttt{P}) as wanted.
 
 \subsubsection{Limitations}
-We consider the fuzzer successful when it consistently measures a clear difference in the execution time of a program concerning its input classes.
-This indicates that the program is vulnerable with high probability.
-However, it is not safe to assume that the program is constant time when the fuzzer is not able to measure variable time.
-Since the fuzzer is conservative, it under-approximates what programs are vulnerable to timing attacks.
-Hence, a limitation is that the input classes used are not necessarily able to capture an event causing variable-time behavior of a program.
-
+One limitation is that the input classes are not necessarily able to capture an event causing variable-time behavior of a program, and hence the fuzzer under-approximates the number of programs vulnerable to timing attacks.
 Another limitation is that the timings produced are still prone to some noise.
 Specifically, when running this in user-land the fuzzer could be influenced by interrupts and preemption (OS forces context switches). 
 To combat these, one is required to run the code in kernel space as suggested by \citep{intel-benchmark-code-execution}.

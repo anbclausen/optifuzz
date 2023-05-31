@@ -1,9 +1,10 @@
+\label{sec:preliminaries}
 \subsection{Timing Attacks}
 Timing attacks are a class of side-channel attacks that exploit the fact that the execution time of a program can depend on the input.
 The history of timing attacks goes back several decades where Kocher showed multiple successful timing attacks on well-known cryptographic algorithms such as Diffie-Hellman and RSA \citep{1996-timing-attacks}.
 An example of vulnerable code is shown in Figure \ref{fig:timing-attack-example}.
 \begin{figure}[H]
-  \begin{lstlisting}[style=defstyle,language=C, xleftmargin=6.8cm, xrightmargin=6.8cm]
+  \begin{lstlisting}[style=defstyle,language=C, xleftmargin=6.8cm, xrightmargin=6.8cm, basicstyle=\footnotesize\ttfamily,breaklines=true]
 int foo(int x) {
   if (x < 100) {
     x *= 2;
@@ -18,7 +19,7 @@ int foo(int x) {
 
 \subsection{Optimizing Compilers}
 Cryptographers will avoid code like the example in Figure \ref{fig:timing-attack-example} and write constant-time code instead.
-Constant-time code is code where the execution time is independent of the input.
+Code is constant-time if the execution time of the program is independent of the input.
 However, the compiler may introduce timing vulnerabilities through optimizations by adding variable-time branches to the machine code.
 The issue arises in the analysis and transformation phases of the compiler as illustrated in Figure \ref{fig:optimizing-compiler-pipeline}.
 
@@ -37,12 +38,12 @@ To illustrate this point, we look at how common subexpression elimination can in
 \label{sec:cse}
 Common Subexpression Elimination is an optimization technique that extracts subexpressions that are common across multiple expressions and replaces them with a single variable.
 This optimization technique can introduce timing vulnerabilities since it can decrease the number of instructions executed for a specific branch of the code as illustrated in Figure \ref{fig:common-subexpression-elimination}.
-Here the common subexpression \texttt{2 * 3 + 5} is extracted and assigned to the variable \texttt{common}, making the \texttt{else} branch execute faster than the \texttt{if} branch.
+Here the common subexpression \texttt{2 * 3 + 5} is extracted and assigned to the variable \texttt{common}, making the \texttt{else}-branch execute faster than the \texttt{then}-branch.
 
 \begin{figure}[H]
   \centering
      \begin{subfigure}[b]{0.3\textwidth}
-        \begin{lstlisting}[style=defstyle, language=C]
+        \begin{lstlisting}[style=defstyle, language=C, basicstyle=\footnotesize\ttfamily,breaklines=true]
 int foo(int x, int *arr) {
   if (x == SECRET) {
     x = arr[0] * 3 + 5;
@@ -59,7 +60,7 @@ int foo(int x, int *arr) {
     \end{subfigure}
     \hspace{1cm}
     \begin{subfigure}[b]{0.3\textwidth}
-      \begin{lstlisting}[style=defstyle, language=C]
+      \begin{lstlisting}[style=defstyle, language=C, basicstyle=\footnotesize\ttfamily,breaklines=true]
 int foo(int x, int *arr) {
   if (x == SECRET) {
     x = arr[0] * 3 + 5;
@@ -74,6 +75,6 @@ int foo(int x, int *arr) {
 } \end{lstlisting} 
        \caption{Optimized code.}
   \end{subfigure}
-  \caption{An example of how the common subexpression elimination can introduce timing vulnerabilities in code. (a) shows the original code and (b) shows the optimized code.}
+  \caption{An example of how the common subexpression elimination can introduce timing vulnerabilities in code.}
   \label{fig:common-subexpression-elimination}
 \end{figure}

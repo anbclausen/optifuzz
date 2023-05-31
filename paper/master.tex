@@ -13,14 +13,20 @@
 \maketitle
 \thispagestyle{empty}
 
-\todo{Add short guide to read data plots}
-\todo{We can probably add "what compile flags are dangerous" to contributions}
-\todo{Make figures smaller and better, and remove [H]}
-
-\section*{Abstract}
-\todo{After the paper is done}
-\todo{Write something like: the status quo is the worst of both worlds}
-
+\section*{\centering Abstract}
+{\fontsize{8pt}{1em}\selectfont
+Developers strive to write secure cryptographic code that is resistant to various attacks, including timing attacks.
+It is a well-established fact that C compilers can introduce timing vulnerabilities into programs, even when the source code is seemingly secure.
+However, to our knowledge, the extent of this problem is quantitatively unknown: 
+How bad is it?
+In this paper, we present OptiFuzz, a tool that can be used to test compilers for timing vulnerabilities.
+OptiFuzz has been optimized considering the C language specification, the x86-64 architecture, and state-of-the-art statistical analysis.
+This has resulted in a simple tool that can reliably indicate the extent of the real-world issue of timing vulnerabilities introduced by compilers.
+Using OptiFuzz, we have generated and compiled 600,000 random C programs and shown that between 0.15\% and 12.63\% of these programs are vulnerable to timing attacks when compiled with \texttt{gcc} depending on the configured level of optimization.
+Contrarily, we show that \texttt{clang} introduces timing vulnerabilities much more rarely.
+This has led us to pinpoint specific optimizations within \texttt{gcc} that are responsible for introducing timing vulnerabilities, as well as specific expression patterns that are vulnerable to resulting in timing vulnerabilities when compiled.
+In light of this result, we have discussed how the issue of timing vulnerabilities introduced by compilers can be mitigated by using language-based security techniques from the literature.
+}
 \section{Introduction}
 \input{chapters/introduction.tex}
 
@@ -62,7 +68,7 @@
 
 \section{Select General Optimizations Results}
 \label{appendix:general-optimizations-results}
-%\input{appendix/general-optimizations-results/master.tex}
+\input{appendix/general-optimizations-results/master.tex}
 
 \end{appendices}
 

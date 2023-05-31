@@ -85,12 +85,7 @@ make experiments                    # a collection of relevant experiments to
                                     # is set up for Linux, and uses sudo
 ```
 
-## Sources
-- [C operators](https://devdocs.io/c/language/operator_arithmetic): List of all arithmetic operators in C. Used as a basis for defining should-be-constant-time ASTs.
-
 ## Improvements
 - General
   - Compile object (.o) files once doing assembly inspection and use these for fuzzing and latex generation. No need to compile do i multiple times.
-
-## Notes
-- It seems like `expr << expr` and `y op (x == const)` are causing branching. Would be awesome to find some real-life examples of tricks like these being used in crypto libraries.
+  
