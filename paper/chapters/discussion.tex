@@ -1,11 +1,22 @@
-\todo{How do we solve the issue?}
+From the previous sections, it is clear that modern compilers introduce timing vulnerabilities in constant-time programs.
+This is devastating for security since it means that developers cannot reliably write constant-time code.
+A solution is required.
+In this section, we discuss how the problem can be solved and what the implications different solutions have on security and efficiency.
 
-\todo{CMOV has been around since 1995 \citep{cmov-from-1995}, but GCC is not utilizing it yet. Fix it, GCC!
-However, might be because of CPU specific optimizations where CMOV is actually slower.
-Relevant thread: \url{https://gcc.gnu.org/bugzilla/show_bug.cgi?id=56309}}
+As shown in Section \ref{sec:gcc-vs-clang}, \texttt{clang} is much more conservative when it comes to inserting conditional branches in constant-time programs.
+Instead of inserting variable-time conditional branches, \texttt{clang} uses constant-time conditional moves to implement branching control flow.
+From this observation, it might be tempting to conclude that always substituting conditional branches with conditional moves is the solution to the problem.
+However, there is more to the story.
 
-\todo{Implement secret keyword: \url{https://electricdusk.com/cmov-conversion.html}}
+\texttt{cmov} instructions severely restrict the out-of-order engine on modern CPUs since \texttt{cmov} instructions increase the data dependency between instructions significantly \citep{intel-optimization-reference}. 
+Furthermore, branch predictions are not used for \texttt{cmov} instructions, which can lead to significant performance degradation.
+Hence, we have to address this trade-off between security and efficiency.
 
-\todo{Discuss what you pay for security in the proposed solutions.}
+This trade-off between security and efficiency has led multiple researchers to propose solutions that only force \texttt{cmov} instructions to be used only on critical data \citep{what-you-c,llvm-issues-blog-post}.
+In both studies, the authors propose to add the possibility to specify forced \texttt{cmov} instructions in the source code and restrict the backend of the compiler to not being able to optimize the \texttt{cmov} away for those specific instructions.
+This solution has the advantage that it does not affect the performance of non-critical parts of the program.
+\todo{Downside: requires compiler to be configurable and that it's never sneaky (dangerous): Praise clangs configurability. Also hate on gcc's configurability.}
 
-\todo{Maybe bring in the fact that compilers are not totally configurable like gcc.}
+\todo{Language-based solutions - discuss performance penalties}
+
+\todo{Black-box solutions. Argue that it is too vague, but perhaps OptiFuzz can be used to minimize issues from compilers.}

@@ -11,6 +11,7 @@ For compilers, \texttt{clang} version 15.0.7 and \texttt{gcc} version 12.2.1 wer
 All experiments were run on a single core and with \texttt{-20 niceness} to minimize interference from other processes.
 
 \subsection{gcc vs. clang}
+\label{sec:gcc-vs-clang}
 Surprisingly, we were unable to find any timing vulnerabilities introduced by \texttt{clang} under any optimization flags.
 This is in contrast to \texttt{gcc}, where we saw timing vulnerabilities across various optimization flags.
 Specifically, we compiled 50,000 random programs with \texttt{clang} using various optimization flags (\texttt{O0}, \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os}) out of which none contained conditional branching instructions.
