@@ -11,6 +11,12 @@
 
 #define MIN(x, y) ((x < y) ? (x) : (y))
 
+typedef enum
+{
+    SUCCESS = 0,
+    FAILURE
+} status_et;
+
 /**
  * @struct      distribution_et
  * @brief       Distributions for setting the two input variables.
@@ -67,9 +73,9 @@ const char *dist_to_string(distribution_et dist);
  * @brief       Allocates memory and initializes an analysis_st struct.
  * @param       analysis            The analysis to be initialized.
  * @param       count               The amount of measurements to get.
- * @return      Returns 0 on success.
+ * @return      Returns SUCCESS or FAILURE.
  */
-int initialize_analysis(analysis_st *analysis, size_t count);
+status_et initialize_analysis(analysis_st *analysis, size_t count);
 
 /**
  * @fn          destroy_analysis
@@ -91,14 +97,14 @@ void destroy_analysis(analysis_st *analysis);
 const char *construct_filename(const char *dist_str);
 
 /**
- * @fn          run_single
+ * @fn          run
  * @brief       Run measurements according to analysis parameter and save results.
  * @param       analysis            The specifications for the measurement.
  * @param       dists               The distributions to use.
  * @param       dists_size          The amount of distributions.
- * @return      Returns 0 on success.
+ * @return      Returns SUCCESS or FAILURE.
  */
-int run_single(analysis_st *analysis, distribution_et *dists, size_t dists_size);
+status_et run(analysis_st *analysis, distribution_et *dists, size_t dists_size);
 
 /**
  * @fn          parse_classes

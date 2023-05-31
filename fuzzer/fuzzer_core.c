@@ -38,9 +38,9 @@ static const char dists_strings[DIST_COUNT][MAX_DIST_STR_LEN] = {"uniform", "equ
  * @param       dist                The name of the file to write to.
  * @param       x                   The input value a.
  * @param       y                   The input value b.
- * @return      Returns 0 on success.
+ * @return      Returns SUCCESS or FAILURE.
  */
-static int set_values(distribution_et dist, int64_t *x, int64_t *y)
+static status_et set_values(distribution_et dist, int64_t *x, int64_t *y)
 {
     switch (dist)
     {
@@ -85,9 +85,9 @@ static int set_values(distribution_et dist, int64_t *x, int64_t *y)
         break;
     default:
         print_error("Distribution not yet supported!\n");
-        return 1;
+        return FAILURE;
     }
-    return 0;
+    return SUCCESS;
 }
 
 /**
@@ -97,19 +97,19 @@ static int set_values(distribution_et dist, int64_t *x, int64_t *y)
  * @param       dists_size          The amount of distributions.
  * @param       inputs              the list to write them to.
  * @param       count               The amount of measurements to write.
- * @return      Returns 0 on success.
+ * @return      Returns SUCCESS or FAILURE.
  */
-static int generate_inputs(distribution_et *dists, size_t dists_size, input_st *inputs, size_t count)
+static status_et generate_inputs(distribution_et *dists, size_t dists_size, input_st *inputs, size_t count)
 {
-    int ret = 0;
     for (size_t i = 0; i < count; i++)
     {
         distribution_et random_dist = dists[RANDOM_U32() % dists_size];
 
         inputs[i].dist = random_dist;
-        ret |= set_values(random_dist, &inputs[i].a, &inputs[i].b);
+        if (set_values(random_dist, &inputs[i].a, &inputs[i].b) == FAILURE)
+            return FAILURE;
     }
-    return ret;
+    return SUCCESS;
 }
 
 /**
@@ -278,35 +278,37 @@ distribution_et *parse_classes(const char *str, size_t *size)
     return dists;
 }
 
-int run_single(analysis_st *analysis, distribution_et *dists, size_t dists_size)
+status_et run(analysis_st *analysis, distribution_et *dists, size_t dists_size)
 {
     if (generate_inputs(dists, dists_size, analysis->inputs, analysis->count))
-        return 1;
+        return FAILURE;
     initialize_measurements(*(analysis->measurements), analysis->count);
     measure(*(analysis->measurements), analysis->inputs, analysis->count);
-    return 0;
+    return SUCCESS;
 }
 
-int initialize_analysis(analysis_st *analysis, size_t count)
+status_et initialize_analysis(analysis_st *analysis, size_t count)
 {
     // Allocate memory for input and measurements
     input_st *inputs = calloc(count, sizeof(*inputs));
     if (inputs == NULL)
-        return 1;
+        return FAILURE;
+
     uint64_t *(*measurements)[ITERATIONS] = calloc(ITERATIONS, sizeof(uint64_t *));
     if (measurements == NULL)
-        return 1;
+        return FAILURE;
+
     for (size_t i = 0; i < ITERATIONS; i++)
     {
         (*measurements)[i] = calloc(count, sizeof(uint64_t));
         if ((*measurements)[i] == NULL)
-            return 1;
+            return FAILURE;
     }
 
     analysis->inputs = inputs;
     analysis->measurements = (uint64_t * (*)[ITERATIONS]) measurements;
     analysis->count = count;
-    return 0;
+    return SUCCESS;
 }
 
 /**

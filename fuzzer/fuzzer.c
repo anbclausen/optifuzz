@@ -70,7 +70,7 @@ int main(int argc, char const *argv[])
     flag = argv[2];
     classes_string = argv[3];
 
-    if (initialize_analysis(&analysis, count))
+    if (initialize_analysis(&analysis, count) == FAILURE)
     {
         print_error("Could not initialize analysis struct!\n");
         exit(EXIT_FAILURE);
@@ -79,7 +79,7 @@ int main(int argc, char const *argv[])
     size_t number_of_dists;
     distribution_et *dists = parse_classes(classes_string, &number_of_dists);
 
-    if (run_single(&analysis, dists, number_of_dists))
+    if (run(&analysis, dists, number_of_dists) == FAILURE)
     {
         print_error("Fuzz run failed!\n");
         exit(EXIT_FAILURE);
