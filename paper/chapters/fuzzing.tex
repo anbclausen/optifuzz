@@ -53,13 +53,6 @@ Out-of-order executions could lead to the instructions being reordered resulting
 This is mitigated by utilizing the non-privileged \texttt{CPUID} instructions serializing capabilities that ensure that memory transactions for previous instructions are completed before the next instruction is executed \citep[a]{intel-reference}.
 Using \texttt{CPUID} and \texttt{RDTSCP} allows us to enclose the program call between our time measures using \texttt{RDTSC}(\texttt{P}) as wanted.
 
-
-\todo{remove this:}
-
-Later, when using these results in the analysis, we use the minimum time for all executions with the same input.
-Using the minimum time as the true execution time instead of the mean filters out the noise from outliers that are the results of i.e. context-switches or congestion \citep{robust-benchmarking}. 
-In comparison to DudeCT from \citep{dudect}, which just removes the top 5\% of the longest measured execution times to reduce such noise, our approach is not prone to accidentally removing measurements of large execution times that are correct and not the result of noise.
-
 \subsubsection{Limitations}
 We consider the fuzzer successful when it consistently measures a clear difference in the execution time of a program concerning its input classes.
 This indicates that the program is vulnerable with high probability.
