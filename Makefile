@@ -34,7 +34,7 @@ generate-inspect: generate inspect
 all: clean generate inspect fuzz latexgen latexcompile
 
 run-experiments:
-	@python experiments.py
+	@./experiments.py
 
 .PHONY : clean
 clean:
