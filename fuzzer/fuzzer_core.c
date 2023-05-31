@@ -212,14 +212,6 @@ static void measure(uint64_t *measurements[ITERATIONS], input_st *inputs, size_t
     }
 }
 
-const char *dist_to_string(distribution_et dist)
-{
-    for (size_t i = 0; i < DIST_COUNT; i++)
-        if (dist == dists[i])
-            return dists_strings[i];
-    return NULL;
-}
-
 /**
  * @fn          string_to_dist
  * @brief       Converts a string to its distribution_et type.
@@ -232,6 +224,14 @@ static distribution_et string_to_dist(const char *str)
         if (strncmp(str, dists_strings[i], MAX_DIST_STR_LEN) == 0)
             return dists[i];
     return INVALID;
+}
+
+const char *dist_to_string(distribution_et dist)
+{
+    for (size_t i = 0; i < DIST_COUNT; i++)
+        if (dist == dists[i])
+            return dists_strings[i];
+    return NULL;
 }
 
 distribution_et *parse_classes(const char *str, size_t *size)
