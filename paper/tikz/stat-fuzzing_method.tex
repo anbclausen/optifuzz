@@ -1,0 +1,10 @@
+\tikzstyle{box} = [rectangle, minimum width=3cm, minimum height=1cm, text centered, draw=black]
+\tikzstyle{arrow} = [thick,->,>=stealth]
+
+\begin{tikzpicture}
+  \node (class_seq) [box] {Generate random class sequence};
+  \node (fuzz) [box, right=15mm of class_seq] {Fuzz all classes};
+
+  \draw [arrow] (class_seq) -- (fuzz);
+  \path[->, arrow] (fuzz) edge [out=-10, in=10, right, loop] node {Repeat \#\texttt{ITERATIONS}} (fuzz);
+\end{tikzpicture}

@@ -1,0 +1,15 @@
+\begin{tikzpicture}
+    \begin{axis}[
+      no markers, domain=0:10, samples=100,
+      axis lines*=left, xlabel=Clock Cycles, ylabel=Frequency,
+      every axis y label/.style={at=(current axis.above origin),anchor=south},
+      every axis x label/.style={at=(current axis.right of origin),anchor=west, yshift=-8mm, xshift=-20mm},
+      height=5cm, width=12cm,
+      xtick={1,...,10}, ytick={1,...,10},
+      enlargelimits=false, clip=false, axis on top,
+      ]
+      \addplot [very thick,cyan!50!black] {gauss(4,1)};
+      \draw[color=black, line width=0.2mm, dashed] 
+      (axis cs:4, 0) -- (axis cs:4, 0.4);
+    \end{axis}
+\end{tikzpicture}%
