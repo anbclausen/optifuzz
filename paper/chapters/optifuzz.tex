@@ -4,6 +4,7 @@ The source code for OptiFuzz is available on GitHub\footnote{\url{https://github
 The goal of OptiFuzz is to quantify the issue of timing attacks introduced by C compilers with different optimization flags enabled.
 The tool works as follows:
 \begin{itemize}
+  \setlength\itemsep{-0.6em}
   \item OptiFuzz generates random C programs consisting of non-branching arithmetic, logical and comparison operations.
   \item OptiFuzz then compiles the generated C programs with different specified optimization flags enabled and inspects the generated assembly for conditional branching instructions introduced by the compiler.
         If branching is found, the program is flagged.
@@ -12,7 +13,7 @@ The tool works as follows:
         Furthermore, OptiFuzz reports the results of the fuzzing in the form of a PDF report.
 \end{itemize}
 The OptiFuzz pipeline is illustrated in Figure \ref{fig:optifuzz-pipeline}. 
-Each of the steps in the pipeline is described in detail in the following sections.
+Each of the steps in the pipeline is described in detail in the following subsections.
 \begin{figure}[H]
   \centering
   \input{tikz/optifuzz-pipeline.tex}
