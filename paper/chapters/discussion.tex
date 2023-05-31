@@ -47,5 +47,18 @@ The constant-time CompCert compiler is significantly slower than \texttt{gcc}.
 Experimental results show an efficiency penalty of well over 100\% in some cases \citep{verified-constant-time-c-comiler}.
 
 \subsection{Testing Solutions}
+The final category of solutions we identified is black-box testing solutions like DudeCT \citep{dudect} and our tool OptiFuzz.
+Concretely, one can test specific implementations for timing vulnerabilities using these tools.
+These tests can even be automated to run as part of a continuous integration pipeline.
+Solutions in this category have the obvious advantage that they are simple and require no modeling of hardware behavior or language semantics.
+It is arguably the most practical solution since it does not require any changes to the compiler or the language.
+It also does not induce any performance penalty.
 
-\todo{Black-box solutions. Argue that it is too vague, but perhaps OptiFuzz can be used to minimize issues from compilers.}
+The testing solutions, however, come with a significant security disadvantage in that they are noisy and not exact.
+As we showed in Section \ref{sec:general-optimizations}, OptiFuzz will produce false positives and false negatives.
+\citeauthor{dudect} raised similar concerns for DudeCT.
+Fuzzing tools provide more of an indication of the presence of timing vulnerabilities than a guarantee.
+
+\todo{Argue that many solutions exist with a mixture of security and efficiency.
+We argue that people should start using them.
+Perhaps OptiFuzz + compromise solutions}
