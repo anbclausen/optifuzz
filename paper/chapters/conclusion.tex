@@ -1,4 +1,12 @@
 \todo{Future Work: More complicated programs}
 
-\todo{Avoid flagging programs that are branching, but do the same amount of work in each branch.
-(???) From our test data, it seems like we see vulnerabilities sometimes anyways. Might be dangerous to do this.}
+
+We have a lot of ideas for future work that we did not get around to. These include:
+\begin{itemize}
+    \setlength\itemsep{-0.6em}
+    \item Increasing the precision of the assembly inspection. One way could be to detect if branches contain the same amount of work and identify them as constant time.
+    \item Implement other relevant input classes. A dynamic class containing the hardcoded values from a program. This might be able to catch the very specific but unpredictable values that courses branching.
+    \item Extending the usage of Welsh's t-test to all classes, and not just between \texttt{uniform} and \texttt{fixed}.
+    \item Create a tool that warns developers in real-time about constant C expressions that might be compiled to variable time by comparing it to a database precomputed using OptiFuzz. This tool could furthermore be implemented in a CI/CD environment.
+    \item Extend OptiFuzz to support other processor architecture, especially including ones used by embedded systems.
+\end{itemize}
