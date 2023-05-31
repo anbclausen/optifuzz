@@ -1,5 +1,5 @@
 # OptiFuzz
-Welcome to OptiFuzz! A tool for fuzzing randomly generated C code with different optimization flags to discover side-channel vulnerabilities. This tool was made for the Language-Based Security course at Aarhus University.
+Welcome to OptiFuzz! A tool for fuzzing randomly generated C code with different optimization flags to discover time-based side-channel vulnerabilities. This tool was made for the Language-Based Security course at Aarhus University.
 
 ## Prerequisites
 OptiFuzz depends on a few languages and libraries:
@@ -88,8 +88,6 @@ make experiments                    # a collection of relevant experiments to
 - [C operators](https://devdocs.io/c/language/operator_arithmetic): List of all arithmetic operators in C. Used as a basis for defining should-be-constant-time ASTs.
 
 ## Improvements
-- Fuzzer
-  - Option to set higher priority (lower niceness) to avoid too many context switches. At least when running in userland. Requires root (use setpriority).
 - General
   - Compile object (.o) files once doing assembly inspection and use these for fuzzing and latex generation. No need to compile do i multiple times.
 
