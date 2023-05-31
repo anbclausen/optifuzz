@@ -4,7 +4,7 @@ In this section, we present our results.
 
 We have divided this section into four subsections.
 First, we compare \texttt{gcc} and \texttt{clang} generally in terms of the number of timing vulnerabilities introduced.
-Second, we present our results for general optimizations flags such as \texttt{O2} and \texttt{Os}.
+Second, we present our results for general optimization flags such as \texttt{O2} and \texttt{Os}.
 Third, we present our results regarding specific optimizations.
 Finally, we present our results regarding what operations are most likely to cause timing vulnerabilities when optimized.
 All experiments were carried out on an Intel Core i7-9750H running Manjaro Linux 22.1.2 with kernel version Linux 5.15.112-1. 
@@ -18,7 +18,7 @@ This is in contrast to \texttt{gcc}, where we saw timing vulnerabilities across 
 Specifically, we compiled 50,000 random programs with \texttt{clang} using various optimization flags (\texttt{O0}, \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os}) out of which none contained conditional branching instructions.
 
 The reason for \texttt{clang} not introducing any timing vulnerabilities is the compiler's utilization of \texttt{cmovcc} instructions. 
-\texttt{cmovcc} is a family of constant-time conditional move instructions \citep{cmov-is-constant-time} that was introduced by Intel in 1995 \citep{cmov-from-1995}. 
+\texttt{cmovcc} is a family of constant-time conditional move instructions \citep{cmov-from-1995}. 
 
 Even though our results show that \texttt{clang} does not introduce any timing vulnerabilities, our research shows that timing vulnerabilities were identified in fairly recent versions of \texttt{clang} \citep{fact,what-you-c}. 
 Furthermore, we have identified an optimization step in the most recent version of the LLVM backend, which \texttt{clang} uses, that removes \texttt{cmovcc} instructions and substitutes them for conditional branches if an efficiency gain can be obtained with high confidence \citep{llvm-optimizing-away-cmov}.
@@ -293,7 +293,7 @@ However, our results also show that definite timing leaks are present in the \te
 ...\end{lstlisting} 
        \caption{Fuzzed assembly code.}
   \end{subfigure}
-  \caption{An example of a true positive, i.e. a variable time program that was rejected by Welch's t-test, from the \texttt{O0} dataset. 
+  \caption{An example of a true positive, i.e. a variable-time program that was rejected by Welch's t-test, from the \texttt{O0} dataset. 
   The source code of the program is shown in Appendix \ref{appendix:general-optimizations-results}. 
   Notice that inputs from the input classes \texttt{small}, \texttt{xzero}, \texttt{fixed} and \texttt{max64} are significantly faster than the rest.
   That is because the program branches on whether $x$ is signed or not (\texttt{js} instruction in line 7), which it never is in these 4 classes.}
@@ -301,18 +301,18 @@ However, our results also show that definite timing leaks are present in the \te
 \end{figure}
 
 Findings from the other datasets also deserve mentioning.
-The \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os} datasets had several false negatives, i.e. programs that were not rejected by Welch's t-test, but were variable time.
+The \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os} datasets had several false negatives, i.e. programs that were not rejected by Welch's t-test, but were variable-time.
 Concretely, we saw examples where the assembled code branched on a \textit{very} specific scenario, e.g. if $x = 8129346172934691$, which is near-impossible to detect by fuzzing since the probability of hitting that specific value is very low.
 We did not find any false positives in any other dataset than \texttt{O0}.
-This is because the vast majority of programs in the \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os} datasets were variable time.
-This points to the fact that more aggressive optimizations with conditional branching are more likely to produce detectably variable-time code.
+This is because the vast majority of programs in the \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os} datasets were variable-time.
+This points to the fact that more aggressive optimizations that introduce conditional branching are more likely to produce actual variable-time machine code.
 The reason that Welch's t-test did not detect vulnerabilities in all programs in the datasets is likely due to the above-mentioned false negatives, but also because the t-test has some inherent limitations as mentioned in Section \ref{sec:statistical-analysis}.
 Concrete examples of true and false positives and negatives can be found in Appendix \ref{appendix:general-optimizations-results}.
 
 Finally, we want to address the fact that the general optimizations datasets were generated with programs that had ASTs of max depth 5.
 This was done to reduce the length of the programs to make them more manageable for analysis.
 However, we also generated datasets with ASTs of max depth 12 and found that the results were similar in the \texttt{O0} and \texttt{O1} datasets, while the \texttt{O2}, \texttt{O3} and \texttt{Os} datasets had significantly more programs with conditional branching -- around 5\%, 5\% and 2\% respectively.
-We deem the choice of max depth 5 to be a good compromise between the length of the programs and the number of conditional branches for our results to underline the problem we are trying to address.
+We deem the choice of max depth 5 to be a good compromise between the length of the programs and the number of conditional branches since our results underline the problem we are trying to address.
 
 \subsection{Specific Optimizations}
 \label{sec:specific-optimizations}
@@ -326,7 +326,7 @@ This also underlines the fact that all the \texttt{O*} flags enable optimization
 The significant increase from \texttt{O1} to \texttt{O2} and \texttt{O3} points to the fact that some optimizations in \texttt{gcc} can introduce conditional branches and therefore timing vulnerabilities. 
 We identified a configurable compiler optimization that was responsible for introducing conditional branches in our datasets: \texttt{ftree-pre}.
 This optimization performs partial redundancy elimination \citep{gcc-manual}.
-\texttt{ftree-pre} is enabled by default for \texttt{O2} and \texttt{O3}, but not for \texttt{O1}.
+\texttt{ftree-pre} is enabled by default for \texttt{O2}, \texttt{O3}, and \texttt{Os}, but not for \texttt{O1}.
 
 Partial redundancy elimination (PRE) is a form of common subexpression elimination (CSE) that tries to eliminate redundant computations. 
 We discussed how CSE works and how it can introduce conditional branches in Section \ref{sec:cse}.
@@ -336,7 +336,7 @@ This results in different control flow paths with different amounts of instructi
 
 \subsection{Vulnerable Expressions}
 \label{sec:vulnerable-expressions}
-We identified various types of expressions that were compiled into conditional branches.
+Finally, we identified various types of expressions that were compiled into conditional branches.
 We identified expressions on the form $c$ \texttt{op} $x$ \texttt{comp} $y$, where $c$ is a constant, \texttt{op} is a bitwise operator, \texttt{comp} is a comparison operator, and $x$ and $y$ are variables.
 Expressions of this form result in constant-time code containing conditional branches, much like the example in Figure \ref{fig:assembly-inspection-example}.
 
@@ -353,8 +353,9 @@ An example of this type of expression and its corresponding assembly, when compi
 int program(long long int x, long long int y) { 
   return (42 >> -1) & (x == y); 
 }\end{lstlisting} 
-      \vspace{8em}
-      \caption{An example of a program containing an expression of the form $undefined$ \texttt{op} $(x$ \texttt{comp} $y)$.}
+      \vspace{6em}
+      \caption{An example of a program containing an expression of the form $undefined$ \texttt{op} $(x$ \texttt{comp} $y)$.
+      Specifically, bit-shifting with a negative number is undefined behavior in C \citep{c-standard}.}
     \end{subfigure}
     \hspace{1cm}
     \begin{subfigure}[b]{0.3\textwidth}
@@ -398,7 +399,8 @@ int program(long long int x, long long int y) {
   return 42 * (x == 42) == (y == 42); 
 }\end{lstlisting} 
     \caption{An example of a program that will be variable-time when compiled with \texttt{O2}, \texttt{O3} or \texttt{Os}, specifically because of PRE.
-    PRE will identify two control flow paths in this expression: one where $x=42$ and one where $x \neq 42$.
+    PRE will identify two control flow paths in this expression: 
+    One where $x=42$ and one where $x \neq 42$.
     If $x=42$, the expression will always evaluate to $0$ since \texttt{42 * (42 == 42) == (y == 42)} will evaluate to $42 \stackrel{?}{=} 0$ or $42 \stackrel{?}{=} 1$ which is false in both cases.
     If $x \neq 42$, the expression depends on whether $y=42$.
     Hence \texttt{(y == 42)} is redundant in the first control flow path, but not in the second.
