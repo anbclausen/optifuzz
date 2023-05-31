@@ -35,7 +35,7 @@ You can configure the OptiFuzz in the `config.json` file. Here you can
 To make the measurement more accurate (less noise), consider running fuzzing on a single thread and with decreased niceness.
 In Linux this can be done like so:
 ```
-$ sudo taskset --cpu-list {cpu index} nice -n -20 make fuzz in={number of fuzzing inputs}
+# taskset --cpu-list {cpu index} nice -n -20 make fuzz in={number of fuzzing inputs}
 ```
 Note that -20 niceness is the lower cap, and will drastically decrease the number of context switches and interrupts when fuzzing.
 
