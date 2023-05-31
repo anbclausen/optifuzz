@@ -1,5 +1,5 @@
 After the assembly inspection has performed the static analysis and flagged programs with potential timing vulnerabilities, OptiFuzz tries and confirm their presence. 
-For this, we have created a fuzzer. 
+For this, we have created a fuzzer.
 First, the fuzzer compiles the program with the specified compiler and optimization level flags.
 Then, the fuzzer runs the program with random inputs and measures the execution time.
 
@@ -13,6 +13,13 @@ Then, for each linked program, the fuzzer generates inputs according to 'input c
 For each input, the fuzzer chooses a uniformly random class among the supplied ones. 
 This way there is no biased order in which the inputs from different classes are used, and thus potential noise is likely to affect all classes equally. 
 This is important when comparing timing distributions in the following statistical analysis. 
+
+\begin{figure}[H]
+    \centering
+    \input{tikz/fuzzer-pipeline.tex}
+    \caption{Illustration of the process of compiling and fuzzing programs.}
+    \label{fig:fuzzer-pipeline}
+  \end{figure}
 
 The fuzzer then runs through all the generated inputs and calls the internally linked program with each of them. 
 The program's execution time is measured every time it is run. 
@@ -68,6 +75,6 @@ Since the fuzzer is conservative, it under-approximates what programs are vulner
 Hence, a limitation is that the input classes used are not necessarily able to capture an event causing variable-time behavior of a program. 
 
 Furthermore, even with the actions taken to get as precise timings as possible, the analysis is still prone to some noise. 
-Specifically, it is worth noting that when running this in user-land the fuzzer could be influenced by interrupts and preemption. 
+Specifically, it is worth noting that when running this in user-land the fuzzer could be influenced by interrupts and preemption (being context switches triggered by the OS instead of the process yielding). 
 To disable interrupts and preemption, one is required to run the code in kernel space, which is a possible future extension of the fuzzer. 
 However, as a compromise, the fuzzer can be run with higher priority to reduce some noise. 
