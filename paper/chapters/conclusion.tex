@@ -1,9 +1,7 @@
-\todo{Future Work: More complicated programs}
-
-
 We have a lot of ideas for future work that we did not get around to. These include:
 \begin{itemize}
     \setlength\itemsep{-0.6em}
+    \item Extend OptiFuzz to generate more complicated programs, eg. by reintroducing the division and modulus operators while dealing with division by zero in a meaningful way.
     \item Increasing the precision of the assembly inspection. One way could be to detect if branches contain the same amount of work and identify them as constant time.
     \item Implement other relevant input classes. A dynamic class containing the hardcoded values from a program. This might be able to catch the very specific but unpredictable values that courses branching.
     \item Extending the usage of Welsh's t-test to all classes, and not just between \texttt{uniform} and \texttt{fixed}.
