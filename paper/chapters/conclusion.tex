@@ -1,4 +1,10 @@
-\todo{Future Work: More complicated programs}
+We have provided a tool, OptiFuzz, that can be used to test compilers for timing vulnerabilities.
+OptiFuzz has been optimized considering the C language specification, the x86-64 architecture, and state-of-the-art statistical analysis.
+This has resulted in a simple tool that is indicative of the real-world issue of timing vulnerabilities introduced by compilers.
+With OptiFuzz, we have shown that between 0.15\% and 12.63\% of randomly generated programs are vulnerable to timing attacks when compiled with \texttt{gcc} using various optimization flags.
+We have used our results to pinpoint specific optimizations within \texttt{gcc} that are responsible for introducing timing vulnerabilities, as well as specific expression patterns that are vulnerable to resulting in timing vulnerabilities when compiled.
+We have also shown that due to better utilization of \texttt{cmovcc} instructions, \texttt{clang} introduces significantly fewer timing vulnerabilities -- so much that we could not detect any timing vulnerabilities introduced by \texttt{clang} using our methodology.
+In light of this result, we have discussed how the issue of timing vulnerabilities introduced by compilers can be mitigated by using language-based security techniques from the literature.
+Generally, solutions to this problem represent a trade-off between security and performance where very secure solutions are not that performant and vice versa.
 
-\todo{Avoid flagging programs that are branching, but do the same amount of work in each branch.
-(???) From our test data, it seems like we see vulnerabilities sometimes anyways. Might be dangerous to do this.}
+In the light of our research, we have identified several areas for future work. $\ldots$
