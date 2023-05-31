@@ -20,7 +20,7 @@ For example, the program in Figure \ref{fig:assembly-inspection-example} is flag
 
 \begin{figure}[H]
   \centering
-  \begin{lstlisting}[style=defstyle, language={[x86masm]Assembler}, xleftmargin=4cm, xrightmargin=4cm]
+  \begin{lstlisting}[style=defstyle, language={[x86masm]Assembler}, basicstyle=\footnotesize\ttfamily,breaklines=true, xleftmargin=4cm, xrightmargin=4cm]
 ...
   cmpl    $1, -4(%rbp) ; compare TOS to 1
   je      .L2          ; jump to .L2 if equal
