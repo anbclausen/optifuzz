@@ -4,7 +4,7 @@ Timing attacks are a class of side-channel attacks that exploit the fact that th
 The history of timing attacks goes back several decades where Kocher showed multiple successful timing attacks on well-known cryptographic algorithms such as Diffie-Hellman and RSA \citep{1996-timing-attacks}.
 An example of vulnerable code is shown in Figure \ref{fig:timing-attack-example}.
 \begin{figure}[H]
-  \begin{lstlisting}[style=defstyle,language=C, xleftmargin=6.8cm, xrightmargin=6.8cm]
+  \begin{lstlisting}[style=defstyle,language=C, xleftmargin=6.8cm, xrightmargin=6.8cm, basicstyle=\footnotesize\ttfamily,breaklines=true]
 int foo(int x) {
   if (x < 100) {
     x *= 2;
@@ -43,7 +43,7 @@ Here the common subexpression \texttt{2 * 3 + 5} is extracted and assigned to th
 \begin{figure}[H]
   \centering
      \begin{subfigure}[b]{0.3\textwidth}
-        \begin{lstlisting}[style=defstyle, language=C]
+        \begin{lstlisting}[style=defstyle, language=C, basicstyle=\footnotesize\ttfamily,breaklines=true]
 int foo(int x, int *arr) {
   if (x == SECRET) {
     x = arr[0] * 3 + 5;
@@ -60,7 +60,7 @@ int foo(int x, int *arr) {
     \end{subfigure}
     \hspace{1cm}
     \begin{subfigure}[b]{0.3\textwidth}
-      \begin{lstlisting}[style=defstyle, language=C]
+      \begin{lstlisting}[style=defstyle, language=C, basicstyle=\footnotesize\ttfamily,breaklines=true]
 int foo(int x, int *arr) {
   if (x == SECRET) {
     x = arr[0] * 3 + 5;

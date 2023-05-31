@@ -43,7 +43,6 @@ A more radical approach is to force the compiler to always produce constant-time
 The constant-time CompCert compiler guarantees that constant-time source code is compiled into constant-time machine code.
 This is achieved by instrumenting the operational semantics of CompCert's IR to be able to capture cryptographic constant-time and proving that cryptographic constant-time is preserved during compilation. 
 This has immense advantages for security.
-
 However, the security advantages come at the cost of efficiency. 
 The constant-time CompCert compiler is significantly slower than \texttt{gcc}.
 Experimental results show an efficiency penalty of well over 100\% in some cases \citep{verified-constant-time-c-comiler}.
