@@ -72,23 +72,23 @@ def compile_user(prog_path: str, compiler: str, flag: str) -> None:
     remove_file_if_exists("template.o")
 
 
-def fuzz_class_lst_to_argument(fuzzing_classes: list) -> str:
-    """Convert list of fuzzing classes to a space seperated string
+def fuzz_class_lst_to_argument(input_classes: list) -> str:
+    """Convert list of input classes to a space seperated string
 
     Parameters
     ----------
-    fuzzing_classes : list
+    input_classes : list
         List of classes to fuzz
 
     Returns
     ----------
     Space seperated string of list items
     """
-    return " ".join(fuzzing_classes)
+    return " ".join(input_classes)
 
 
 def fuzz_program_user(
-    prog_path: str, compiler: str, flag: str, fuzzing_classes: list
+    prog_path: str, compiler: str, flag: str, input_classes: list, number_of_fuzzing_runs: str
 ) -> None:
     """Compile and fuzz specified program in user mode
 
@@ -100,29 +100,31 @@ def fuzz_program_user(
         Compiler used for compilation of program
     flag : str
         Optimization flag to compile program
-    fuzzing_classes : list
+    input_classes : list
         List of classes to fuzz
+    number_of_fuzzing_runs : str
+        The amount of run-throughs the fuzzer should do
     """
     compile_user(prog_path, compiler, flag)
-    class_arg = fuzz_class_lst_to_argument(fuzzing_classes)
+    class_arg = fuzz_class_lst_to_argument(input_classes)
     os.system(f"./out {number_of_fuzzing_runs} {flag} '{class_arg}'")
 
 
-def save_results(seed: str, fuzzing_classes: list, flag: str, result_dir: str) -> None:
+def save_results(seed: str, input_classes: list, flag: str, result_dir: str) -> None:
     """Copy results to results folder and rename to reflect class and flag
 
     Parameters
     ----------
     seed : str
         Seed used to generate the program
-    fuzzing_classes : list
-        The fuzzing classes the results come from
+    input_classes : list
+        The input classes the results come from
     flag : str
         Optimization flag used to compile program
     result_dir : str
         The directory to save the results in
     """
-    for fuzzing_class in fuzzing_classes:
+    for fuzzing_class in input_classes:
         shutil.copyfile(
             f"result-{fuzzing_class}.csv",
             f"{result_dir}{os.sep}{seed}-{fuzzing_class}_{flag}.csv",
@@ -131,10 +133,11 @@ def save_results(seed: str, fuzzing_classes: list, flag: str, result_dir: str) -
 
 def fuzz(
     prog_dir: str,
-    fuzzing_classes: list,
+    input_classes: list,
     optimization_flags: list,
     compiler: str,
     result_dir: str,
+    number_of_fuzzing_runs: str
 ) -> None:
     """Fuzz all programs for each optimization flag and fuzzing class in inspecified mode
 
@@ -142,14 +145,16 @@ def fuzz(
     ----------
     prog_dir : str
         Directory containing the programs
-    fuzzing_classes : list
-        The fuzzing classes to be testet by the programs
+    input_classes : list
+        The input classes to be testet by the programs
     optimization_flags : list
         Optimization flags to compile the programs with
     compiler : str
         The compiler used to compile the programs
     result_dir : str
         The directory to save the results in
+    number_of_fuzzing_runs : str
+        The amount of run-throughs the fuzzer should do
     """
     amount_of_programs = len(os.listdir(prog_dir))
     if amount_of_programs == 0:
@@ -169,24 +174,25 @@ def fuzz(
             )
 
             for flag in optimization_flags:
-                fuzz_program_user(prog_path, compiler, flag, fuzzing_classes)
+                fuzz_program_user(prog_path, compiler, flag,
+                                  input_classes, number_of_fuzzing_runs)
                 print(f"  {flag}", end="", flush=True)
 
-                save_results(seed, fuzzing_classes, flag, result_dir)
+                save_results(seed, input_classes, flag, result_dir)
 
             print()
 
 
-def clean(fuzzing_classes: list) -> None:
+def clean(input_classes: list) -> None:
     """Remove all temporary result files and program
 
     Parameters
     ----------
-    fuzzing_classes : list
+    input_classes : list
         All classes that has emitted result files
     """
     remove_file_if_exists("out")
-    for fuzzing_class in fuzzing_classes:
+    for fuzzing_class in input_classes:
         remove_file_if_exists(f"result-{fuzzing_class}.csv")
 
 
@@ -203,7 +209,7 @@ if __name__ == "__main__":
 
     number_of_fuzzing_runs = sys.argv[1]
     optimization_flags = config["compiler_flags"]
-    fuzzing_classes = config["fuzzing_classes"]
+    input_classes = config["input_classes"]
 
     compiler = config["compiler"]
 
@@ -211,7 +217,7 @@ if __name__ == "__main__":
     os.makedirs(result_dir, exist_ok=True)
 
     fuzz(
-        prog_dir, fuzzing_classes, optimization_flags, compiler, result_dir
+        prog_dir, input_classes, optimization_flags, compiler, result_dir, number_of_fuzzing_runs
     )
 
-    clean(fuzzing_classes)
+    clean(input_classes)

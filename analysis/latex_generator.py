@@ -22,7 +22,7 @@ config = json.load(open(f"{config_dir}{os.sep}{CONFIG_FILENAME}"))
 # config["fuzzer_results_dir"] holds the path relative to the config_dir
 RESULTS_FOLDER = os.path.join(config_dir, config["fuzzer_results_dir"])
 COMPILER_USED = config["compiler"]
-DO_T_TEST = {"fixed", "uniform"}.issubset(set(config["fuzzing_classes"]))
+DO_T_TEST = {"fixed", "uniform"}.issubset(set(config["input_classes"]))
 
 LATEX_FOLDER = "latex"
 LATEX_OUTPUT_FOLDER = f"{LATEX_FOLDER}/generated_latex"
@@ -157,12 +157,12 @@ class TexTikzPic(TexBlock):
             ]
         )
 
-        fuzz_classes = list(means.keys())
+        input_classes = list(means.keys())
 
         def plot_means_if_exists(i: int) -> str:
-            if len(fuzz_classes) > i:
+            if len(input_classes) > i:
                 return (
-                    f"\\texttt{{{fuzz_classes[i]}}}_\\mu: & \\,{means[fuzz_classes[i]]}"
+                    f"\\texttt{{{input_classes[i]}}}_\\mu: & \\,{means[input_classes[i]]}"
                 )
             return "\ "
 
@@ -282,7 +282,7 @@ class ParsedCSV:
 
         Returns
         ----------
-        A ParsedCSV containing which compile-flag & fuzz_classes were used,
+        A ParsedCSV containing which compile-flag & input_classes were used,
         and stores the filename in the ParsedCSV object
         """
         self.file = f"{RESULTS_FOLDER}/{filename}"
@@ -350,10 +350,10 @@ def gen_header(prog_id: str, prog_seed: str) -> str:
     """
     compiler = config["compiler"]
     compiler_flags = config["compiler_flags"]
-    fuzzing_classes = config["fuzzing_classes"]
+    input_classes = config["input_classes"]
 
     compiled_with = compiler + " " + " ".join(compiler_flags)
-    fuzzclasses = "Classes: " + " ".join(fuzzing_classes)
+    fuzzclasses = "Classes: " + " ".join(input_classes)
     newline = "\\\\"
     return f"\\textbf{{Program {prog_id}}} -- \\texttt{{Seed {prog_seed}}} -- \\texttt{{{compiled_with}}}{newline}\small\\texttt{{{fuzzclasses}}}\n"
 
@@ -468,7 +468,7 @@ def gen_plot_asm_fig(
     seed : str
         Seed of fuzzed data
     parsed_csv : dict[str, list[ParsedCSV]]
-        Map from a compile flag to a list of different fuzz classes as CSV files
+        Map from a compile flag to a list of different input classes as CSV files
     colors : str list
         List of colors to use for the plots
     blank_indexes : int list
@@ -651,7 +651,7 @@ def gen_latex_doc(
     seed : str
         Seed of fuzzed data
     csv_files : dict[str, list[ParsedCSV]]
-        Map from a compile flag to a list of different fuzz classes as CSV files
+        Map from a compile flag to a list of different input classes as CSV files
     prog_id : int
         Identifier of the program
 

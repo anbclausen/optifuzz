@@ -291,7 +291,7 @@ However, our results also show that definite timing leaks are present in the \te
   \end{subfigure}
   \caption{An example of a true positive, i.e. a variable time program that was rejected by Welch's t-test, from the \texttt{O0} dataset. 
   The source code of the program is shown in Appendix \ref{appendix:general-optimizations-results}. 
-  Notice that inputs from the fuzz classes \texttt{small}, \texttt{xzero}, \texttt{fixed} and \texttt{max64} are significantly faster than the rest.
+  Notice that inputs from the input classes \texttt{small}, \texttt{xzero}, \texttt{fixed} and \texttt{max64} are significantly faster than the rest.
   That is because the program branches on whether $x$ is signed or not (\texttt{js} instruction in line 7), which it never is in these 4 classes.}
   \label{fig:general-optimizations-O0-true-positive}
 \end{figure}
@@ -331,6 +331,7 @@ This is done by moving the computation to a point in the program where it is gua
 This results in different control flow paths with different amounts of instructions, which in turn result in timing vulnerabilities.
 
 \subsection{Vulnerable Expressions}
+\label{sec:vulnerable-expressions}
 We identified various types of expressions that were compiled into conditional branches.
 We identified expressions on the form $c$ \texttt{op} $x$ \texttt{comp} $y$, where $c$ is a constant, \texttt{op} is a bitwise operator, \texttt{comp} is a comparison operator, and $x$ and $y$ are variables.
 Expressions of this form result in constant-time code containing conditional branches, much like the example in Figure \ref{fig:assembly-inspection-example}.
