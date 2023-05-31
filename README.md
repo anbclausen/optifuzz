@@ -47,7 +47,7 @@ make all pn={# of random programs to generate} md={max depth of the generated AS
 ```
 At the end you will have a generated pdf report visualizing the results, the code, the assembly and some analysis in. The saved location is specified in config.json and the default is`results/master.pdf`.
 
-As an example `make all pn=1000 md=5 in=100000` will run the whole pipeline on 1000 random programs with AST's of maximum depth 5 where each program is fuzzed with 100000 inputs.
+As an example `make all pn=1000 md=5 in=100000` will run the whole pipeline on 1000 random programs with ASTs of maximum depth 5 where each program is fuzzed with 100000 inputs.
 
 Note that `in` describes the total number of inputs a given program will be fuzzed with distributed over the input classes.
 
