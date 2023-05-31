@@ -67,7 +67,8 @@ However, our results also show that definite timing leaks are present in the \te
 
 \begin{figure}[H]
   \centering
-     \begin{subfigure}[b]{0.55\textwidth}
+     \begin{subfigure}[b]{0.41\textwidth}
+      \begin{lrbox}{\mybox}%
       \begin{tikzpicture}[>=latex]
         \begin{axis}[
             axis x line=center,
@@ -260,11 +261,12 @@ However, our results also show that definite timing leaks are present in the \te
         };
         \node[fit=(1)(2)(3),draw]{};
         \end{tikzpicture}%
+      \end{lrbox}\resizebox{\textwidth}{!}{\usebox{\mybox}}
       \caption{Fuzzing results visualized. The means of each fuzz class are shown as vertical lines.}
     \end{subfigure}
     \hspace{1cm}
-    \begin{subfigure}[b]{0.35\textwidth}
-      \begin{lstlisting}[style=defstyle,language={[x86masm]Assembler},basicstyle=\small\ttfamily,breaklines=true]
+    \begin{subfigure}[b]{0.3\textwidth}
+      \begin{lstlisting}[style=defstyle,language={[x86masm]Assembler},basicstyle=\footnotesize\ttfamily,breaklines=true]
 ...
   pushq	%rbp
   movq	%rsp, %rbp
@@ -350,12 +352,12 @@ An example of this type of expression and its corresponding assembly, when compi
 int program(long long int x, long long int y) { 
   return (42 >> -1) & (x == y); 
 }\end{lstlisting} 
-      \vspace{10em}
+      \vspace{8em}
       \caption{An example of a program containing an expression of the form $undefined$ \texttt{op} $(x$ \texttt{comp} $y)$.}
     \end{subfigure}
     \hspace{1cm}
-    \begin{subfigure}[b]{0.35\textwidth}
-      \begin{lstlisting}[style=defstyle,language={[x86masm]Assembler},basicstyle=\ttfamily,breaklines=true]
+    \begin{subfigure}[b]{0.3\textwidth}
+      \begin{lstlisting}[style=defstyle,language={[x86masm]Assembler},basicstyle=\footnotesize\ttfamily,breaklines=true]
 ...
   pushq   %rbp
   movq    %rsp, %rbp
