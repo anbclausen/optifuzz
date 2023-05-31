@@ -12,11 +12,23 @@ However, there is more to the story.
 Furthermore, branch predictions are not used for \texttt{cmov} instructions, which can lead to significant performance degradation.
 Hence, we have to address this trade-off between security and efficiency.
 
-This trade-off between security and efficiency has led multiple researchers to propose solutions that only force \texttt{cmov} instructions to be used only on critical data \citep{what-you-c,llvm-issues-blog-post}.
+\subsection{Forcing \texttt{cmov} Instructions When Necessary}
+This trade-off between security and efficiency has led multiple researchers to propose solutions that only force \texttt{cmov} instructions to be used on critical data \citep{what-you-c,llvm-issues-blog-post}.
 In both studies, the authors propose to add the possibility to specify forced \texttt{cmov} instructions in the source code and restrict the backend of the compiler to not being able to optimize the \texttt{cmov} away for those specific instructions.
 This solution has the advantage that it does not affect the performance of non-critical parts of the program.
-\todo{Downside: requires compiler to be configurable and that it's never sneaky (dangerous): Praise clangs configurability. Also hate on gcc's configurability.}
+In fact, \citeauthor{what-you-c} show that their solution only introduces a performance penalty of 1\% and sometimes even increases performance.
 
+However, this solution also has its disadvantages.
+First, the solution relies heavily on the developer.
+The developer has to know which parts of the program are critical, and also be able to use the language extension correctly.
+In turn, it means that security relies on human factors, which are error-prone.
+Second, the solution relies on the compiler being configurable to avoid forced \texttt{cmov} instructions being optimized away.
+As we discussed in Section \ref{sec:gcc-vs-clang} and \ref{sec:general-optimizations}, \texttt{clang} seems to be quite configurable while \texttt{gcc} does not.
+Hence, the solution might not be easily applicable to all compilers.
+
+\subsection{Bullet-proofing the Compiler}
 \todo{Language-based solutions - discuss performance penalties}
+
+\subsection{Testing Solutions}
 
 \todo{Black-box solutions. Argue that it is too vague, but perhaps OptiFuzz can be used to minimize issues from compilers.}
