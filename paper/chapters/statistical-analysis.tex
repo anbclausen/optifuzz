@@ -1,7 +1,7 @@
 \label{sec:statistical-analysis}
-At the end of the pipeline, we have at our disposal flagged C programs, which have been fuzzed and timed. Now we have to conclude whether or not these programs are variable time or not. This is a very complex task, as a lot of factors can affect this. Notably, the research conducted by \citeauthor{Abel19a} demonstrates the difficulty of this, as determining the performance of instructions is very microarchitecture dependant. Additionally, \cite{Almeida16}'s work suggests that static analysis on LLVM can be done, but again suffers from architecture-specific modeling. Thus, we determined that our method should not consider all the intricate details of architecture-specific implementations. Instead, a statistical approach was deemed more suitable.
+At the end of the pipeline, we have at our disposal flagged C programs, which have been fuzzed and timed. Now we have to conclude whether or not these programs are variable-time or not. This is a very complex task, as a lot of factors can affect this. Notably, the research conducted by \citeauthor{Abel19a} demonstrates the difficulty of this, as determining the performance of instructions is very microarchitecture dependant. Additionally, \cite{verifying-constant-time-llvm}'s work suggests that static analysis on LLVM can be done, but again suffers from architecture-specific modeling. Thus, we determined that our method should not consider all the intricate details of architecture-specific implementations. Instead, a statistical approach was deemed more suitable.
 
-One statistical approach is to apply significance tests between classes of fuzzing inputs. If we can detect a difference in time between different kinds of inputs, then we can conclude with good probability, that the program is not constant time. Ideally, for constant-time programs, we would expect a univariate Gaussian with low variation when we measure the running time of the program for all kinds of inputs. Likewise, ideally, for variable-time programs, we hope to see a mixture distribution composed of two (or more) Gaussians with different means. For instance, if we observe two means: $\mu_1 \neq \mu_2$, then we can conclude with good probability, that most likely a branching instruction on the input dictates whether or not the program will have a running time close to $\mu_1$ or $\mu_2$.
+One statistical approach is to apply significance tests between classes of fuzzing inputs. If we can detect a difference in time between different kinds of inputs, then we can conclude with good probability, that the program is not constant-time. Ideally, for constant-time programs, we would expect a univariate Gaussian with low variation when we measure the running time of the program for all kinds of inputs. Likewise, ideally, for variable-time programs, we hope to see a mixture distribution composed of two (or more) Gaussians with different means. For instance, if we observe two means: $\mu_1 \neq \mu_2$, then we can conclude with good probability, that most likely a branching instruction on the input dictates whether or not the program will have a running time close to $\mu_1$ or $\mu_2$.
 
 \pgfmathdeclarefunction{gauss}{2}{%
   \pgfmathparse{1/(#2*sqrt(2*pi))*exp(-((x-#1)^2)/(2*#2^2))}%
@@ -15,17 +15,17 @@ One statistical approach is to apply significance tests between classes of fuzzi
 \resizebox{\linewidth}{!}{
     \input{tikz/gauss-constant.tex}
 }%
-\caption{A constant time program yielding\\a univariate Gaussian with $\mu = 4$.}
+\caption{A constant-time program yielding\\a univariate Gaussian with $\mu = 4$.}
 \label{fig:univargauss}
 \end{subfigure}
 \begin{subfigure}[t]{0.50\textwidth}
 \resizebox{\linewidth}{!}{
     \input{tikz/gauss-variable.tex}
 }%
-\caption{A variable time program, yielding a mixture\\distribution composed of two Gaussian distributions\\having means: $\mu_1 = 4, \mu_2 = 6$ with different variances}
+\caption{A variable-time program, yielding a mixture\\distribution composed of two Gaussian distributions\\having means: $\mu_1 = 4, \mu_2 = 6$ with different variances.}
 \label{fig:mixdisgauss}
 \end{subfigure}
-\caption{An example of what we would expect in theory, when we fuzz with different input classes.}
+\caption{An example of what we would expect in theory, when we fuzz constant-time and variable-time programs.}
 \label{fig:fuzzclass-statistics-example}
 \end{figure}
 As seen above in Figure \ref{fig:univargauss}, we have an example of what we, in theory, would think the clock-cycles distribution for a constant-time program would look like. Likewise, Figure \ref{fig:mixdisgauss} shows what the distribution could look like for a variable-time program.
@@ -54,13 +54,13 @@ For example, if we in our random class sequence \{A, B, B, C\} do two iterations
 \end{center}
 where A: 2 corresponds to the program given input from input class A took 2 clock cycles to run, then the final saved measurements would be: \{A: 2, B: 3, B: 4, C: 2\}. Note that the random class sequence samples once and fixes the input for all iterations.
 
-Now we apply a significance test to our measurements. There is a great consensus that Welch's t-test \cite{WELCH1947} works great for the task of leakage detection \cite{cryptoeprint:2015/536}.
-The test tests the null hypothesis that two populations have equal means, which aligns exactly with our described objectives. The strengths of utilizing Welch's t-test are that it is robust to different variances as seen in figure \ref{fig:mixdisgauss}, and that its sampling complexity is low. According to a testing methodology for side channel resistance validation by \citeauthor{Goodwill2011ATM}, comparing only two of our input classes \texttt{FIXED} and \texttt{UNIFORM} is sufficient.
-This is also what is used in DudeCT \cite{dudect} with a critical value of $t = 10$. 
-This is a quite high threshold for the test, resulting in constant time programs being flagged as variable time with a very low probability (Type I errors).
-However, the drawback is an increased Type II error, where variable time programs will not show up as variable time.
+Now we apply a significance test to our measurements. There is a great consensus that Welch's t-test \citep{WELCH1947} works great for the task of leakage detection \citep{cryptoeprint:2015/536}.
+The test tests the null hypothesis that two populations have equal means, which aligns exactly with our described objectives. The strengths of utilizing Welch's t-test are that it is robust to different variances as seen in figure \ref{fig:mixdisgauss}, and that its sampling complexity is low. Furthermore, comparing only two of our input classes \texttt{FIXED} and \texttt{UNIFORM} is sufficient \citep{Goodwill2011ATM}.
+This is also what is used in DudeCT \citep{dudect} with a critical value of $t = 10$. 
+This is a quite high threshold for the test, resulting in constant-time programs being flagged as variable-time with a very low probability (Type I errors).
+However, the drawback is an increased Type II error, where variable-time programs will not show up as variable-time.
 
-Our methodology takes a more conservative approach, where instead of fixing a critical value, we set $p = 0.05$. This significance level will in turn give us an expected Type I error of 5\%; however, the test will perform better when dealing with variable time programs.
+Our methodology takes a more conservative approach, where instead of fixing a critical value, we set $p = 0.05$. This significance level will in turn give us an expected Type I error of 5\%; however, the test will perform better when dealing with variable-time programs.
 
 Finally, the minimal measurements are plotted by generating TikZ with a corresponding program assembly, an indicator showing whether the null hypothesis was rejected, and a list of conditional jump instructions are highlighted. We also plot means for different input classes, aiding in identifying whether or not the program has timing leakages. Note that our plot trims outliers by removing the top 5 percentile, however, the t-test is applied to all measurements.
-
+See Appendix \ref{appendix:general-optimizations-results} for examples.
