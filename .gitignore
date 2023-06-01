@@ -51,7 +51,6 @@ fuzzer/.*
 fuzzer/result-*.csv
 fuzzer/results
 
-paper/master.pdf
 
 __pycache__
 
