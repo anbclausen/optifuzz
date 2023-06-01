@@ -16,7 +16,6 @@ All experiments were run on a single core and with \texttt{-20 niceness} to mini
 Surprisingly, we were unable to find any timing vulnerabilities introduced by \texttt{clang} under any optimization flags.
 This is in contrast to \texttt{gcc}, where we saw timing vulnerabilities across various optimization flags.
 Specifically, we compiled 50,000 random programs with \texttt{clang} using various optimization flags (\texttt{O0}, \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os}) out of which none contained conditional branching instructions.
-
 The reason for \texttt{clang} not introducing any timing vulnerabilities is the compiler's utilization of \texttt{cmovcc} instructions. 
 \texttt{cmovcc} is a family of constant-time conditional move instructions \citep{cmov-from-1995}. 
 
@@ -26,7 +25,6 @@ Furthermore, we have identified an optimization step in the most recent version 
 Evidently, \texttt{clang} introduces conditional branches, and thus potentially timing vulnerabilities, much more conservatively than \texttt{gcc}. 
 This is favorable in the context of language-based security avoiding timing vulnerabilities, but seemingly, \texttt{clang} is not perfect in preventing timing vulnerabilities even though our results were not able to confirm this. 
 The lack of confirmed results might be ascribed to the simplicity of the generated programs or the sample size.
-
 As no timing vulnerabilities were found using \texttt{clang}, all following subsections will present data obtained only through \texttt{gcc}.
 
 \subsection{General Optimizations}
@@ -384,7 +382,7 @@ int program(long long int x, long long int y) {
   \caption{An example of a small program that causes \texttt{gcc} to generate variable-time code when compiled with \texttt{O0}. Specifically, one can obtain whether $x$ is equal to $y$ by timing the program.}
   \label{fig:vulnerable-expression}
 \end{figure}
-
+\vspace{-1em}
 Finally, and perhaps most importantly, we identified expressions that will result in variable-time code when compiled with \texttt{O2}, \texttt{O3} and \texttt{Os}.
 As mentioned in Section \ref{sec:specific-optimizations}, partial redundancy elimination (PRE) can introduce conditional branches.
 PRE is enabled for \texttt{O2}, \texttt{O3} and \texttt{Os} \citep{gcc-manual}.
