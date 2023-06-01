@@ -1,5 +1,5 @@
 \label{sec:results}
-We have run OptiFuzz to generate around 600,000 programs, which have been fuzzed and analyzed using different compilers and optimization flags.
+We have run OptiFuzz to generate around 500,000 programs, which have been fuzzed and analyzed using different compilers and optimization flags.
 In this section, we present our results.
 
 We have divided this section into four subsections.
@@ -47,7 +47,7 @@ The results are shown in Table \ref{tab:general-optimizations} and visualized re
   The results are based on 100,000 generated programs for each optimization flag. 
   Each program is generated from an AST of max depth 5.
   The first row shows the percentage of programs that contained conditional branching instructions after compilation (potential timing leak).
-  The second and third rows show the percentage of programs that resulted in $H_0$ getting rejected in Welch's t-test (definite timing leak).}
+  The second and third rows show the percentage of programs that resulted in $H_0$ getting rejected in Welch's t-test (probable timing leak).}
   \label{tab:general-optimizations}
 \end{table}
 Our results show that the problem is very prevalent in \texttt{gcc} with \texttt{O0}, surprisingly, being the worst offender where over a tenth of the randomly generated programs were rejected by Welch's t-test. 
@@ -300,7 +300,7 @@ Findings from the other datasets also deserve mentioning.
 The \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os} datasets had several false negatives, i.e. programs that were not rejected by Welch's t-test, but were variable-time.
 Concretely, we saw examples where the assembled code branched on a \textit{very} specific scenario, e.g. if $x = 8129346172934691$, which is near-impossible to detect by fuzzing since the probability of hitting that specific value is very low.
 We did not find any false positives in any other dataset than \texttt{O0}.
-This is because the vast majority of programs in the \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os} datasets were variable-time.
+This is because the vast majority of programs in the \texttt{O1}, \texttt{O2}, \texttt{O3} and \texttt{Os} datasets (consisting only of flagged programs) were variable-time.
 This points to the fact that more aggressive optimizations that introduce conditional branching are more likely to produce actual variable-time machine code.
 The reason that Welch's t-test did not detect vulnerabilities in all programs in the datasets is likely due to the above-mentioned false negatives, but also because the t-test has some inherent limitations as mentioned in Section \ref{sec:statistical-analysis}.
 Concrete examples of true and false positives and negatives can be found in Appendix \ref{appendix:general-optimizations-results}.
@@ -322,7 +322,7 @@ This also underlines the fact that all the \texttt{O*} flags enable optimization
 The significant increase from \texttt{O1} to \texttt{O2} and \texttt{O3} points to the fact that some optimizations in \texttt{gcc} can introduce conditional branches and therefore timing vulnerabilities. 
 We identified a configurable compiler optimization that was responsible for introducing conditional branches in our datasets: \texttt{ftree-pre}.
 This optimization performs partial redundancy elimination \citep{gcc-manual}.
-\texttt{ftree-pre} is enabled by default for \texttt{O2}, \texttt{O3}, and \texttt{Os}, but not for \texttt{O1}.
+\texttt{ftree-pre} is enabled by default for \texttt{O2}, \texttt{O3}, and \texttt{Os}, but not for \texttt{O0} and \texttt{O1}.
 
 Partial redundancy elimination (PRE) is a form of common subexpression elimination (CSE) that tries to eliminate redundant computations. 
 We discussed how CSE works and how it can introduce conditional branches in Section \ref{sec:cse}.

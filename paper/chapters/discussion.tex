@@ -1,5 +1,5 @@
 \label{sec:discussion}
-From the previous sections, it is clear that modern compilers introduce timing vulnerabilities in constant-time programs.
+From the previous sections, it is clear that some modern optimizing compilers introduce timing vulnerabilities in constant-time programs.
 This is devastating for security since it means that developers cannot reliably write constant-time code.
 A solution is required.
 In this section, we discuss how the problem can be solved and what the implications different solutions have on security and efficiency.
@@ -30,7 +30,7 @@ Hence, the solution might not be easily applicable to all compilers.
 
 Another solution is to implement vulnerable parts of the program using a domain-specific language that is designed to be constant-time.
 \citeauthor{fact} proposed a domain-specific language, called FaCT, for implementing constant-time cryptographic algorithms \citep{fact}.
-FaCT is designed to be interoperable with C, and the compiler ensures constant-time code by leveraging the \texttt{ct-verif} tool that is based on verification of the LLVM IR \cite{verifying-constant-time-llvm}.
+FaCT is designed to be interoperable with C, and the compiler ensures constant-time code by leveraging the \texttt{ct-verif} tool that is based on verification of the LLVM IR \citep{verifying-constant-time-llvm}.
 \texttt{ct-verif} operates on a formalization of constant-time code and verifies based on a theoretically sound and complete methodology.
 However, \citeauthor{verifying-constant-time-llvm} note that the verification process of \texttt{ct-verif} is not guaranteed to identify all timing vulnerabilities due to translation between the LLVM IR and machine code, and due to possible incompleteness of their formalization of constant-time code. 
 Some of these issues were experimentally verified.
@@ -60,14 +60,14 @@ As we showed in Section \ref{sec:general-optimizations}, OptiFuzz will produce f
 \citeauthor{dudect} raised similar concerns for DudeCT.
 Fuzzing tools provide more of an indication of the presence of timing vulnerabilities than a guarantee.
 
-Finally, we want to mention the possibility to combine the solutions.
+Finally, we want to mention the possibility of combining the solutions.
 OptiFuzz differs from other existing solutions in that it operates on the tool level instead of the program level.
 For example, we have used OptiFuzz to conclude that \texttt{gcc} is not suitable for compiling constant-time code, while \texttt{clang} is safer.
 Hence OptiFuzz might be tailored to be used in combination with the solutions mentioned in Section \ref{sec:forcing-cmov} to detect security vulnerabilities in these.
 This would allow tool developers to maximize the security of their tools while keeping a low performance penalty.
 
 In summary, various solutions exist to the problem of timing vulnerabilities in constant-time programs.
-The solutions range from solutions that are very efficient but not very secure to solutions that are very secure but not very efficient.
+The solutions range from being very efficient but not very secure to being very secure but not very efficient.
 The correct solution depends on the use case.
 But importantly, many developers do not make use of these tools even though they are aware of the problem \citep{developer-survey-timing-attacks}.
 Hence, we urge developers to start using these tools since, as we showed, relying on the compiler to produce constant-time code is not a viable solution.
