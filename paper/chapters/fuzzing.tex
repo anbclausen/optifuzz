@@ -3,8 +3,6 @@ After the assembly inspection has performed the static analysis and flagged prog
 For this, we have created a fuzzer.
 In this section, we explain the process of compiling, running, and timing the programs.
 This process is illustrated in Figure \ref{fig:fuzzer-pipeline}.
-%First, the fuzzer compiles the program with the specified compiler and optimization level flags.
-%Then, the fuzzer runs the program with random inputs and measures the execution time.
 The process goes as follows: 
 First, the fuzzer itself is compiled into object files (simplified to a single file in Figure \ref{fig:fuzzer-pipeline}) that are not yet linked. 
 This compilation happens once.

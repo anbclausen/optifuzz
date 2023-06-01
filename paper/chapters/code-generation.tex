@@ -48,7 +48,7 @@ The third range is the range of signed 64-bit integers.
 Generally, we have included these smaller ranges of integers since they are interesting in computation and it is very unlikely that a uniformly random 64-bit integer would fall into one of these ranges.
 
 The grammar in Figure \ref{fig:grammar} generates programs with undefined behavior.
-For example, bit-shifting with a negative number, or a number larger than the size of the type, is undefined behavior in C \citep{c-standard}.
+For example, bit-shifting with a negative number, or a number larger than the bit-size of the type, is undefined behavior in C \citep{c-standard}.
 We chose to include undefined behavior in the grammar since it is a source of timing vulnerabilities \citep{what-you-c}, and it is common in real-life code \citep{undefined-behavior-c}.
 The grammar also does not distinguish operations on Booleans and integers and hence generates untypical C programs.
 For example, the program in Figure \ref{fig:code-gen-example} features multiplication between a Boolean and an integer.
