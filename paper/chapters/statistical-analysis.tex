@@ -54,14 +54,14 @@ For example, if we in our random class sequence \{A, B, B, C\} do two iterations
 \end{center}
 where A: 2 corresponds to the program given input from input class A took 2 clock cycles to run, then the final saved measurements would be: \{A: 2, B: 3, B: 4, C: 2\}. Note that the random class sequence samples once and fixes the input for all iterations.
 
-Using the minimum time as the true execution time instead of the mean filters out the noise from outliers  \cite{robust-benchmarking}.
+Using the minimum time as the true execution time instead of the mean filters out the noise from outliers  \citep{robust-benchmarking}.
 In comparison to DudeCT by \citeauthor{dudect}, which just removes the top 5\% of the longest measured execution times to reduce such noise, our approach is not prone to accidentally removing measurements of large execution times that are correct and not the result of noise.
 
-Now we apply a significance test to our measurements. There is a great consensus that Welch's t-test \cite{WELCH1947} works great for the task of leakage detection \cite{cryptoeprint:2015/536}.
+Now we apply a significance test to our measurements. There is a great consensus that Welch's t-test \citep{WELCH1947} works great for the task of leakage detection \citep{cryptoeprint:2015/536}.
 The test tests the null hypothesis that two populations have equal means, which aligns exactly with our described objectives. The strengths of utilizing Welch's t-test are that it is robust to different variances as seen in figure \ref{fig:mixdisgauss}, and that its sampling complexity is low. According to a testing methodology for side channel resistance validation by \citeauthor{Goodwill2011ATM}, comparing only two of our input classes \texttt{FIXED} and \texttt{UNIFORM} is sufficient.
-This is also what is used in DudeCT \cite{dudect} with a critical value of $t = 10$. 
-This is a quite high threshold for the test, resulting in constant time programs being flagged as variable time with a very low probability (Type I errors).
-However, the drawback is an increased Type II error, where variable time programs will not show up as variable time.
+This is also what is used in DudeCT \citep{dudect} with a critical value of $t = 10$. 
+This is a quite high threshold for the test, resulting in constant-time programs being flagged as variable-time with a very low probability (Type I errors).
+However, the drawback is an increased Type II error, where variable-time programs will not show up as variable-time.
 
 Our methodology takes a more conservative approach, where instead of fixing a critical value, we set $p = 0.05$. This significance level will in turn give us an expected Type I error of 5\%; however, the test will perform better when dealing with variable-time programs.
 
